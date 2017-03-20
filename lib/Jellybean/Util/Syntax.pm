@@ -16,6 +16,15 @@ our @EXPORT_OK; BEGIN {
     ]
 }
 
+sub import {
+    shift;
+    my $pkg     = caller();
+    my @exports = @_ ? @_ : @EXPORT_OK;
+
+    no strict 'refs';
+    *{$pkg.'::'.$_} = \&{$_} for @exports;
+}
+
 sub true  () { Jellybean::Util::JSON->true }
 sub false () { Jellybean::Util::JSON->false }
 

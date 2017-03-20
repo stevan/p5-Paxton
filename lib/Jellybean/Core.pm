@@ -18,6 +18,15 @@ our @EXPORT_OK; BEGIN {
     ]
 }
 
+sub import {
+    shift;
+    my $pkg     = caller();
+    my @exports = @_ ? @_ : @EXPORT_OK;
+
+    no strict 'refs';
+    *{$pkg.'::'.$_} = \&{$_} for @exports;
+}
+
 # We have some base stuff we need to create ...
 
 sub Ref     ($) { my ($uri)  = @_; Jellybean::Core::Schema::Ref->new( $uri ) }

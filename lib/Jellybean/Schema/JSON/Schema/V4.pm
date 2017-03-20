@@ -10,12 +10,6 @@ our $AUTHORITY = 'cpan:STEVAN';
 use Jellybean::Core;
 use Jellybean::Util::Syntax;
 
-BEGIN {
-    no strict 'refs';
-    *{$_} = *{'Jellybean::Core::'.$_}         for @Jellybean::Core::EXPORT_OK;
-    *{$_} = *{'Jellybean::Util::Syntax::'.$_} for @Jellybean::Util::Syntax::EXPORT_OK;
-}
-
 # This is actually the meta-schema, which is nicely
 # described with the schema language itself and
 # a little bit of Perl syntax mixed in.
