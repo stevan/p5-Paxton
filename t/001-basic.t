@@ -13,17 +13,15 @@ BEGIN {
     use_ok('Jellybean::Schema::JSON::Schema::V4');
 }
 
-eq_or_diff_data(
-
-    Jellybean::Util::load_schema_from(
-        'Jellybean::Schema::JSON::Schema::V4'
-    )->to_HASH,
-
-    Jellybean::Util::JSON()->decode(
-        Path::Tiny::path('./share/schemas/json-schema-v4.json')->slurp
-    ),
-
-    '... our schema matched the schema'
+my $schema = Jellybean::Util::load_schema_from('Jellybean::Schema::JSON::Schema::V4');
+my $data   = Jellybean::Util::JSON()->decode(
+    Path::Tiny::path('./share/schemas/json-schema-v4.json')->slurp
 );
+
+eq_or_diff_data( $schema->to_HASH, $data, '... our schema matched the stored schema' );
+
+my $result = $schema->validate( $data );
+
+ok( (not defined $result), '... and schema validated successfully' );
 
 done_testing;

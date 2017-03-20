@@ -7,11 +7,24 @@ use warnings;
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
 
-use Scalar::Util ();
+use Scalar::Util         ();
+use JSON::Schema::AsType (); # temporarily
 
 sub new {
     my ($class, %args) = @_;
     bless \%args => $class
+}
+
+my $COMPILED_SCHEMA;
+sub validate {
+    my ($self, $data) = @_;
+    # NOTE:
+    # this is likely not how we want to do this,
+    # but it works for now and I don't have to
+    # re-write all this logic.
+    # - SL
+    $COMPILED_SCHEMA ||= JSON::Schema::AsType->new( schema => $self->to_HASH );
+    $COMPILED_SCHEMA->validate_explain( $data );
 }
 
 sub to_HASH {
