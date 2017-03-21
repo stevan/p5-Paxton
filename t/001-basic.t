@@ -8,13 +8,13 @@ use Test::Differences;
 use Path::Tiny;
 
 BEGIN {
-    use_ok('Jellybean');
-    use_ok('Jellybean::Util');
-    use_ok('Jellybean::Schema::JSON::Schema::V4');
+    use_ok('Paxton');
+    use_ok('Paxton::Util');
+    use_ok('Paxton::Schema::JSON::Schema::V4');
 }
 
-my $schema = Jellybean::Util::load_schema_from('Jellybean::Schema::JSON::Schema::V4');
-my $data   = Jellybean::Util::JSON()->decode(
+my $schema = Paxton::Util::load_schema_from('Paxton::Schema::JSON::Schema::V4');
+my $data   = Paxton::Util::JSON()->decode(
     Path::Tiny::path('./share/schemas/json-schema-v4.json')->slurp
 );
 

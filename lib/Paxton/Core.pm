@@ -1,4 +1,4 @@
-package Jellybean::Core;
+package Paxton::Core;
 # ABSTRACT: One stop for all your JSON needs
 
 use strict;
@@ -7,8 +7,8 @@ use warnings;
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
 
-use Jellybean::Core::Schema;
-use Jellybean::Core::Schema::Ref;
+use Paxton::Core::Schema;
+use Paxton::Core::Schema::Ref;
 
 our @EXPORT_OK; BEGIN {
     @EXPORT_OK = qw[
@@ -29,8 +29,8 @@ sub import {
 
 # We have some base stuff we need to create ...
 
-sub Ref     ($) { my ($uri)  = @_; Jellybean::Core::Schema::Ref->new( $uri ) }
-sub Schema  (%) { my (%args) = @_; Jellybean::Core::Schema->new( %args )     }
+sub Ref     ($) { my ($uri)  = @_; Paxton::Core::Schema::Ref->new( $uri ) }
+sub Schema  (%) { my (%args) = @_; Paxton::Core::Schema->new( %args )     }
 
 # next we start to build our base type combinators ...
 

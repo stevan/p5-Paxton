@@ -1,4 +1,4 @@
-package Jellybean::Schema::JSON::Schema::V4;
+package Paxton::Schema::JSON::Schema::V4;
 # ABSTRACT: One stop for all your JSON needs
 
 use strict;
@@ -7,8 +7,8 @@ use warnings;
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
 
-use Jellybean::Core;
-use Jellybean::Util::Syntax;
+use Paxton::Core;
+use Paxton::Util::Syntax;
 
 # This is actually the meta-schema, which is nicely
 # described with the schema language itself and

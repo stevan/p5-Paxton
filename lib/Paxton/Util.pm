@@ -1,4 +1,4 @@
-package Jellybean::Util;
+package Paxton::Util;
 # ABSTRACT: One stop for all your JSON needs
 
 use strict;
@@ -9,7 +9,7 @@ our $AUTHORITY = 'cpan:STEVAN';
 
 use JSON::MaybeXS ();
 
-use Jellybean::Core;
+use Paxton::Core;
 
 # ...
 
@@ -19,7 +19,7 @@ sub load_schema_from {
     my ($pkg) = @_;
 
     no strict 'refs';
-    Jellybean::Core::Object(
+    Paxton::Core::Object(
         id           => ${$pkg.'::ID'},
         '$schema'    => ${$pkg.'::SCHEMA'},
         description  => ${$pkg.'::DESCRIPTION'},

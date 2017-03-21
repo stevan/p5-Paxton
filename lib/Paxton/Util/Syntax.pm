@@ -1,4 +1,4 @@
-package Jellybean::Util::Syntax;
+package Paxton::Util::Syntax;
 # ABSTRACT: One stop for all your JSON needs
 
 use strict;
@@ -7,7 +7,7 @@ use warnings;
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
 
-use Jellybean::Util;
+use Paxton::Util;
 
 our @EXPORT_OK; BEGIN {
     @EXPORT_OK = qw[
@@ -25,8 +25,8 @@ sub import {
     *{$pkg.'::'.$_} = \&{$_} for @exports;
 }
 
-sub true  () { Jellybean::Util::JSON->true }
-sub false () { Jellybean::Util::JSON->false }
+sub true  () { Paxton::Util::JSON->true }
+sub false () { Paxton::Util::JSON->false }
 
 sub prop ($$) {
     my ($name, $schema) = @_;

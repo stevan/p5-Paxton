@@ -1,4 +1,4 @@
-package Jellybean::Core::Schema;
+package Paxton::Core::Schema;
 # ABSTRACT: One stop for all your JSON needs
 
 use strict;

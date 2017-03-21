@@ -6,7 +6,7 @@ use warnings;
 use Test::More;
 
 BEGIN {
-    use_ok('Jellybean');
+    use_ok('Paxton');
 }
 
 done_testing;
