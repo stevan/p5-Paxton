@@ -9,17 +9,17 @@ our $AUTHORITY = 'cpan:STEVAN';
 
 use JSON::MaybeXS ();
 
-use Paxton::Core;
+use Paxton::Schema::Core;
 
 # ...
 
 sub JSON { JSON::MaybeXS->new }
 
-sub load_schema_from {
+sub load_schema_from_package {
     my ($pkg) = @_;
 
     no strict 'refs';
-    Paxton::Core::Object(
+    Paxton::Schema::Core::Object(
         id           => ${$pkg.'::ID'},
         '$schema'    => ${$pkg.'::SCHEMA'},
         description  => ${$pkg.'::DESCRIPTION'},

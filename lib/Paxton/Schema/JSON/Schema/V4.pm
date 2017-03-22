@@ -7,8 +7,8 @@ use warnings;
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
 
-use Paxton::Core;
-use Paxton::Util::Syntax;
+use Paxton::Schema::Core;
+use Paxton::Schema::Util::Syntax;
 
 # This is actually the meta-schema, which is nicely
 # described with the schema language itself and

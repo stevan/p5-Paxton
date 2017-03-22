@@ -1,4 +1,4 @@
-package Paxton::Core::Schema;
+package Paxton::Schema::Core::Schema;
 # ABSTRACT: One stop for all your JSON needs
 
 use strict;

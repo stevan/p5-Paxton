@@ -13,7 +13,7 @@ BEGIN {
     use_ok('Paxton::Schema::JSON::Schema::V4');
 }
 
-my $schema = Paxton::Util::load_schema_from('Paxton::Schema::JSON::Schema::V4');
+my $schema = Paxton::Util::load_schema_from_package('Paxton::Schema::JSON::Schema::V4');
 my $data   = Paxton::Util::JSON()->decode(
     Path::Tiny::path('./share/schemas/json-schema-v4.json')->slurp
 );
