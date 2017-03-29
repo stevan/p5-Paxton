@@ -32,6 +32,11 @@ sub new {
     bless [ '', $args{file}, $args{size}, 1 ] => $class;
 }
 
+sub current_position {
+    my ($self) = @_;
+    $self->[_FILE]->tell - length $self->[_BUFFER];
+}
+
 sub get {
     my ($self) = @_;
     $self->[_DONE] // return;

@@ -16,6 +16,8 @@ subtest '... testing simple charbuffer' => sub {
     my $b = Paxton::Core::CharBuffer->new( file => IO::File->new( $FILE ) );
     isa_ok($b, 'Paxton::Core::CharBuffer');
 
+    is($b->current_position, 0, '... got the current position');
+
     foreach my $i ( 1 .. 5 ) {
         is($b->peek, 'l', '... peeked the expected character');
         is($b->get, 'l', '... got the expected character');
@@ -24,16 +26,19 @@ subtest '... testing simple charbuffer' => sub {
         is($b->get, 'e', '... got the expected character');
         is($b->get, $i, '... got the expected character');
         is($b->get, "\n", '... got the expected character');
+        is($b->current_position, (6 * $i), '... got the current position');
     }
 
     is($b->get, "\n", '... got the expected character');
 
+    is($b->current_position, 31, '... got the current position');
     is(exception { $b->skip(4) }, undef, '... skipped succesfully');
+    is($b->current_position, 35, '... got the current position');
 
     is($b->peek, '7', '... peeked the expected character');
     is($b->get, '7', '... got the expected character');
     is($b->get, "\n", '... got the expected character');
-
+    is($b->current_position, 37, '... got the current position');
 };
 
 
