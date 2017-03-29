@@ -1,4 +1,4 @@
-package Paxton::Internal::CharBuffer;
+package Paxton::Core::CharBuffer;
 # ABSTRACT: One stop for all your JSON needs
 
 use strict;
