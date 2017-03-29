@@ -24,8 +24,11 @@ BEGIN {
         END_ARRAY      => Scalar::Util::dualvar( $idx++, 'END_ARRAY'      ),
 
         ADD_STRING     => Scalar::Util::dualvar( $idx++, 'ADD_STRING'     ),
-        ADD_NUMBER     => Scalar::Util::dualvar( $idx++, 'ADD_NUMBER'     ),
-        ADD_BOOLEAN    => Scalar::Util::dualvar( $idx++, 'ADD_BOOLEAN'    ),
+        ADD_INT        => Scalar::Util::dualvar( $idx++, 'ADD_INT'        ),
+        ADD_FLOAT      => Scalar::Util::dualvar( $idx++, 'ADD_FLOAT'      ),
+
+        ADD_TRUE       => Scalar::Util::dualvar( $idx++, 'ADD_TRUE'       ),
+        ADD_FALSE      => Scalar::Util::dualvar( $idx++, 'ADD_FALSE'      ),
         ADD_NULL       => Scalar::Util::dualvar( $idx++, 'ADD_NULL'       ),
 
         ERROR          => Scalar::Util::dualvar( $idx++, 'ERROR'          ),
@@ -74,9 +77,13 @@ __END__
 
 =head2 C<ADD_STRING>
 
-=head2 C<ADD_NUMBER>
+=head2 C<ADD_INT>
 
-=head2 C<ADD_BOOLEAN>
+=head2 C<ADD_FLOAT>
+
+=head2 C<ADD_TRUE>
+
+=head2 C<ADD_FALSE>
 
 =head2 C<ADD_NULL>
 

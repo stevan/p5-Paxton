@@ -12,7 +12,6 @@ A low-level, streaming reader API for JSON.
 
 Capablities include:
 
-- different types of input of buffering (line, char, n-char, etc.)
 - easy skipping of structures
 - recording of line/col of input
 - easy capturing of stats
