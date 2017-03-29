@@ -13,7 +13,7 @@ BEGIN {
 our $FILE = 't/data/100-core/001-charbuffer.txt';
 
 subtest '... testing simple charbuffer' => sub {
-    my $b = Paxton::Core::CharBuffer->new( file => IO::File->new( $FILE ) );
+    my $b = Paxton::Core::CharBuffer->new( stream => IO::File->new( $FILE ) );
     isa_ok($b, 'Paxton::Core::CharBuffer');
 
     is($b->current_position, 0, '... got the current position');

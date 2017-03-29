@@ -14,27 +14,27 @@ use constant MAX_BUFFER_SIZE => 512;
 
 # accessor helpers ...
 use constant _BUFFER => 0;
-use constant _FILE   => 1;
+use constant _STREAM => 1;
 use constant _SIZE   => 2;
 use constant _DONE   => 3;
 
 sub new {
     my ($class, %args) = @_;
 
-    (exists $args{file})
-        || Carp::confess('You must specify a `file`');
+    (exists $args{stream})
+        || Carp::confess('You must specify a `stream`');
 
-    (Scalar::Util::blessed( $args{file} ) && $args{file}->isa('IO::Handle') )
-        || Carp::confess('You must specify a `file` that is derived from IO::Handle');
+    (Scalar::Util::blessed( $args{stream} ) && $args{stream}->isa('IO::Handle') )
+        || Carp::confess('You must specify a `stream` that is derived from IO::Handle');
 
     $args{size} ||= MAX_BUFFER_SIZE;
 
-    bless [ '', $args{file}, $args{size}, 1 ] => $class;
+    bless [ '', $args{stream}, $args{size}, 1 ] => $class;
 }
 
 sub current_position {
     my ($self) = @_;
-    $self->[_FILE]->tell - length $self->[_BUFFER];
+    $self->[_STREAM]->tell - length $self->[_BUFFER];
 }
 
 sub get {
@@ -42,7 +42,7 @@ sub get {
     $self->[_DONE] // return;
     ($self->[_BUFFER] ne ''
         ? substr( $self->[_BUFFER], 0, 1, '' )
-        : $self->[_FILE]->read( $self->[_BUFFER], $self->[_SIZE] )
+        : $self->[_STREAM]->read( $self->[_BUFFER], $self->[_SIZE] )
             ? substr( $self->[_BUFFER], 0, 1, '' )
             : undef $self->[_DONE]);
 }
@@ -52,7 +52,7 @@ sub peek {
     $self->[_DONE] // return;
     $self->[_BUFFER] ne ''
         ? substr( $self->[_BUFFER], 0, 1 )
-        : $self->[_FILE]->read( $self->[_BUFFER], $self->[_SIZE] )
+        : $self->[_STREAM]->read( $self->[_BUFFER], $self->[_SIZE] )
             ? substr( $self->[_BUFFER], 0, 1 )
             : undef $self->[_DONE];
 }
@@ -68,7 +68,7 @@ sub skip {
     }
     elsif ( $num_chars > $buffer_length ) {
         $self->[_BUFFER] = '';
-        $self->[_FILE]->read( my $x, ($num_chars - $buffer_length) );
+        $self->[_STREAM]->read( my $x, ($num_chars - $buffer_length) );
     }
 }
 
