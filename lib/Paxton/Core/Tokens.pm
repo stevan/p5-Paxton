@@ -4,10 +4,18 @@ package Paxton::Core::Tokens;
 use strict;
 use warnings;
 
-use Scalar::Util;
+use Carp         ();
+use Scalar::Util ();
 
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
+
+## TODO:
+# Put all these exports into properly
+# segemented export groups, etc.
+# For now we can just export everything
+# by default, ugly, but fixable later.
+# - SL
 
 our ( @EXPORTS, %TOKEN_MAP );
 BEGIN {
@@ -42,6 +50,17 @@ BEGIN {
         no strict 'refs';
         *{$name} = sub { $TOKEN_MAP{ $name } };
     }
+
+    push @EXPORTS => qw[
+        is_boolean
+        is_numeric
+        is_error
+        is_struct_start
+        is_struct_end
+
+        token
+        is_token
+    ];
 }
 
 sub import { (shift)->import_into( scalar caller, @_ ) }
@@ -53,12 +72,54 @@ sub import_into {
     *{$into.'::'.$_} = \&{$_} foreach @exports;
 }
 
+## token constructors
+
+# NOTE:
+# Think of tokens as an abstract data type that
+# we don't really want to expose just yet.
+# - SL
+
+sub token {
+    my ($type, @payload) = @_;
+
+    (exists $TOKEN_MAP{ $type })
+        || Carp::confess('Unknown token type (' . $type . ')');
+
+    return bless [ $type, @payload ] => 'Paxton::Core::Tokens::Token';
+}
+
+sub Paxton::Core::Tokens::Token::type    { $_[0]->[0] }
+sub Paxton::Core::Tokens::Token::payload { $_[0]->[ 1 .. $#{ $_[0] } ] }
+
+sub Paxton::Core::Tokens::Token::dump {
+    require Data::Dumper;
+    Data::Dumper::Dumper( $_[0] );
+}
+
+sub is_token {
+    (Scalar::Util::blessed($_[0]) && $_[0]->isa('Paxton::Core::Tokens::Token'))
+}
+
+## useful predicates
+
 sub is_boolean {
     ($_[0] == $TOKEN_MAP{ADD_TRUE} || $_[0] == $TOKEN_MAP{ADD_FALSE})
 }
 
 sub is_numeric {
     ($_[0] == $TOKEN_MAP{ADD_INT} || $_[0] == $TOKEN_MAP{ADD_FLOAT})
+}
+
+sub is_error {
+    ($_[0] == $TOKEN_MAP{NO_TOKEN} || $_[0] == $TOKEN_MAP{ERROR} || $_[0] == $TOKEN_MAP{NOT_AVAILABLE})
+}
+
+sub is_struct_start {
+    ($_[0] == $TOKEN_MAP{START_OBJECT} || $_[0] == $TOKEN_MAP{START_ARRAY})
+}
+
+sub is_struct_end {
+    ($_[0] == $TOKEN_MAP{END_OBJECT} || $_[0] == $TOKEN_MAP{END_ARRAY})
 }
 
 1;

@@ -34,6 +34,12 @@ sub current_position {
     $self->{handle}->tell - length $self->{buffer};
 }
 
+sub is_done {
+    my ($self) = @_;
+    # when done is undef, we are done (sorry, odd I know)
+    not defined $self->{done}
+}
+
 sub get {
     my ($self) = @_;
     $self->{done} // return;
@@ -56,8 +62,22 @@ sub peek {
 
 sub skip {
     my ($self, $n) = @_;
+
     $self->{done} // return;
-    substr( $self->{buffer}, 0, ($n // 1), '' );
+
+    $n //= 1;
+
+    my $len = length $self->{buffer};
+    if ( $n == $len ) {
+        $self->{buffer} = '';
+    }
+    elsif ( $n < $len ) {
+        substr( $self->{buffer}, 0, $n, '' )
+    }
+    elsif ( $n > $len ) {
+        $self->{buffer} = '';
+        $self->{handle}->read( my $x, ($n - $len) );
+    }
 }
 
 1;
