@@ -18,7 +18,7 @@ BEGIN {
 our $FILE = 't/data/100-core/001-charbuffer.txt';
 
 subtest '... testing simple charbuffer' => sub {
-    my $b = Paxton::Core::CharBuffer->new( stream => IO::File->new( $FILE ) );
+    my $b = Paxton::Core::CharBuffer->new( handle => IO::File->new( $FILE ) );
     isa_ok($b, 'Paxton::Core::CharBuffer');
 
     test_my_buffer( $b );
@@ -26,7 +26,7 @@ subtest '... testing simple charbuffer' => sub {
 
 subtest '... testing simple charbuffer w/ IO::Scalar' => sub {
     my $b = Paxton::Core::CharBuffer->new(
-        stream => IO::Scalar->new(
+        handle => IO::Scalar->new(
             \(Path::Tiny::path( $FILE )->slurp)
         )
     );
@@ -56,7 +56,12 @@ sub test_my_buffer {
     is($b->get, "\n", '... got the expected character');
 
     is($b->current_position, 31, '... got the current position');
-    is(exception { $b->skip(4) }, undef, '... skipped succesfully');
+    foreach my $i ( 1 .. 4 ) {
+        my $c = $b->peek;
+        is($b->current_position, 31 + ($i - 1), '... got the current position (peek did not advance)');
+        is($b->skip, $c, '... skip returned the char it is discarding');
+        is($b->current_position, 31 + $i, '... got the current position (skip did advance)');
+    }
     is($b->current_position, 35, '... got the current position');
 
     is($b->peek, '7', '... peeked the expected character');
