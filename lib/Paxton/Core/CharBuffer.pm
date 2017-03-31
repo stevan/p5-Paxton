@@ -81,20 +81,19 @@ sub skip {
     }
 }
 
-sub skip_whitespace {
+sub discard_whitespace_and_peek {
     my ($self) = @_;
-    # while we have spaces in
-    # the buffer to remove ...
-    while ( $self->{buffer} =~ s/^\s+// ) {
-        # then if that action
-        # drained the buffer ...
+
+    $self->{done} // return;
+
+    do {
         if ( length $self->{buffer} == 0 ) {
-            # fill the buffer again ...
-            $self->{handle}->read( $self->{buffer}, $self->{size} );
+            $self->{handle}->read( $self->{buffer}, $self->{size} )
+                or undef $self->{done};
         }
-        # ... and loop
-    }
-    return;
+    } while ( $self->{buffer} =~ s/^\s+// );
+
+    return defined $self->{done} ? substr( $self->{buffer}, 0, 1 ) : undef;
 }
 
 1;
