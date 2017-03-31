@@ -6,6 +6,7 @@ use warnings;
 
 use Scalar::Util ();
 use UNIVERSAL::Object;
+use MOP::Method;
 
 use IO::Handle;
 use IO::Scalar;
@@ -16,6 +17,8 @@ use Paxton::Core::CharBuffer;
 
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
+
+use constant DEBUG => $ENV{PAXTON_READER_DEBUG} // 0;
 
 our @ISA; BEGIN { @ISA = ('UNIVERSAL::Object') }
 our %HAS; BEGIN {
@@ -60,6 +63,9 @@ sub next_token {
     my ($self) = @_;
 
     if ( my $next = $self->pop_stack ) {
+
+        $self->log( 'Running ' . MOP::Method->new( $next )->fully_qualified_name ) if DEBUG;
+
         my ($token, $cont) = $self->$next();
 
         (defined $token && is_token( $token ))
@@ -73,8 +79,9 @@ sub next_token {
         elsif ( not is_error( $token ) ) {
             $self->push_stack( \&start );
         }
-        elsif ( $token->type eq ERROR ) {
-            $self->log( 'Encountered error: ', $token->payload );
+
+        if ( $token->type eq ERROR ) {
+            $self->log( 'Encountered error: ', $token->payload ) if DEBUG;
         }
 
         return $token;
@@ -85,19 +92,12 @@ sub next_token {
 
 sub skip_token;
 
-# logging & debugging
-
-use constant DEBUG   => $ENV{PAXTON_DEBUG}   // 0;
-use constant VERBOSE => $ENV{PAXTON_VERBOSE} // 0;
+# logging
 
 sub log {
     my ($self, @msg) = @_;
-    if ( VERBOSE ) {
-        Carp::cluck( @msg );
-    }
-    else {
-        warn( @msg );
-    }
+    (DEBUG > 1) ? Carp::cluck( @msg ) : warn( @msg );
+    return;
 }
 
 # stack methods
@@ -112,12 +112,16 @@ sub get  { $_[0]->{source}->get           }
 sub peek { $_[0]->{source}->peek          }
 sub skip { $_[0]->{source}->skip( $_[1] ) }
 
+sub discard_whitespace_and_peek {
+    $_[0]->{source}->discard_whitespace_and_peek
+}
+
 # parse methods
 
 sub root {
     my ($self) = @_;
 
-    my $char = $self->peek;
+    my $char = $self->discard_whitespace_and_peek;
 
     if ( defined $char ) {
 
@@ -158,7 +162,7 @@ sub end {
 sub start {
     my ($self) = @_;
 
-    my $char = $self->peek;
+    my $char = $self->discard_whitespace_and_peek;
 
     if ( defined $char ) {
         if ( $char eq '{' ) {
@@ -185,7 +189,7 @@ sub start {
             return $self->nil_literal;
         }
         else {
-            return token( ERROR, 'Unrecognized start character ['.$char.']' );
+            return token( ERROR, 'Unrecognized start character `'.$char.'`' );
         }
     }
     else {
@@ -196,7 +200,7 @@ sub start {
 sub object {
     my ($self) = @_;
 
-    my $char = $self->peek;
+    my $char = $self->discard_whitespace_and_peek;
 
     if ( defined $char ) {
         if ( $char eq '}' ) {
@@ -219,7 +223,7 @@ sub object {
 sub property {
     my ($self) = @_;
 
-    my $char = $self->peek;
+    my $char = $self->discard_whitespace_and_peek;
 
     if ( defined $char ) {
         if ( $char eq '"' ) {
@@ -237,7 +241,7 @@ sub property {
 sub array {
     my ($self) = @_;
 
-    my $char = $self->peek;
+    my $char = $self->discard_whitespace_and_peek;
 
     if ( defined $char ) {
         if ( $char eq ']' ) {
