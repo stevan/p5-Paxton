@@ -68,5 +68,15 @@ sub test_my_buffer {
     is($b->get, '7', '... got the expected character');
     is($b->get, "\n", '... got the expected character');
     is($b->current_position, 37, '... got the current position');
+
+    $b->skip_whitespace;
+    is($b->current_position, 43, '... got the current position');
+    is($b->get, 'l', '... got the expected character');
+    is($b->get, 'i', '... got the expected character');
+    is($b->get, 'n', '... got the expected character');
+    is($b->get, 'e', '... got the expected character');
+    is($b->get, '8', '... got the expected character');
+    is($b->get, "\n", '... got the expected character');
+
 }
 

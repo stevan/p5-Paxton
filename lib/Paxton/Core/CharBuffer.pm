@@ -81,6 +81,22 @@ sub skip {
     }
 }
 
+sub skip_whitespace {
+    my ($self) = @_;
+    # while we have spaces in
+    # the buffer to remove ...
+    while ( $self->{buffer} =~ s/^\s+// ) {
+        # then if that action
+        # drained the buffer ...
+        if ( length $self->{buffer} == 0 ) {
+            # fill the buffer again ...
+            $self->{handle}->read( $self->{buffer}, $self->{size} );
+        }
+        # ... and loop
+    }
+    return;
+}
+
 1;
 
 __END__
