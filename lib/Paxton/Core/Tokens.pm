@@ -4,8 +4,9 @@ package Paxton::Core::Tokens;
 use strict;
 use warnings;
 
-use Carp         ();
 use Scalar::Util ();
+
+use Paxton::Core::Exception;
 
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
@@ -83,13 +84,13 @@ sub token {
     my ($type, @payload) = @_;
 
     (exists $TOKEN_MAP{ $type })
-        || Carp::confess('Unknown token type (' . $type . ')');
+        || Paxton::Core::Exception->new( message => 'Unknown token type (' . $type . ')' )->throw;
 
     return bless [ $type, @payload ] => 'Paxton::Core::Tokens::Token';
 }
 
 sub Paxton::Core::Tokens::Token::type    { $_[0]->[0] }
-sub Paxton::Core::Tokens::Token::payload { $_[0]->[ 1 .. $#{ $_[0] } ] }
+sub Paxton::Core::Tokens::Token::payload { @{ $_[0] }[ 1 .. $#{ $_[0] } ] }
 
 sub Paxton::Core::Tokens::Token::dump {
     require Data::Dumper;

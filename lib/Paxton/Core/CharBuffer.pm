@@ -7,9 +7,10 @@ use warnings;
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
 
-use Carp         ();
 use Scalar::Util ();
 use UNIVERSAL::Object;
+
+use Paxton::Core::Exception;
 
 use constant MAX_BUFFER_SIZE => 512;
 
@@ -26,7 +27,7 @@ our %HAS; BEGIN {
 sub BUILD {
     my ($self) = @_;
     (Scalar::Util::blessed( $self->{handle} ) && $self->{handle}->isa('IO::Handle') )
-        || Carp::confess('You must specify a `handle` that is derived from IO::Handle');
+        || Paxton::Core::Exception->new( message => 'You must specify a `handle` that is derived from IO::Handle' )->throw;
 }
 
 sub current_position {

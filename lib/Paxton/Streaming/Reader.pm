@@ -4,13 +4,13 @@ package Paxton::Streaming::Reader;
 use strict;
 use warnings;
 
-use Carp         ();
 use Scalar::Util ();
 use UNIVERSAL::Object;
 
 use IO::Handle;
 use IO::Scalar;
 
+use Paxton::Core::Exception;
 use Paxton::Core::Tokens;
 use Paxton::Core::CharBuffer;
 
@@ -31,7 +31,7 @@ sub new_from_stream {
     my ($class, $stream) = @_;
 
     (Scalar::Util::blessed( $stream ) && $stream->isa('IO::Handle') )
-        || Carp::confess('The stream must be derived from IO::Handle');
+        || Paxton::Core::Exception->new( message => 'The stream must be derived from IO::Handle' )->throw;
 
     $class->new( source => Paxton::Core::CharBuffer->new( handle => $stream ) );
 }
@@ -46,7 +46,7 @@ sub new_from_string {
 sub BUILD {
     my ($self) = @_;
     (Scalar::Util::blessed( $self->{source} ) && $self->{source}->isa('Paxton::Core::CharBuffer') )
-        || Carp::confess('The `source` must be an instance of `Paxton::Core::CharBuffer`');
+        || Paxton::Core::Exception->new( message => 'The `source` must be an instance of `Paxton::Core::CharBuffer`' )->throw;
 }
 
 # iteration API
@@ -63,7 +63,7 @@ sub next_token {
         my ($token, $cont) = $self->$next();
 
         (defined $token && is_token( $token ))
-            || Carp::confess('Invalid token ('.$token.')');
+            || Paxton::Core::Exception->new( message => 'Invalid token ('.$token.')' )->throw;
 
         return if $token->type == NO_TOKEN;
 
@@ -73,6 +73,9 @@ sub next_token {
         elsif ( not is_error( $token ) ) {
             $self->push_stack( \&start );
         }
+        elsif ( $token->type eq ERROR ) {
+            $self->log( 'Encountered error: ', $token->payload );
+        }
 
         return $token;
     }
@@ -81,6 +84,21 @@ sub next_token {
 }
 
 sub skip_token;
+
+# logging & debugging
+
+use constant DEBUG   => $ENV{PAXTON_DEBUG}   // 0;
+use constant VERBOSE => $ENV{PAXTON_VERBOSE} // 0;
+
+sub log {
+    my ($self, @msg) = @_;
+    if ( VERBOSE ) {
+        Carp::cluck( @msg );
+    }
+    else {
+        warn( @msg );
+    }
+}
 
 # stack methods
 
