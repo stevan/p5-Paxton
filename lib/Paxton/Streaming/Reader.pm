@@ -51,7 +51,7 @@ sub BUILD {
 
 # iteration API
 
-sub is_done {
+sub is_done { # this needs a better name
     my ($self) = @_;
     $self->{source}->is_done;
 }
@@ -61,6 +61,9 @@ sub next_token {
 
     if ( my $next = $self->pop_stack ) {
         my ($token, $cont) = $self->$next();
+
+        (defined $token && is_token( $token ))
+            || Carp::confess('Invalid token ('.$token.')');
 
         return if $token->type == NO_TOKEN;
 
