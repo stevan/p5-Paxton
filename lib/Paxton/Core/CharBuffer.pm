@@ -4,13 +4,13 @@ package Paxton::Core::CharBuffer;
 use strict;
 use warnings;
 
-our $VERSION   = '0.01';
-our $AUTHORITY = 'cpan:STEVAN';
-
 use Scalar::Util ();
 use UNIVERSAL::Object;
 
 use Paxton::Core::Exception;
+
+our $VERSION   = '0.01';
+our $AUTHORITY = 'cpan:STEVAN';
 
 use constant MAX_BUFFER_SIZE => 512;
 
