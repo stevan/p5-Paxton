@@ -23,8 +23,8 @@ use constant DEBUG => $ENV{PAXTON_READER_DEBUG} // 0;
 our @ISA; BEGIN { @ISA = ('UNIVERSAL::Object') }
 our %HAS; BEGIN {
     %HAS = (
-        source  => sub { die 'You must specify a `source` to use.'},
-        stack   => sub { +[ \&root ] },
+        source => sub { die 'You must specify a `source` to use.'},
+        cont   => sub { \&root },
     )
 }
 
@@ -62,9 +62,9 @@ sub is_done { # this needs a better name
 sub next_token {
     my ($self) = @_;
 
-    if ( my $next = $self->pop_stack ) {
+    if ( my $next = $self->{cont} ) {
 
-        $self->log( 'Running ' . MOP::Method->new( $next )->fully_qualified_name ) if DEBUG;
+        $self->log( 'Calling => ' . MOP::Method->new( $next )->name ) if DEBUG;
 
         my ($token, $cont) = $self->$next();
 
@@ -74,10 +74,10 @@ sub next_token {
         return if $token->type == NO_TOKEN;
 
         if ( $cont ) {
-            $self->push_stack( $cont );
+            $self->{cont} = $cont;
         }
         elsif ( not is_error( $token ) ) {
-            $self->push_stack( \&start );
+            $self->{cont} = \&start;
         }
 
         if ( $token->type eq ERROR ) {
@@ -102,9 +102,7 @@ sub log {
 
 # stack methods
 
-sub pop_stack  { pop    @{ $_[0]->{stack} }          }
-sub push_stack { push   @{ $_[0]->{stack} } => $_[1] }
-sub stack_size { scalar @{ $_[0]->{stack} }          }
+sub stack_size { 1 }
 
 # delegated charbuffer methods
 
@@ -146,17 +144,12 @@ sub root {
 
 sub end {
     my ($self) = @_;
-    if ( $self->stack_size != 0 ) {
-        return token( ERROR, 'Unexpected end of input (still have '.$self->stack_size.' items on the stack)' );
-    }
-    else {
-        # NOTE:
-        # this token type works for
-        # now, but we might want to
-        # be more specific later.
-        # - SL
-        return token( NO_TOKEN );
-    }
+    # NOTE:
+    # this token type works for
+    # now, but we might want to
+    # be more specific later.
+    # - SL
+    return token( NO_TOKEN );
 }
 
 sub start {
@@ -205,7 +198,6 @@ sub object {
     if ( defined $char ) {
         if ( $char eq '}' ) {
             $self->skip;
-            $self->pop_stack;
             return token( END_OBJECT );
         }
         elsif ( $char eq '"' ) {
@@ -227,7 +219,23 @@ sub property {
 
     if ( defined $char ) {
         if ( $char eq '"' ) {
-            return $self->string;
+            return $self->string, \&property;
+        }
+        elsif ( $char eq ':' ) {
+            $self->skip;
+            my $value = $self->start;
+
+            return $value if is_error( $value );
+
+            $char = $self->discard_whitespace_and_peek;
+
+            if ( $char eq ',' ) {
+                $self->skip;
+            }
+            else {
+            }
+
+            return $value, \&end_property;
         }
         else {
             return token( ERROR, 'Expected end of array' );
@@ -238,6 +246,11 @@ sub property {
     }
 }
 
+sub end_property {
+    my ($self) = @_;
+    return token( END_PROPERTY ), \&object;
+}
+
 sub array {
     my ($self) = @_;
 
@@ -246,7 +259,6 @@ sub array {
     if ( defined $char ) {
         if ( $char eq ']' ) {
             $self->skip;
-            $self->pop_stack;
             return token( END_ARRAY );
         }
         else {
@@ -258,9 +270,51 @@ sub array {
     }
 }
 
+our %ESCAPE_CHARS = (
+    b => "\b",
+    f => "\f",
+    n => "\n",
+    r => "\r",
+    t => "\t",
+    "\\" => "\\",
+    "/" => "/",
+    '"' => '"',
+);
+
 sub string {
     my ($self) = @_;
-    return token( ERROR, 'Unimplemented (string)' );
+
+    my $char = $self->get;
+
+    if ( defined $char ) {
+
+        my $acc = '';
+        while (1) {
+            $char = $self->get;
+            return token( ERROR, "Unterminated string" ) unless defined $char;
+
+            last if $char eq '"';
+
+            if ($char eq "\\") {
+                my $escape_char = $self->get;
+                return token( ERROR, "Unfinished escape sequence" )
+                    unless defined $escape_char;
+                return token( ERROR, "\\u sequence not yet supported" )
+                    if $escape_char eq 'u';
+                return token( ERROR, "Invalid escape sequence \\$escape_char" )
+                    unless exists $ESCAPE_CHARS{ $escape_char };
+                $acc .= $ESCAPE_CHARS{ $escape_char };
+            }
+            else {
+                $acc .= $char;
+            }
+        }
+
+        return token( ADD_STRING, $acc );
+    }
+    else {
+        return $self->end;
+    }
 }
 
 sub number {
