@@ -20,12 +20,20 @@ our $AUTHORITY = 'cpan:STEVAN';
 
 use constant DEBUG => $ENV{PAXTON_READER_DEBUG} // 0;
 
+# context ...
+
+use constant IN_OBJECT   => Scalar::Util::dualvar( 1, 'IN_OBJECT'   );
+use constant IN_ARRAY    => Scalar::Util::dualvar( 2, 'IN_ARRAY'    );
+use constant IN_PROPERTY => Scalar::Util::dualvar( 3, 'IN_PROPERTY' );
+
+# ...
+
 our @ISA; BEGIN { @ISA = ('UNIVERSAL::Object') }
 our %HAS; BEGIN {
     %HAS = (
         source     => sub { die 'You must specify a `source` to use.'},
         next_state => sub { \&root },
-        depth      => sub { 0 },
+        context    => sub { +[] },
     )
 }
 
@@ -65,7 +73,9 @@ sub next_token {
 
     if ( my $next = delete $self->{next_state} ) {
 
-        $self->log( '>> CURRENT => ', MOP::Method->new( $next )->name ) if DEBUG;
+        $self->log( '>> CURRENT => ', MOP::Method->new( $next )->name   ) if DEBUG;
+        $self->log( '   CONTEXT => ', join ', ' => @{$self->{context}}  ) if DEBUG;
+        $self->log( '   BUFFER  => \'', $self->{source}->{buffer}, '\'' ) if DEBUG;
 
         my $token = $self->$next();
 
@@ -207,17 +217,44 @@ sub object {
     if ( defined $char ) {
         if ( $char eq '{' ) {
             $self->skip_next_char;
-            $self->{next_state} = \&start_property;
+            push @{ $self->{context} } => IN_OBJECT;
+            $self->{next_state} = \&property;
             return token( START_OBJECT );
         }
         elsif ( $char eq '}' ) {
+            # close any open properties ...
+            if ( $self->{context}->[-1] == IN_PROPERTY ) {
+                return $self->end_property;
+            }
+
+            # now close any objects ...
             $self->skip_next_char;
-            $self->{next_state} = \&start;
+            if ( $self->{context}->[-1] == IN_OBJECT ) {
+
+                my $ctx = $self->{context}->[-2];
+                if ( not defined $ctx ) {
+                    $self->{next_state} = \&start;
+                }
+                elsif ( $ctx == IN_OBJECT ) {
+                    $self->{next_state} = \&object;
+                }
+                elsif ( $ctx == IN_ARRAY ) {
+                    $self->{next_state} = \&array;
+                }
+                elsif ( $ctx == IN_PROPERTY ) {
+                    $self->{next_state} = \&end_property;
+                }
+
+                pop @{ $self->{context} };
+            }
+            else {
+                $self->{next_state} = \&start;
+            }
             return token( END_OBJECT );
         }
         elsif ( $char eq ',' ) {
             $self->skip_next_char;
-            return $self->start_property;
+            return $self->property;
         }
         else {
             return token( ERROR, 'Expected end of object or start of property name but found ('.$char.')' );
@@ -228,10 +265,10 @@ sub object {
     }
 }
 
-sub start_property {
+sub property {
     my ($self) = @_;
 
-    $self->log( 'Entering `start_property`' ) if DEBUG;
+    $self->log( 'Entering `property`' ) if DEBUG;
 
     my $char = $self->discard_whitespace_and_peek;
 
@@ -241,7 +278,8 @@ sub start_property {
 
             return $key if is_error( $key );
 
-            $self->{next_state} = \&start_property;
+            push @{ $self->{context} } => IN_PROPERTY;
+            $self->{next_state} = \&property;
             return token( START_PROPERTY, $key->payload );
         }
         elsif ( $char eq ':' ) {
@@ -250,7 +288,10 @@ sub start_property {
 
             return $value if is_error( $value );
 
-            $self->{next_state} = \&end_property;
+            # if no next-state has been
+            # queued up, we can end the
+            # property
+            $self->{next_state} ||= \&end_property;
 
             return $value;
         }
@@ -268,8 +309,11 @@ sub end_property {
 
     $self->log( 'Entering `end_property`' ) if DEBUG;
 
-    $self->{next_state} = \&object;
+    if ( $self->{context}->[-1] == IN_PROPERTY ) {
+        pop @{ $self->{context} };
+    }
 
+    $self->{next_state} = \&object;
     return token( END_PROPERTY );
 }
 
@@ -283,14 +327,33 @@ sub array {
     if ( defined $char ) {
         if ( $char eq '[' ) {
             $self->skip_next_char;
-            $self->{depth}++;
+            push @{ $self->{context} } => IN_ARRAY;
             $self->{next_state} = \&array;
             return token( START_ARRAY );
         }
         elsif ( $char eq ']' ) {
             $self->skip_next_char;
-            $self->{depth}--;
-            $self->{next_state} = $self->{depth} == 0 ? \&start : \&array;
+            if ( $self->{context}->[-1] == IN_ARRAY ) {
+
+                my $ctx = $self->{context}->[-2];
+                if ( not defined $ctx ) {
+                    $self->{next_state} = \&start;
+                }
+                elsif ( $ctx == IN_OBJECT ) {
+                    $self->{next_state} = \&object;
+                }
+                elsif ( $ctx == IN_ARRAY ) {
+                    $self->{next_state} = \&array;
+                }
+                elsif ( $ctx == IN_PROPERTY ) {
+                    $self->{next_state} = \&end_property;
+                }
+
+                pop @{ $self->{context} };
+            }
+            else {
+                $self->{next_state} = \&start;
+            }
             return token( END_ARRAY );
         }
         elsif ( $char eq ',' ) {
