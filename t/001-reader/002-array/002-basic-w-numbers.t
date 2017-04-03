@@ -11,23 +11,13 @@ use Test::Paxton;
 use Paxton::Core::Tokens;
 
 tokens_match(
-    '["foo"]',
+    '[10]',
     [
         token(START_ARRAY),
-            token(ADD_STRING, "foo"),
+            token(ADD_INT, 10),
         token(END_ARRAY),
     ],
     '... simple array'
-);
-
-tokens_match(
-    '[  "foo"        ]',
-    [
-        token(START_ARRAY),
-            token(ADD_STRING, "foo"),
-        token(END_ARRAY),
-    ],
-    '... simple array w/ whitespace'
 );
 
 done_testing;
