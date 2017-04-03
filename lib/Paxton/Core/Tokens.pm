@@ -108,23 +108,23 @@ sub is_token {
 ## useful predicates
 
 sub is_boolean {
-    ($_[0] == $TOKEN_MAP{ADD_TRUE} || $_[0] == $TOKEN_MAP{ADD_FALSE})
+    ($_[0]->type == $TOKEN_MAP{ADD_TRUE} || $_[0]->type == $TOKEN_MAP{ADD_FALSE})
 }
 
 sub is_numeric {
-    ($_[0] == $TOKEN_MAP{ADD_INT} || $_[0] == $TOKEN_MAP{ADD_FLOAT})
+    ($_[0]->type == $TOKEN_MAP{ADD_INT} || $_[0]->type == $TOKEN_MAP{ADD_FLOAT})
 }
 
 sub is_error {
-    ($_[0] == $TOKEN_MAP{NO_TOKEN} || $_[0] == $TOKEN_MAP{ERROR} || $_[0] == $TOKEN_MAP{NOT_AVAILABLE})
+    ($_[0]->type == $TOKEN_MAP{ERROR} || $_[0]->type == $TOKEN_MAP{NO_TOKEN} || $_[0]->type == $TOKEN_MAP{NOT_AVAILABLE})
 }
 
 sub is_struct_start {
-    ($_[0] == $TOKEN_MAP{START_OBJECT} || $_[0] == $TOKEN_MAP{START_ARRAY})
+    ($_[0]->type == $TOKEN_MAP{START_OBJECT} || $_[0]->type == $TOKEN_MAP{START_ARRAY})
 }
 
 sub is_struct_end {
-    ($_[0] == $TOKEN_MAP{END_OBJECT} || $_[0] == $TOKEN_MAP{END_ARRAY})
+    ($_[0]->type == $TOKEN_MAP{END_OBJECT} || $_[0]->type == $TOKEN_MAP{END_ARRAY})
 }
 
 1;
