@@ -10,7 +10,7 @@ BEGIN {
     use_ok('Paxton::Core::Tokens');
 }
 
-subtest '... simple object' => sub {
+subtest '... simple object w/ string-value' => sub {
     my @expected = (
         START_OBJECT,
             START_PROPERTY,
@@ -34,7 +34,7 @@ subtest '... simple object' => sub {
     ok( $r->is_done, '... the reader is done' );
 };
 
-subtest '... simple object w/ whitespace' => sub {
+subtest '... simple object w/ whitespace & string-value' => sub {
     my @expected = (
         START_OBJECT,
             START_PROPERTY,
@@ -51,7 +51,7 @@ subtest '... simple object w/ whitespace' => sub {
         my $t = $r->next_token;
         ok(is_token( $t ), '... we got a token');
         is($t->type, $e, '... and it is the expected token ('.$t->type.')');
-        warn( $t->dump );
+        #warn( $t->dump );
     }
 
     is( $r->next_token, undef, '... parsing is complete' );

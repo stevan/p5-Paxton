@@ -229,10 +229,12 @@ sub property {
 
             $char = $self->discard_whitespace_and_peek;
 
+            # discard the , and end the property
+            # which will return control to the
+            # object method, which will look for
+            # another property or end the object
             if ( $char eq ',' ) {
                 $self->skip;
-            }
-            else {
             }
 
             return $value, \&end_property;
