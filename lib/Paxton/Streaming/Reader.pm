@@ -113,10 +113,9 @@ sub stack_size { 1 }
 
 # delegated charbuffer methods
 
-sub get  { $_[0]->{source}->get           }
-sub peek { $_[0]->{source}->peek          }
-sub skip { $_[0]->{source}->skip( $_[1] ) }
-
+sub get_next_char  { $_[0]->{source}->get  }
+sub peek_next_char { $_[0]->{source}->peek }
+sub skip_next_char { $_[0]->{source}->skip }
 sub discard_whitespace_and_peek {
     $_[0]->{source}->discard_whitespace_and_peek
 }
@@ -210,12 +209,12 @@ sub object {
 
     if ( defined $char ) {
         if ( $char eq '{' ) {
-            $self->skip;
+            $self->skip_next_char;
             $self->{next_state} = \&object;
             return token( START_OBJECT );
         }
         elsif ( $char eq '}' ) {
-            $self->skip;
+            $self->skip_next_char;
             $self->{next_state} = \&start;
             return token( END_OBJECT );
         }
@@ -245,7 +244,7 @@ sub property {
             return $self->string_literal;
         }
         elsif ( $char eq ':' ) {
-            $self->skip;
+            $self->skip_next_char;
             my $value = $self->start;
 
             return $value if is_error( $value );
@@ -257,7 +256,7 @@ sub property {
             # object method, which will look for
             # another property or end the object
             if ( $char eq ',' ) {
-                $self->skip;
+                $self->skip_next_char;
             }
 
             $self->{next_state} = \&end_property;
@@ -292,17 +291,17 @@ sub array {
 
     if ( defined $char ) {
         if ( $char eq '[' ) {
-            $self->skip;
+            $self->skip_next_char;
             $self->{next_state} = \&array;
             return token( START_ARRAY );
         }
         elsif ( $char eq ']' ) {
-            $self->skip;
+            $self->skip_next_char;
             $self->{next_state} = \&start;
             return token( END_ARRAY );
         }
         elsif ( $char eq ',' ) {
-            $self->skip;
+            $self->skip_next_char;
         }
 
         $self->{next_state} = \&array;
@@ -331,7 +330,7 @@ sub string_literal {
 
     $self->log( 'Entering `string_literal`' ) if DEBUG;
 
-    my $char = $self->get;
+    my $char = $self->get_next_char;
 
     return token( ERROR, 'String must begin with a double-quote character' )
         unless $char eq '"';
@@ -340,13 +339,13 @@ sub string_literal {
 
         my $acc = '';
         while (1) {
-            $char = $self->get;
+            $char = $self->get_next_char;
             return token( ERROR, 'Unterminated string' ) unless defined $char;
 
             last if $char eq '"';
 
             if ($char eq "\\") {
-                my $escape_char = $self->get;
+                my $escape_char = $self->get_next_char;
                 return token( ERROR, 'Unfinished escape sequence' )
                     unless defined $escape_char;
                 return token( ERROR, '\u sequence not yet supported' )
@@ -415,8 +414,8 @@ sub _match_literal {
         while ( @expected ) {
             if ( $char eq shift @expected ) {
                 $received .= $char;
-                $self->skip;
-                $char = $self->peek;
+                $self->skip_next_char;
+                $char = $self->peek_next_char;
             }
             else {
                 last;
