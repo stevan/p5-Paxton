@@ -18,7 +18,7 @@ our $AUTHORITY = 'cpan:STEVAN';
 # by default, ugly, but fixable later.
 # - SL
 
-our ( @EXPORTS, %TOKEN_MAP );
+our ( @EXPORT, %TOKEN_MAP );
 BEGIN {
     my $idx = 1;
     %TOKEN_MAP = (
@@ -45,14 +45,14 @@ BEGIN {
         ERROR          => Scalar::Util::dualvar( $idx++, 'ERROR'          ),
     );
 
-    @EXPORTS = keys %TOKEN_MAP;
+    @EXPORT = keys %TOKEN_MAP;
 
     foreach my $name ( keys %TOKEN_MAP ) {
         no strict 'refs';
         *{$name} = sub { $TOKEN_MAP{ $name } };
     }
 
-    push @EXPORTS => qw[
+    push @EXPORT => qw[
         is_boolean
         is_numeric
         is_error
@@ -67,10 +67,10 @@ BEGIN {
 sub import { (shift)->import_into( scalar caller, @_ ) }
 
 sub import_into {
-    my (undef, $into, @exports) = @_;
-    @exports = @EXPORTS unless @exports;
+    my (undef, $into, @export) = @_;
+    @export = @EXPORT unless @export;
     no strict 'refs';
-    *{$into.'::'.$_} = \&{$_} foreach @exports;
+    *{$into.'::'.$_} = \&{$_} foreach @export;
 }
 
 ## token constructors
