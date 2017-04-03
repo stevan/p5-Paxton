@@ -43,8 +43,8 @@ sub tokens_match {
         foreach my $e ( @$expected ) {
             my $t = $r->next_token;
             Test::More::ok(is_token( $t ), '... we got a token');
-            Test::More::is($t->type, $e->type, '... and it is the expected token type('.$t->type.')');
-            Test::More::is_deeply([$t->payload], [$e->payload], '... and it is the expected token payload('.(join ', ' => $t->payload).')');
+            Test::More::is($t->type, $e->type, '... and it is the expected token type('.$e->type.')');
+            Test::More::is_deeply([$t->payload], [$e->payload], '... and it is the expected token payload('.(join ', ' => $e->payload).')');
             Test::More::diag( $t->dump ) if VERBOSE;
         }
 

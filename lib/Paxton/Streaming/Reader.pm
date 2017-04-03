@@ -64,7 +64,7 @@ sub next_token {
 
     if ( my $next = $self->{cont} ) {
 
-        $self->log( 'Calling => ' . MOP::Method->new( $next )->name ) if DEBUG;
+        $self->log( '>> CC => ', MOP::Method->new( $next )->name ) if DEBUG;
 
         my ($token, $cont) = $self->$next();
 
@@ -76,15 +76,25 @@ sub next_token {
         if ( $cont ) {
             $self->{cont} = $cont;
         }
-        elsif ( not is_error( $token ) ) {
-            $self->{cont} = \&start;
-        }
-
-        if ( $token->type eq ERROR ) {
+        elsif ( is_error( $token ) ) {
             $self->log( 'Encountered error: ', $token->payload ) if DEBUG;
         }
+        else {
+            Paxton::Core::Exception
+                ->new( message => 'No continuation specified with '.$token->as_string )
+                ->throw;
+        }
+
+        $self->log( '<< NC <= ', $self->{cont} ? MOP::Method->new( $self->{cont} )->name : 'NONE' ) if DEBUG;
 
         return $token;
+    }
+    else {
+        # TODO:
+        # We are going to need to handle the
+        # case where there is no `cont` and
+        # we still have source to process.
+        # - SL
     }
 
     return;
@@ -96,7 +106,7 @@ sub skip_token;
 
 sub log {
     my ($self, @msg) = @_;
-    (DEBUG > 1) ? Carp::cluck( @msg ) : warn( @msg );
+    (DEBUG > 1) ? Carp::cluck( @msg ) : warn( @msg, "\n" );
     return;
 }
 
@@ -118,6 +128,8 @@ sub discard_whitespace_and_peek {
 
 sub root {
     my ($self) = @_;
+
+    $self->log( 'Entering `root`' ) if DEBUG;
 
     my $char = $self->discard_whitespace_and_peek;
 
@@ -144,6 +156,8 @@ sub root {
 
 sub end {
     my ($self) = @_;
+
+    $self->log( 'Entering `end`' ) if DEBUG;
     # NOTE:
     # this token type works for
     # now, but we might want to
@@ -155,22 +169,22 @@ sub end {
 sub start {
     my ($self) = @_;
 
+    $self->log( 'Entering `start`' ) if DEBUG;
+
     my $char = $self->discard_whitespace_and_peek;
 
     if ( defined $char ) {
         if ( $char eq '{' ) {
-            $self->skip;
-            return token( START_OBJECT ), \&object;
+            return $self->object;
         }
         elsif ( $char eq '[' ) {
-            $self->skip;
-            return token( START_ARRAY ), \&array;
+            return $self->array;
         }
         elsif ( $char eq '"' ) {
-            return $self->string;
+            return $self->string_token;
         }
         elsif ( $char eq '-' ||  $char =~ /^[0-9]$/ ) {
-            return $self->number;
+            return $self->number_token;
         }
         elsif ( $char eq 't' ) {
             return $self->true_literal;
@@ -179,7 +193,7 @@ sub start {
             return $self->false_literal;
         }
         elsif ( $char eq 'n' ) {
-            return $self->nil_literal;
+            return $self->null_literal;
         }
         else {
             return token( ERROR, 'Unrecognized start character `'.$char.'`' );
@@ -193,12 +207,18 @@ sub start {
 sub object {
     my ($self) = @_;
 
+    $self->log( 'Entering `object`' ) if DEBUG;
+
     my $char = $self->discard_whitespace_and_peek;
 
     if ( defined $char ) {
-        if ( $char eq '}' ) {
+        if ( $char eq '{' ) {
             $self->skip;
-            return token( END_OBJECT );
+            return token( START_OBJECT ), \&object;
+        }
+        elsif ( $char eq '}' ) {
+            $self->skip;
+            return token( END_OBJECT ), \&start;
         }
         elsif ( $char eq '"' ) {
             return token( START_PROPERTY ), \&property;
@@ -215,11 +235,13 @@ sub object {
 sub property {
     my ($self) = @_;
 
+    $self->log( 'Entering `property`' ) if DEBUG;
+
     my $char = $self->discard_whitespace_and_peek;
 
     if ( defined $char ) {
         if ( $char eq '"' ) {
-            return $self->string, \&property;
+            return $self->string_token, \&property;
         }
         elsif ( $char eq ':' ) {
             $self->skip;
@@ -250,27 +272,40 @@ sub property {
 
 sub end_property {
     my ($self) = @_;
+
+    $self->log( 'Entering `end_property`' ) if DEBUG;
+
     return token( END_PROPERTY ), \&object;
 }
 
 sub array {
     my ($self) = @_;
 
+    $self->log( 'Entering `array`' ) if DEBUG;
+
     my $char = $self->discard_whitespace_and_peek;
 
     if ( defined $char ) {
-        if ( $char eq ']' ) {
+        if ( $char eq '[' ) {
             $self->skip;
-            return token( END_ARRAY );
+            return token( START_ARRAY ), \&array;
         }
-        else {
-            return token( ERROR, 'Expected end of array' );
+        elsif ( $char eq ']' ) {
+            $self->skip;
+            return token( END_ARRAY ), \&start;
         }
+        elsif ( $char eq ',' ) {
+            $self->skip;
+        }
+
+        return $self->start, \&array;
     }
     else {
         return $self->end;
     }
 }
+
+## ....
 
 our %ESCAPE_CHARS = (
     b => "\b",
@@ -283,27 +318,32 @@ our %ESCAPE_CHARS = (
     '"' => '"',
 );
 
-sub string {
+sub string_token {
     my ($self) = @_;
 
+    $self->log( 'Entering `string_token`' ) if DEBUG;
+
     my $char = $self->get;
+
+    return token( ERROR, 'String must begin with a double-quote character' )
+        unless $char eq '"';
 
     if ( defined $char ) {
 
         my $acc = '';
         while (1) {
             $char = $self->get;
-            return token( ERROR, "Unterminated string" ) unless defined $char;
+            return token( ERROR, 'Unterminated string' ) unless defined $char;
 
             last if $char eq '"';
 
             if ($char eq "\\") {
                 my $escape_char = $self->get;
-                return token( ERROR, "Unfinished escape sequence" )
+                return token( ERROR, 'Unfinished escape sequence' )
                     unless defined $escape_char;
-                return token( ERROR, "\\u sequence not yet supported" )
+                return token( ERROR, '\u sequence not yet supported' )
                     if $escape_char eq 'u';
-                return token( ERROR, "Invalid escape sequence \\$escape_char" )
+                return token( ERROR, 'Invalid escape sequence $escape_char' )
                     unless exists $ESCAPE_CHARS{ $escape_char };
                 $acc .= $ESCAPE_CHARS{ $escape_char };
             }
@@ -319,24 +359,72 @@ sub string {
     }
 }
 
-sub number {
+sub number_token {
     my ($self) = @_;
-    return token( ERROR, 'Unimplemented (number)' );
+
+    $self->log( 'Entering `number_token`' ) if DEBUG;
+
+    return token( ERROR, 'Unimplemented (number_token)' );
 }
 
 sub true_literal {
-    my ($self) = @_;
-    return token( ERROR, 'Unimplemented (true)' );
+    $_[0]->_match_literal(
+        ['t', 'r', 'u', 'e'],
+        ADD_TRUE,
+        'Expected end of `true` literal, not(%s)'
+    );
 }
 
 sub false_literal {
-    my ($self) = @_;
-    return token( ERROR, 'Unimplemented (false)' );
+    $_[0]->_match_literal(
+        ['f', 'a', 'l', 's', 'e'],
+        ADD_FALSE,
+        'Expected end of `false` literal, not(%s)'
+    );
 }
 
-sub nil_literal {
-    my ($self) = @_;
-    return token( ERROR, 'Unimplemented (nil)' );
+sub null_literal {
+    $_[0]->_match_literal(
+        ['n', 'u', 'l', 'l'],
+        ADD_NULL,
+        'Expected end of `null` literal, not(%s)'
+    );
+}
+
+## ....
+
+sub _match_literal {
+    my ($self, $expected, $token_type, $error_message) = @_;
+
+    $self->log( 'Entering `' . (join '' => @$expected) . '`' ) if DEBUG;
+
+    my $char = $self->discard_whitespace_and_peek;
+
+    if ( defined $char ) {
+
+        my $received = '';
+        my @expected = @$expected;
+        while ( @expected ) {
+            if ( $char eq shift @expected ) {
+                $received .= $char;
+                $self->skip;
+                $char = $self->peek;
+            }
+            else {
+                last;
+            }
+        }
+
+        if ( @expected ) {
+            return token( ERROR, sprintf( $error_message, $received ) );
+        }
+        else {
+            return token( $token_type );
+        }
+    }
+    else {
+        return $self->end;
+    }
 }
 
 1;
