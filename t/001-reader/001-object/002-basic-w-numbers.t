@@ -14,8 +14,7 @@ tokens_match(
     '{"foo":10}',
     [
         token(START_OBJECT),
-            token(START_PROPERTY),
-                token(ADD_STRING, "foo"),
+            token(START_PROPERTY, "foo"),
                 token(ADD_INT, 10),
             token(END_PROPERTY),
         token(END_OBJECT),

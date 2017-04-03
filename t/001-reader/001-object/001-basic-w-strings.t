@@ -14,8 +14,7 @@ tokens_match(
     '{"foo":"bar"}',
     [
         token(START_OBJECT),
-            token(START_PROPERTY),
-                token(ADD_STRING, "foo"),
+            token(START_PROPERTY, "foo"),
                 token(ADD_STRING, "bar"),
             token(END_PROPERTY),
         token(END_OBJECT),
@@ -27,8 +26,7 @@ tokens_match(
     '{  "foo" :      "bar"   }',
     [
         token(START_OBJECT),
-            token(START_PROPERTY),
-                token(ADD_STRING, "foo"),
+            token(START_PROPERTY, "foo"),
                 token(ADD_STRING, "bar"),
             token(END_PROPERTY),
         token(END_OBJECT),

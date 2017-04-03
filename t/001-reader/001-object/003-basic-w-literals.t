@@ -14,8 +14,7 @@ tokens_match(
     '{"foo":true}',
     [
         token(START_OBJECT),
-            token(START_PROPERTY),
-                token(ADD_STRING, "foo"),
+            token(START_PROPERTY, "foo"),
                 token(ADD_TRUE),
             token(END_PROPERTY),
         token(END_OBJECT),
@@ -27,8 +26,7 @@ tokens_match(
     '{"foo":false}',
     [
         token(START_OBJECT),
-            token(START_PROPERTY),
-                token(ADD_STRING, "foo"),
+            token(START_PROPERTY, "foo"),
                 token(ADD_FALSE),
             token(END_PROPERTY),
         token(END_OBJECT),
@@ -40,8 +38,7 @@ tokens_match(
     '{"foo":null}',
     [
         token(START_OBJECT),
-            token(START_PROPERTY),
-                token(ADD_STRING, "foo"),
+            token(START_PROPERTY, "foo"),
                 token(ADD_NULL),
             token(END_PROPERTY),
         token(END_OBJECT),

@@ -210,7 +210,7 @@ sub object {
     if ( defined $char ) {
         if ( $char eq '{' ) {
             $self->skip_next_char;
-            $self->{next_state} = \&object;
+            $self->{next_state} = \&property;
             return token( START_OBJECT );
         }
         elsif ( $char eq '}' ) {
@@ -218,12 +218,12 @@ sub object {
             $self->{next_state} = \&start;
             return token( END_OBJECT );
         }
-        elsif ( $char eq '"' ) {
-            $self->{next_state} = \&property;
-            return token( START_PROPERTY );
+        elsif ( $char eq ',' ) {
+            $self->skip_next_char;
+            return $self->property;
         }
         else {
-            return token( ERROR, 'Expected end of object or start of property name' );
+            return token( ERROR, 'Expected end of object or start of property name but found ('.$char.')' );
         }
     }
     else {
@@ -240,8 +240,12 @@ sub property {
 
     if ( defined $char ) {
         if ( $char eq '"' ) {
+            my $key = $self->string_literal;
+
+            return $key if is_error( $key );
+
             $self->{next_state} = \&property;
-            return $self->string_literal;
+            return token( START_PROPERTY, $key->payload );
         }
         elsif ( $char eq ':' ) {
             $self->skip_next_char;
@@ -249,22 +253,12 @@ sub property {
 
             return $value if is_error( $value );
 
-            $char = $self->discard_whitespace_and_peek;
-
-            # discard the , and end the property
-            # which will return control to the
-            # object method, which will look for
-            # another property or end the object
-            if ( $char eq ',' ) {
-                $self->skip_next_char;
-            }
-
             $self->{next_state} = \&end_property;
 
             return $value;
         }
         else {
-            return token( ERROR, 'Expected end of array' );
+            return $self->object;
         }
     }
     else {
