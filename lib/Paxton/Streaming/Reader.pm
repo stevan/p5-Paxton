@@ -361,7 +361,67 @@ sub numeric_literal {
 
     $self->log( 'Entering `numeric_literal`' ) if DEBUG;
 
-    return token( ERROR, 'Unimplemented (numeric_literal)' );
+    my $char = $self->peek_next_char;
+
+    if ( defined $char ) {
+
+        my $ttype  = ADD_INT;
+        my $number = '';
+
+        if ( $char eq '-' ) {
+            $number .= $char;
+            $self->skip_next_char;
+        }
+
+        while (1) {
+            $char = $self->peek_next_char;
+
+            return token( ERROR, 'Unexpected end of input' )
+                if not defined $char;
+
+            if ( $char =~ /^\d$/ ) {
+                $number .= $char;
+                $self->skip_next_char;
+            }
+            elsif ( $char eq '.' ) {
+                # if the previous character is not
+                # a digit, then we need to error here
+                return token( ERROR, 'Invalid number ('.$number.') cannot be followed by `.`' )
+                    if $number eq '' || $number eq '-';
+
+                $ttype   = ADD_FLOAT;
+                $number .= $char;
+                $self->skip_next_char;
+            }
+            elsif ( $char eq 'e' ) {
+                # $char = _peek_char( $_[0] );
+                # if ( defined $char && $char =~ /e/i ) {
+                #     push @acc, $char;
+                #     chop $_[0]->{buffer};
+                #     $char = _peek_char( $_[0] );
+                #     if ( defined $char && ($char eq '+' || $char eq '-') ) {
+                #         push @acc, $char;
+                #         chop $_[0]->{buffer};
+                #     }
+                #     $digit = _accum_digits( $_[0] );
+                #     return [ ERROR, 'Expected digits but got '.($_[0]->{buffer} || 'EOF') ]
+                #         if $digit eq '';
+                #     push @acc, $digit;
+                # }
+            }
+            else {
+                last;
+            }
+        }
+
+        return token( ERROR, 'Invalid number ('.$number.') has no digits in it' )
+            if $number !~ /\d/;
+
+        return token( $ttype, $number );
+    }
+    else {
+        return $self->end;
+    }
 }
 
 sub true_literal {
