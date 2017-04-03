@@ -3,72 +3,50 @@
 use strict;
 use warnings;
 
+use lib 't/lib/';
+
 use Test::More;
+use Test::Paxton;
 
-BEGIN {
-    use_ok('Paxton::Streaming::Reader');
-    use_ok('Paxton::Core::Tokens');
-}
+use Paxton::Core::Tokens;
 
-subtest '... simple object w/ 2 keys and string values' => sub {
-    my @expected = (
-        START_OBJECT,
-            START_PROPERTY,
-                ADD_STRING,
-                ADD_STRING,
-            END_PROPERTY,
-            START_PROPERTY,
-                ADD_STRING,
-                ADD_STRING,
-            END_PROPERTY,
-        END_OBJECT,
-    );
+tokens_match(
+    '{ "foo" : "bar" , "baz" : "gorch" }',
+    [
+        token(START_OBJECT),
+            token(START_PROPERTY),
+                token(ADD_STRING, "foo"),
+                token(ADD_STRING, "bar"),
+            token(END_PROPERTY),
+            token(START_PROPERTY),
+                token(ADD_STRING, "baz"),
+                token(ADD_STRING, "gorch"),
+            token(END_PROPERTY),
+        token(END_OBJECT),
+    ],
+    '... simple object w/ 2 keys and string values'
+);
 
-    my $r = Paxton::Streaming::Reader->new_from_string('{ "foo" : "bar" , "baz" : "gorch" }');
-    isa_ok($r, 'Paxton::Streaming::Reader');
-
-    foreach my $e ( @expected ) {
-        my $t = $r->next_token;
-        ok(is_token( $t ), '... we got a token');
-        is($t->type, $e, '... and it is the expected token ('.$t->type.')');
-        #warn( $t->dump );
-    }
-
-    is( $r->next_token, undef, '... parsing is complete' );
-    ok( $r->is_done, '... the reader is done' );
-};
-
-subtest '... simple object w/ 2 keys and string values' => sub {
-    my @expected = (
-        START_OBJECT,
-            START_PROPERTY,
-                ADD_STRING,
-                ADD_STRING,
-            END_PROPERTY,
-            START_PROPERTY,
-                ADD_STRING,
-                ADD_STRING,
-            END_PROPERTY,
-            START_PROPERTY,
-                ADD_STRING,
-                ADD_STRING,
-            END_PROPERTY,
-        END_OBJECT,
-    );
-
-    my $r = Paxton::Streaming::Reader->new_from_string('{ "foo" : "bar" , "baz" : "gorch", "bob" : "alice" }');
-    isa_ok($r, 'Paxton::Streaming::Reader');
-
-    foreach my $e ( @expected ) {
-        my $t = $r->next_token;
-        ok(is_token( $t ), '... we got a token');
-        is($t->type, $e, '... and it is the expected token ('.$t->type.')');
-        #warn( $t->dump );
-    }
-
-    is( $r->next_token, undef, '... parsing is complete' );
-    ok( $r->is_done, '... the reader is done' );
-};
+tokens_match(
+    '{ "foo" : "bar" ,          "baz"     :"gorch",  "bob":           "alice"}',
+    [
+        token(START_OBJECT),
+            token(START_PROPERTY),
+                token(ADD_STRING, "foo"),
+                token(ADD_STRING, "bar"),
+            token(END_PROPERTY),
+            token(START_PROPERTY),
+                token(ADD_STRING, "baz"),
+                token(ADD_STRING, "gorch"),
+            token(END_PROPERTY),
+            token(START_PROPERTY),
+                token(ADD_STRING, "bob"),
+                token(ADD_STRING, "alice"),
+            token(END_PROPERTY),
+        token(END_OBJECT),
+    ],
+    '... simple object w/ 3 keys, string values and random whitespace'
+);
 
 
 done_testing;
