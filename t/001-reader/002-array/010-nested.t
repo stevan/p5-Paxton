@@ -21,4 +21,17 @@ tokens_match(
     '... simple nested array'
 );
 
+tokens_match(
+    '[[[]]]',
+    [
+        token(START_ARRAY),
+            token(START_ARRAY),
+                token(START_ARRAY),
+                token(END_ARRAY),
+            token(END_ARRAY),
+        token(END_ARRAY)
+    ],
+    '... simple nested array'
+);
+
 done_testing;

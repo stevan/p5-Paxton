@@ -25,6 +25,7 @@ our %HAS; BEGIN {
     %HAS = (
         source     => sub { die 'You must specify a `source` to use.'},
         next_state => sub { \&root },
+        depth      => sub { 0 },
     )
 }
 
@@ -282,39 +283,21 @@ sub array {
     if ( defined $char ) {
         if ( $char eq '[' ) {
             $self->skip_next_char;
-            $self->{next_state} = \&array_item;
+            $self->{depth}++;
+            $self->{next_state} = \&array;
             return token( START_ARRAY );
         }
         elsif ( $char eq ']' ) {
             $self->skip_next_char;
-            $self->{next_state} = \&start;
+            $self->{depth}--;
+            $self->{next_state} = $self->{depth} == 0 ? \&start : \&array;
             return token( END_ARRAY );
         }
         elsif ( $char eq ',' ) {
             $self->skip_next_char;
-            return $self->array_item;
         }
 
         $self->{next_state} = \&array;
-        return $self->start;
-    }
-    else {
-        return $self->end;
-    }
-}
-
-sub array_item {
-    my ($self) = @_;
-
-    $self->log( 'Entering `array_item`' ) if DEBUG;
-
-    my $char = $self->discard_whitespace_and_peek;
-
-    if ( defined $char ) {
-        # we know we are done now ...
-        return $self->array if $char eq ']';
-        # just keep handling tokens ...
-        $self->{next_state} = \&array_item;
         return $self->start;
     }
     else {
