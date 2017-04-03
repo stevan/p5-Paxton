@@ -23,8 +23,8 @@ use constant DEBUG => $ENV{PAXTON_READER_DEBUG} // 0;
 our @ISA; BEGIN { @ISA = ('UNIVERSAL::Object') }
 our %HAS; BEGIN {
     %HAS = (
-        source => sub { die 'You must specify a `source` to use.'},
-        cont   => sub { \&root },
+        source     => sub { die 'You must specify a `source` to use.'},
+        next_state => sub { \&root },
     )
 }
 
@@ -62,37 +62,34 @@ sub is_done { # this needs a better name
 sub next_token {
     my ($self) = @_;
 
-    if ( my $next = $self->{cont} ) {
+    if ( my $next = delete $self->{next_state} ) {
 
-        $self->log( '>> CC => ', MOP::Method->new( $next )->name ) if DEBUG;
+        $self->log( '>> CURRENT => ', MOP::Method->new( $next )->name ) if DEBUG;
 
-        my ($token, $cont) = $self->$next();
+        my $token = $self->$next();
 
         (defined $token && is_token( $token ))
             || Paxton::Core::Exception->new( message => 'Invalid token ('.$token.')' )->throw;
 
         return if $token->type == NO_TOKEN;
 
-        if ( $cont ) {
-            $self->{cont} = $cont;
-        }
-        elsif ( is_error( $token ) ) {
+        if ( is_error( $token ) ) {
             $self->log( 'Encountered error: ', $token->payload ) if DEBUG;
         }
-        else {
+        elsif ( not exists $self->{next_state} ) {
             Paxton::Core::Exception
-                ->new( message => 'No continuation specified with '.$token->as_string )
+                ->new( message => 'Next state is not specified after '.$token->as_string )
                 ->throw;
         }
 
-        $self->log( '<< NC <= ', $self->{cont} ? MOP::Method->new( $self->{cont} )->name : 'NONE' ) if DEBUG;
+        $self->log( '<< NEXT <= ', $self->{next_state} ? MOP::Method->new( $self->{next_state} )->name : 'NONE' ) if DEBUG;
 
         return $token;
     }
     else {
         # TODO:
         # We are going to need to handle the
-        # case where there is no `cont` and
+        # case where there is no `next_state` and
         # we still have source to process.
         # - SL
     }
@@ -181,10 +178,10 @@ sub start {
             return $self->array;
         }
         elsif ( $char eq '"' ) {
-            return $self->string_token;
+            return $self->string_literal;
         }
         elsif ( $char eq '-' ||  $char =~ /^[0-9]$/ ) {
-            return $self->number_token;
+            return $self->numeric_literal;
         }
         elsif ( $char eq 't' ) {
             return $self->true_literal;
@@ -214,14 +211,17 @@ sub object {
     if ( defined $char ) {
         if ( $char eq '{' ) {
             $self->skip;
-            return token( START_OBJECT ), \&object;
+            $self->{next_state} = \&object;
+            return token( START_OBJECT );
         }
         elsif ( $char eq '}' ) {
             $self->skip;
-            return token( END_OBJECT ), \&start;
+            $self->{next_state} = \&start;
+            return token( END_OBJECT );
         }
         elsif ( $char eq '"' ) {
-            return token( START_PROPERTY ), \&property;
+            $self->{next_state} = \&property;
+            return token( START_PROPERTY );
         }
         else {
             return token( ERROR, 'Expected end of object or start of property name' );
@@ -241,7 +241,8 @@ sub property {
 
     if ( defined $char ) {
         if ( $char eq '"' ) {
-            return $self->string_token, \&property;
+            $self->{next_state} = \&property;
+            return $self->string_literal;
         }
         elsif ( $char eq ':' ) {
             $self->skip;
@@ -259,7 +260,9 @@ sub property {
                 $self->skip;
             }
 
-            return $value, \&end_property;
+            $self->{next_state} = \&end_property;
+
+            return $value;
         }
         else {
             return token( ERROR, 'Expected end of array' );
@@ -275,7 +278,9 @@ sub end_property {
 
     $self->log( 'Entering `end_property`' ) if DEBUG;
 
-    return token( END_PROPERTY ), \&object;
+    $self->{next_state} = \&object;
+
+    return token( END_PROPERTY );
 }
 
 sub array {
@@ -288,17 +293,20 @@ sub array {
     if ( defined $char ) {
         if ( $char eq '[' ) {
             $self->skip;
-            return token( START_ARRAY ), \&array;
+            $self->{next_state} = \&array;
+            return token( START_ARRAY );
         }
         elsif ( $char eq ']' ) {
             $self->skip;
-            return token( END_ARRAY ), \&start;
+            $self->{next_state} = \&start;
+            return token( END_ARRAY );
         }
         elsif ( $char eq ',' ) {
             $self->skip;
         }
 
-        return $self->start, \&array;
+        $self->{next_state} = \&array;
+        return $self->start;
     }
     else {
         return $self->end;
@@ -318,10 +326,10 @@ our %ESCAPE_CHARS = (
     '"' => '"',
 );
 
-sub string_token {
+sub string_literal {
     my ($self) = @_;
 
-    $self->log( 'Entering `string_token`' ) if DEBUG;
+    $self->log( 'Entering `string_literal`' ) if DEBUG;
 
     my $char = $self->get;
 
@@ -359,12 +367,12 @@ sub string_token {
     }
 }
 
-sub number_token {
+sub numeric_literal {
     my ($self) = @_;
 
-    $self->log( 'Entering `number_token`' ) if DEBUG;
+    $self->log( 'Entering `numeric_literal`' ) if DEBUG;
 
-    return token( ERROR, 'Unimplemented (number_token)' );
+    return token( ERROR, 'Unimplemented (numeric_literal)' );
 }
 
 sub true_literal {
