@@ -97,6 +97,10 @@ sub Paxton::Core::Tokens::Token::dump {
     Data::Dumper::Dumper( $_[0] );
 }
 
+sub Paxton::Core::Tokens::Token::as_string {
+    sprintf 'token( %s => %s )' => $_[0]->type, join ', ' => $_[0]->payload;
+}
+
 sub is_token {
     (Scalar::Util::blessed($_[0]) && $_[0]->isa('Paxton::Core::Tokens::Token'))
 }
