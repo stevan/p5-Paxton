@@ -460,6 +460,8 @@ sub numeric_literal {
                 $self->skip_next_char;
             }
             elsif ( $char eq 'e' ) {
+                Carp::confess('Unimplemented (scientific notation)');
+
                 # $char = _peek_char( $_[0] );
                 # if ( defined $char && $char =~ /e/i ) {
                 #     push @acc, $char;
