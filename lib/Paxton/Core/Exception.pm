@@ -10,6 +10,8 @@ use UNIVERSAL::Object;
 
 use Devel::StackTrace;
 
+use overload '""' => 'to_string';
+
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
 
@@ -19,7 +21,7 @@ our %HAS; BEGIN {
         message      => sub {},
         _stack_trace => sub {
             Devel::StackTrace->new(
-                #skip_frames  => 1,
+                skip_frames  => 4,
                 #frame_filter => sub {}
             )
         }
