@@ -107,10 +107,6 @@ sub log {
     return;
 }
 
-# stack methods
-
-sub stack_size { 1 }
-
 # delegated charbuffer methods
 
 sub get_next_char  { $_[0]->{source}->get  }
