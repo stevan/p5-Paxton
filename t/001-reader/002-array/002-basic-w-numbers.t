@@ -53,4 +53,15 @@ tokens_match(
     '... simple array w/ float items'
 );
 
+tokens_match(
+    '[ 0, -0.1 ]',
+    [
+        token(START_ARRAY),
+            token(ADD_INT, 0),
+            token(ADD_FLOAT, -0.1),
+        token(END_ARRAY),
+    ],
+    '... simple array w/ mixed items'
+);
+
 done_testing;

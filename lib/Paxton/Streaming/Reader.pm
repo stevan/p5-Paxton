@@ -206,7 +206,7 @@ sub object {
     if ( defined $char ) {
         if ( $char eq '{' ) {
             $self->skip_next_char;
-            $self->{next_state} = \&property;
+            $self->{next_state} = \&start_property;
             return token( START_OBJECT );
         }
         elsif ( $char eq '}' ) {
@@ -216,7 +216,7 @@ sub object {
         }
         elsif ( $char eq ',' ) {
             $self->skip_next_char;
-            return $self->property;
+            return $self->start_property;
         }
         else {
             return token( ERROR, 'Expected end of object or start of property name but found ('.$char.')' );
@@ -227,10 +227,10 @@ sub object {
     }
 }
 
-sub property {
+sub start_property {
     my ($self) = @_;
 
-    $self->log( 'Entering `property`' ) if DEBUG;
+    $self->log( 'Entering `start_property`' ) if DEBUG;
 
     my $char = $self->discard_whitespace_and_peek;
 
@@ -240,7 +240,7 @@ sub property {
 
             return $key if is_error( $key );
 
-            $self->{next_state} = \&property;
+            $self->{next_state} = \&start_property;
             return token( START_PROPERTY, $key->payload );
         }
         elsif ( $char eq ':' ) {
@@ -282,7 +282,7 @@ sub array {
     if ( defined $char ) {
         if ( $char eq '[' ) {
             $self->skip_next_char;
-            $self->{next_state} = \&array;
+            $self->{next_state} = \&array_item;
             return token( START_ARRAY );
         }
         elsif ( $char eq ']' ) {
@@ -292,9 +292,29 @@ sub array {
         }
         elsif ( $char eq ',' ) {
             $self->skip_next_char;
+            return $self->array_item;
         }
 
         $self->{next_state} = \&array;
+        return $self->start;
+    }
+    else {
+        return $self->end;
+    }
+}
+
+sub array_item {
+    my ($self) = @_;
+
+    $self->log( 'Entering `array_item`' ) if DEBUG;
+
+    my $char = $self->discard_whitespace_and_peek;
+
+    if ( defined $char ) {
+        # we know we are done now ...
+        return $self->array if $char eq ']';
+        # just keep handling tokens ...
+        $self->{next_state} = \&array_item;
         return $self->start;
     }
     else {

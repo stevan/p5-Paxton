@@ -64,4 +64,20 @@ tokens_match(
     '... simple object w/ two float values'
 );
 
+tokens_match(
+    '{ "foo":0, "bar": -0.1 }',
+    [
+        token(START_OBJECT),
+            token(START_PROPERTY, "foo"),
+                token(ADD_INT, 0),
+            token(END_PROPERTY),
+            token(START_PROPERTY, "bar"),
+                token(ADD_FLOAT, -0.1),
+            token(END_PROPERTY),
+        token(END_OBJECT),
+    ],
+    '... simple object w/ mixed values'
+);
+
+
 done_testing;
