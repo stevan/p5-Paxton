@@ -85,7 +85,7 @@ sub next_token {
         return if $token->type == NO_TOKEN;
 
         if ( is_error( $token ) ) {
-            $self->log( 'Encountered error: ', $token->payload ) if DEBUG;
+            $self->log( 'Encountered error: ', $token->value ) if DEBUG;
         }
         elsif ( not exists $self->{next_state} ) {
             Paxton::Core::Exception
@@ -280,7 +280,7 @@ sub property {
 
             push @{ $self->{context} } => IN_PROPERTY;
             $self->{next_state} = \&property;
-            return token( START_PROPERTY, $key->payload );
+            return token( START_PROPERTY, $key->value );
         }
         elsif ( $char eq ':' ) {
             $self->skip_next_char;

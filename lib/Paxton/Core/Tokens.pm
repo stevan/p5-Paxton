@@ -81,16 +81,16 @@ sub import_into {
 # - SL
 
 sub token {
-    my ($type, @payload) = @_;
+    my ($type, $value) = @_;
 
     (exists $TOKEN_MAP{ $type })
         || Paxton::Core::Exception->new( message => 'Unknown token type (' . $type . ')' )->throw;
 
-    return bless [ $type, @payload ] => 'Paxton::Core::Tokens::Token';
+    return bless [ $type, $value ] => 'Paxton::Core::Tokens::Token';
 }
 
-sub Paxton::Core::Tokens::Token::type    { $_[0]->[0] }
-sub Paxton::Core::Tokens::Token::payload { @{ $_[0] }[ 1 .. $#{ $_[0] } ] }
+sub Paxton::Core::Tokens::Token::type  { $_[0]->[0] }
+sub Paxton::Core::Tokens::Token::value { $_[0]->[1] }
 
 sub Paxton::Core::Tokens::Token::dump {
     require Data::Dumper;
@@ -98,7 +98,17 @@ sub Paxton::Core::Tokens::Token::dump {
 }
 
 sub Paxton::Core::Tokens::Token::as_string {
-    sprintf 'token( %s => %s )' => $_[0]->type, join ', ' => $_[0]->payload;
+    my $out  = 'token( '.$_[0]->type;
+
+    if ( $_[0]->value ) {
+        my $needs_quotes = $_[0]->type == ADD_STRING || $_[0]->type == START_PROPERTY;
+
+        $out .= ', '
+             .($needs_quotes ? '\'' : '')
+             .$_[0]->value
+             .($needs_quotes ? '\'' : '');
+    }
+    return $out.' )';
 }
 
 sub is_token {
