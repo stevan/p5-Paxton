@@ -100,7 +100,7 @@ sub Paxton::Core::Tokens::Token::dump {
 sub Paxton::Core::Tokens::Token::as_string {
     my $out  = 'token( '.$_[0]->type;
 
-    if ( $_[0]->value ) {
+    if ( defined $_[0]->value ) {
         my $needs_quotes = $_[0]->type == ADD_STRING || $_[0]->type == START_PROPERTY;
 
         $out .= ', '
