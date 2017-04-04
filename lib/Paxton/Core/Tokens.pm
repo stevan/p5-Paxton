@@ -130,11 +130,11 @@ sub is_error {
 }
 
 sub is_struct_start {
-    ($_[0]->type == $TOKEN_MAP{START_OBJECT} || $_[0]->type == $TOKEN_MAP{START_ARRAY})
+    ($_[0]->type == $TOKEN_MAP{START_OBJECT} || $_[0]->type == $TOKEN_MAP{START_ARRAY} || $_[0]->type == $TOKEN_MAP{START_PROPERTY})
 }
 
 sub is_struct_end {
-    ($_[0]->type == $TOKEN_MAP{END_OBJECT} || $_[0]->type == $TOKEN_MAP{END_ARRAY})
+    ($_[0]->type == $TOKEN_MAP{END_OBJECT} || $_[0]->type == $TOKEN_MAP{END_ARRAY} || $_[0]->type == $TOKEN_MAP{END_PROPERTY})
 }
 
 1;
