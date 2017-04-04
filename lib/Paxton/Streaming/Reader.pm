@@ -4,6 +4,7 @@ package Paxton::Streaming::Reader;
 use strict;
 use warnings;
 
+use Carp         ();
 use Scalar::Util ();
 use UNIVERSAL::Object;
 use MOP::Method;
@@ -63,11 +64,6 @@ sub BUILD {
 
 # iteration API
 
-sub is_done { # this needs a better name
-    my ($self) = @_;
-    $self->{source}->is_done;
-}
-
 sub next_token {
     my ($self) = @_;
 
@@ -107,8 +103,6 @@ sub next_token {
 
     return;
 }
-
-sub skip_token;
 
 # logging
 

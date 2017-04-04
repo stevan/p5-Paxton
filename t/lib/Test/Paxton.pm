@@ -49,7 +49,7 @@ sub tokens_match {
         }
 
         Test::More::is( $r->next_token, undef, '... parsing is complete' );
-        Test::More::ok( $r->is_done, '... the reader is done' );
+        Test::More::ok( $r->{source}->is_done, '... the reader is done' );
     });
 }
 
