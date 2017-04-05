@@ -5,7 +5,6 @@ use strict;
 use warnings;
 
 use Scalar::Util ();
-use UNIVERSAL::Object;
 
 use Paxton::Core::Exception;
 
@@ -19,12 +18,12 @@ use constant IN_OBJECT   => Scalar::Util::dualvar( 2, 'IN_OBJECT'   );
 use constant IN_ARRAY    => Scalar::Util::dualvar( 3, 'IN_ARRAY'    );
 use constant IN_PROPERTY => Scalar::Util::dualvar( 4, 'IN_PROPERTY' );
 
-our @ISA; BEGIN { @ISA = ('UNIVERSAL::Object') }
+# constructor ...
 
-# use an array based instance here
-
-sub REPR   { +[] }
-sub CREATE { $_[0]->REPR }
+sub new {
+    my ($class) = @_;
+    return bless [] => $class;
+}
 
 # predicates
 
