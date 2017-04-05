@@ -32,7 +32,14 @@ our %HAS;  BEGIN {
     %HAS = (
         source     => sub { die 'You must specify a `source` to read from.'},
         next_state => sub { \&root },
-        context    => sub { Paxton::Core::Context->new },
+        context    => sub {
+            Paxton::Core::Context->new_with_handlers(
+                __DEFAULT__ => \&start,
+                IN_OBJECT   => \&object,
+                IN_ARRAY    => \&array,
+                IN_PROPERTY => \&end_property,
+            )
+        },
     )
 }
 
@@ -225,27 +232,14 @@ sub object {
         }
         elsif ( $char eq '}' ) {
             # close any open properties ...
-            if ( $self->{context}->current_context == $self->{context}->IN_PROPERTY ) {
-                return $self->end_property;
-            }
+            return $self->end_property
+                if $self->{context}->in_property_context;
 
             # now close any objects ...
             $self->skip_next_char;
-            if ( $self->{context}->current_context == $self->{context}->IN_OBJECT ) {
+            if ( $self->{context}->in_object_context ) {
                 $self->{context}->leave_current_context;
-                my $ctx = $self->{context}->current_context;
-                if ( not defined $ctx ) {
-                    $self->{next_state} = \&start;
-                }
-                elsif ( $ctx == $self->{context}->IN_OBJECT ) {
-                    $self->{next_state} = \&object;
-                }
-                elsif ( $ctx == $self->{context}->IN_ARRAY ) {
-                    $self->{next_state} = \&array;
-                }
-                elsif ( $ctx == $self->{context}->IN_PROPERTY ) {
-                    $self->{next_state} = \&end_property;
-                }
+                $self->{next_state} = $self->{context}->restore_previous_context;
             }
             else {
                 $self->{next_state} = \&start;
@@ -309,9 +303,8 @@ sub end_property {
 
     $self->log( 'Entering `end_property`' ) if DEBUG;
 
-    if ( $self->{context}->current_context == $self->{context}->IN_PROPERTY ) {
-        $self->{context}->leave_current_context;
-    }
+    $self->{context}->leave_current_context
+        if $self->{context}->in_property_context;
 
     $self->{next_state} = \&object;
     return token( END_PROPERTY );
@@ -333,22 +326,9 @@ sub array {
         }
         elsif ( $char eq ']' ) {
             $self->skip_next_char;
-            if ( $self->{context}->current_context == $self->{context}->IN_ARRAY ) {
-
+            if ( $self->{context}->in_array_context ) {
                 $self->{context}->leave_current_context;
-                my $ctx = $self->{context}->current_context;
-                if ( not defined $ctx ) {
-                    $self->{next_state} = \&start;
-                }
-                elsif ( $ctx == $self->{context}->IN_OBJECT ) {
-                    $self->{next_state} = \&object;
-                }
-                elsif ( $ctx == $self->{context}->IN_ARRAY ) {
-                    $self->{next_state} = \&array;
-                }
-                elsif ( $ctx == $self->{context}->IN_PROPERTY ) {
-                    $self->{next_state} = \&end_property;
-                }
+                $self->{next_state} = $self->{context}->restore_previous_context;
             }
             else {
                 $self->{next_state} = \&start;
