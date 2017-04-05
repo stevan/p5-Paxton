@@ -28,7 +28,6 @@ our @DOES; BEGIN { @DOES = ('Paxton::Core::API::Writer') }
 our %HAS;  BEGIN {
     %HAS = (
         sink    => sub { die 'You must specify a `sink` to write to.'},
-        #context => sub { +[] },
     )
 }
 
@@ -69,54 +68,48 @@ sub BUILD {
 
 sub put_token {
     my ($self, $token) = @_;
-    if ( my $out = $self->_token_to_string( $token ) ) {
-        $self->{sink}->print( $out );
-    }
-}
 
+    (defined $token && is_token($token))
+        || Paxton::Core::Exception->new( message => 'Invalid token: '.$token )->throw;
 
-# ...
-
-sub _token_to_string {
-    my ($self, $token) = @_;
-
+    my $sink       = $self->{sink};
     my $token_type = $token->type;
 
     if ( $token_type == START_OBJECT ) {
-        return '{';
+        $sink->print('{');
     }
     elsif ( $token_type == END_OBJECT ) {
-        return '}';
+        $sink->print('}');
     }
-    if ( $token_type == START_PROPERTY ) {
-        return sprintf '"%s":' => $token->value;
+    elsif ( $token_type == START_PROPERTY ) {
+        $sink->printf('"%s":' => $token->value);
     }
-    if ( $token_type == END_PROPERTY ) {
-        return;
+    elsif ( $token_type == END_PROPERTY ) {
+        ;
     }
     elsif ( $token_type == START_ARRAY ) {
-        return '[';
+        $sink->print('[');
     }
     elsif ( $token_type == END_ARRAY ) {
-        return ']';
+        $sink->print(']');
     }
     elsif ( is_numeric( $token ) ) {
-        return ''.$token->value;
+        $sink->print($token->value);
     }
     elsif ( $token_type == ADD_STRING ) {
-        return sprintf '"%s"' => $token->value;
+        $sink->printf('"%s"' => $token->value);
     }
     elsif ( $token_type == ADD_TRUE ) {
-        return 'true'
+        $sink->print('true');
     }
     elsif ( $token_type == ADD_FALSE ) {
-        return 'false'
+        $sink->print('false');
     }
     elsif ( $token_type == ADD_NULL ) {
-        return 'null'
+        $sink->print('null');
     }
     else {
-        die 'Unknown token: ' . $token_type;
+        Paxton::Core::Exception->new( message => 'Unkown token type: '.$token_type )->throw;
     }
 }
 
