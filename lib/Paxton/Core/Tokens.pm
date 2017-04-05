@@ -49,7 +49,7 @@ BEGIN {
 
     foreach my $name ( keys %TOKEN_MAP ) {
         no strict 'refs';
-        *{$name} = sub { $TOKEN_MAP{ $name } };
+        *{$name} = sub () { $TOKEN_MAP{ $name } };
     }
 
     push @EXPORT => qw[
