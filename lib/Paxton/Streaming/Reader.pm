@@ -17,6 +17,7 @@ use Paxton::Core::API::Reader;
 use Paxton::Core::Exception;
 use Paxton::Core::Tokens;
 use Paxton::Core::CharBuffer;
+use Paxton::Core::Context;
 
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
@@ -37,7 +38,7 @@ our %HAS;  BEGIN {
     %HAS = (
         source     => sub { die 'You must specify a `source` to read from.'},
         next_state => sub { \&root },
-        context    => sub { +[] },
+        context    => sub { Paxton::Core::Context->new },
     )
 }
 
@@ -82,9 +83,9 @@ sub get_token {
 
     if ( my $next = delete $self->{next_state} ) {
 
-        $self->log( '>> CURRENT => ', MOP::Method->new( $next )->name   ) if DEBUG;
-        $self->log( '   CONTEXT => ', join ', ' => @{$self->{context}}  ) if DEBUG;
-        $self->log( '   BUFFER  => \'', $self->{source}->{buffer}, '\'' ) if DEBUG;
+        $self->log( '>> CURRENT => ', MOP::Method->new( $next )->name            ) if DEBUG;
+        $self->log( '   CONTEXT => ', join ', ' => @{ $self->{context}->{stack}} ) if DEBUG;
+        $self->log( '   BUFFER  => \'', $self->{source}->{buffer}, '\''          ) if DEBUG;
 
         my $token = $self->$next();
 
@@ -224,35 +225,33 @@ sub object {
     if ( defined $char ) {
         if ( $char eq '{' ) {
             $self->skip_next_char;
-            push @{ $self->{context} } => IN_OBJECT;
+            $self->{context}->enter_object_context;
             $self->{next_state} = \&property;
             return token( START_OBJECT );
         }
         elsif ( $char eq '}' ) {
             # close any open properties ...
-            if ( $self->{context}->[-1] == IN_PROPERTY ) {
+            if ( $self->{context}->current_context == $self->{context}->IN_PROPERTY ) {
                 return $self->end_property;
             }
 
             # now close any objects ...
             $self->skip_next_char;
-            if ( $self->{context}->[-1] == IN_OBJECT ) {
-
-                my $ctx = $self->{context}->[-2];
+            if ( $self->{context}->current_context == $self->{context}->IN_OBJECT ) {
+                $self->{context}->leave_current_context;
+                my $ctx = $self->{context}->current_context;
                 if ( not defined $ctx ) {
                     $self->{next_state} = \&start;
                 }
-                elsif ( $ctx == IN_OBJECT ) {
+                elsif ( $ctx == $self->{context}->IN_OBJECT ) {
                     $self->{next_state} = \&object;
                 }
-                elsif ( $ctx == IN_ARRAY ) {
+                elsif ( $ctx == $self->{context}->IN_ARRAY ) {
                     $self->{next_state} = \&array;
                 }
-                elsif ( $ctx == IN_PROPERTY ) {
+                elsif ( $ctx == $self->{context}->IN_PROPERTY ) {
                     $self->{next_state} = \&end_property;
                 }
-
-                pop @{ $self->{context} };
             }
             else {
                 $self->{next_state} = \&start;
@@ -285,7 +284,7 @@ sub property {
 
             return $key if is_error( $key );
 
-            push @{ $self->{context} } => IN_PROPERTY;
+            $self->{context}->enter_property_context;
             $self->{next_state} = \&property;
             return token( START_PROPERTY, $key->value );
         }
@@ -316,8 +315,8 @@ sub end_property {
 
     $self->log( 'Entering `end_property`' ) if DEBUG;
 
-    if ( $self->{context}->[-1] == IN_PROPERTY ) {
-        pop @{ $self->{context} };
+    if ( $self->{context}->current_context == IN_PROPERTY ) {
+        $self->{context}->leave_current_context;
     }
 
     $self->{next_state} = \&object;
@@ -334,29 +333,28 @@ sub array {
     if ( defined $char ) {
         if ( $char eq '[' ) {
             $self->skip_next_char;
-            push @{ $self->{context} } => IN_ARRAY;
+            $self->{context}->enter_array_context;
             $self->{next_state} = \&array;
             return token( START_ARRAY );
         }
         elsif ( $char eq ']' ) {
             $self->skip_next_char;
-            if ( $self->{context}->[-1] == IN_ARRAY ) {
+            if ( $self->{context}->current_context == IN_ARRAY ) {
 
-                my $ctx = $self->{context}->[-2];
+                $self->{context}->leave_current_context;
+                my $ctx = $self->{context}->current_context;
                 if ( not defined $ctx ) {
                     $self->{next_state} = \&start;
                 }
-                elsif ( $ctx == IN_OBJECT ) {
+                elsif ( $ctx == $self->{context}->IN_OBJECT ) {
                     $self->{next_state} = \&object;
                 }
-                elsif ( $ctx == IN_ARRAY ) {
+                elsif ( $ctx == $self->{context}->IN_ARRAY ) {
                     $self->{next_state} = \&array;
                 }
-                elsif ( $ctx == IN_PROPERTY ) {
+                elsif ( $ctx == $self->{context}->IN_PROPERTY ) {
                     $self->{next_state} = \&end_property;
                 }
-
-                pop @{ $self->{context} };
             }
             else {
                 $self->{next_state} = \&start;
