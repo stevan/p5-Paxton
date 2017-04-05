@@ -24,12 +24,6 @@ our $AUTHORITY = 'cpan:STEVAN';
 
 use constant DEBUG => $ENV{PAXTON_READER_DEBUG} // 0;
 
-# context ...
-
-use constant IN_OBJECT   => Scalar::Util::dualvar( 1, 'IN_OBJECT'   );
-use constant IN_ARRAY    => Scalar::Util::dualvar( 2, 'IN_ARRAY'    );
-use constant IN_PROPERTY => Scalar::Util::dualvar( 3, 'IN_PROPERTY' );
-
 # ...
 
 our @ISA;  BEGIN { @ISA  = ('UNIVERSAL::Object') }
@@ -315,7 +309,7 @@ sub end_property {
 
     $self->log( 'Entering `end_property`' ) if DEBUG;
 
-    if ( $self->{context}->current_context == IN_PROPERTY ) {
+    if ( $self->{context}->current_context == $self->{context}->IN_PROPERTY ) {
         $self->{context}->leave_current_context;
     }
 
@@ -339,7 +333,7 @@ sub array {
         }
         elsif ( $char eq ']' ) {
             $self->skip_next_char;
-            if ( $self->{context}->current_context == IN_ARRAY ) {
+            if ( $self->{context}->current_context == $self->{context}->IN_ARRAY ) {
 
                 $self->{context}->leave_current_context;
                 my $ctx = $self->{context}->current_context;

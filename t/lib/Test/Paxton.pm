@@ -37,7 +37,7 @@ sub tokens_match {
     Test::More::subtest( $msg => sub {
         Test::More::diag( $json ) if VERBOSE;
 
-        my $r = Paxton::Streaming::Reader->new_from_string( $json );
+        my $r = Paxton::Streaming::Reader->new_from_string( \$json );
         Test::More::isa_ok($r, 'Paxton::Streaming::Reader');
 
         foreach my $e ( @$expected ) {
