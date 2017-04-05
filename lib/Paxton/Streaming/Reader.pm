@@ -32,14 +32,7 @@ our %HAS;  BEGIN {
     %HAS = (
         source     => sub { die 'You must specify a `source` to read from.'},
         next_state => sub { \&root },
-        context    => sub {
-            Paxton::Core::Context->new_with_handlers(
-                __DEFAULT__ => \&start,
-                IN_OBJECT   => \&object,
-                IN_ARRAY    => \&array,
-                IN_PROPERTY => \&end_property,
-            )
-        },
+        context    => sub { Paxton::Core::Context->new },
     )
 }
 
@@ -75,6 +68,8 @@ sub BUILD {
     # is actually readable.
     # - SL
 
+    # enter the root context now ...
+    $self->{context}->enter_root_context( \&start );
 }
 
 # iteration API
@@ -84,9 +79,9 @@ sub get_token {
 
     if ( my $next = delete $self->{next_state} ) {
 
-        $self->log( '>> CURRENT => ', MOP::Method->new( $next )->name            ) if DEBUG;
-        $self->log( '   CONTEXT => ', join ', ' => @{ $self->{context}->{stack}} ) if DEBUG;
-        $self->log( '   BUFFER  => \'', $self->{source}->{buffer}, '\''          ) if DEBUG;
+        $self->log( '>> CURRENT => ', MOP::Method->new( $next )->name ) if DEBUG;
+        $self->log( '   CONTEXT => ', join ', ' => map $_->[0], @{ $self->{context}->{stack}} ) if DEBUG;
+        $self->log( '   BUFFER  => \'', $self->{source}->{buffer}, '\'' ) if DEBUG;
 
         my $token = $self->$next();
 
@@ -226,7 +221,7 @@ sub object {
     if ( defined $char ) {
         if ( $char eq '{' ) {
             $self->skip_next_char;
-            $self->{context}->enter_object_context;
+            $self->{context}->enter_object_context( \&object );
             $self->{next_state} = \&property;
             return token( START_OBJECT );
         }
@@ -238,8 +233,7 @@ sub object {
             # now close any objects ...
             $self->skip_next_char;
             if ( $self->{context}->in_object_context ) {
-                $self->{context}->leave_current_context;
-                $self->{next_state} = $self->{context}->restore_previous_context;
+                $self->{next_state} = $self->{context}->leave_current_context;
             }
             else {
                 $self->{next_state} = \&start;
@@ -272,7 +266,7 @@ sub property {
 
             return $key if is_error( $key );
 
-            $self->{context}->enter_property_context;
+            $self->{context}->enter_property_context( \&end_property );
             $self->{next_state} = \&property;
             return token( START_PROPERTY, $key->value );
         }
@@ -320,15 +314,14 @@ sub array {
     if ( defined $char ) {
         if ( $char eq '[' ) {
             $self->skip_next_char;
-            $self->{context}->enter_array_context;
+            $self->{context}->enter_array_context( \&array );
             $self->{next_state} = \&array;
             return token( START_ARRAY );
         }
         elsif ( $char eq ']' ) {
             $self->skip_next_char;
             if ( $self->{context}->in_array_context ) {
-                $self->{context}->leave_current_context;
-                $self->{next_state} = $self->{context}->restore_previous_context;
+                $self->{next_state} = $self->{context}->leave_current_context;
             }
             else {
                 $self->{next_state} = \&start;
