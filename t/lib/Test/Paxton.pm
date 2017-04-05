@@ -41,14 +41,14 @@ sub tokens_match {
         Test::More::isa_ok($r, 'Paxton::Streaming::Reader');
 
         foreach my $e ( @$expected ) {
-            my $t = $r->next_token;
+            my $t = $r->get_token;
             Test::More::ok(is_token( $t ), '... we got a token');
             Test::More::is($t->type, $e->type, '... and it is the expected token type('.$e->type.')');
             Test::More::is($t->value, $e->value, '... and it is the expected token value('.($e->value // 'undef').')');
             Test::More::diag( $t->dump ) if VERBOSE;
         }
 
-        Test::More::is( $r->next_token, undef, '... parsing is complete' );
+        Test::More::is( $r->get_token, undef, '... parsing is complete' );
         Test::More::ok( $r->{source}->is_done, '... the reader is done' );
     });
 }

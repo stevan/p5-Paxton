@@ -12,6 +12,8 @@ use MOP::Method;
 use IO::Handle;
 use IO::Scalar;
 
+use Paxton::Core::API::Reader;
+
 use Paxton::Core::Exception;
 use Paxton::Core::Tokens;
 use Paxton::Core::CharBuffer;
@@ -29,10 +31,11 @@ use constant IN_PROPERTY => Scalar::Util::dualvar( 3, 'IN_PROPERTY' );
 
 # ...
 
-our @ISA; BEGIN { @ISA = ('UNIVERSAL::Object') }
-our %HAS; BEGIN {
+our @ISA;  BEGIN { @ISA  = ('UNIVERSAL::Object') }
+our @DOES; BEGIN { @DOES = ('Paxton::Core::API::Reader') }
+our %HAS;  BEGIN {
     %HAS = (
-        source     => sub { die 'You must specify a `source` to use.'},
+        source     => sub { die 'You must specify a `source` to read from.'},
         next_state => sub { \&root },
         context    => sub { +[] },
     )
@@ -40,18 +43,22 @@ our %HAS; BEGIN {
 
 ## Constructors
 
-sub new_from_stream {
-    my ($class, $stream) = @_;
+sub new_from_handle {
+    my ($class, $handle) = @_;
 
-    (Scalar::Util::blessed( $stream ) && $stream->isa('IO::Handle') )
-        || Paxton::Core::Exception->new( message => 'The stream must be derived from IO::Handle' )->throw;
+    (Scalar::Util::blessed( $handle ) && $handle->isa('IO::Handle'))
+        || Paxton::Core::Exception->new( message => 'The handle must be derived from IO::Handle' )->throw;
 
-    $class->new( source => Paxton::Core::CharBuffer->new( handle => $stream ) );
+    $class->new( source => Paxton::Core::CharBuffer->new( handle => $handle ) );
 }
 
 sub new_from_string {
-    my ($class, $value) = @_;
-    return $class->new_from_stream( IO::Scalar->new(ref $value ? $value : \$value) );
+    my ($class, $string_ref) = @_;
+
+    (defined $string_ref && ref $string_ref eq 'SCALAR')
+        || Paxton::Core::Exception->new( message => 'The string must be a SCALAR reference' )->throw;
+
+    return $class->new_from_handle( IO::Scalar->new( $string_ref ) );
 }
 
 # ...
@@ -60,11 +67,17 @@ sub BUILD {
     my ($self) = @_;
     (Scalar::Util::blessed( $self->{source} ) && $self->{source}->isa('Paxton::Core::CharBuffer') )
         || Paxton::Core::Exception->new( message => 'The `source` must be an instance of `Paxton::Core::CharBuffer`' )->throw;
+
+    # TODO:
+    # check to make sure the handle
+    # is actually readable.
+    # - SL
+
 }
 
 # iteration API
 
-sub next_token {
+sub get_token {
     my ($self) = @_;
 
     if ( my $next = delete $self->{next_state} ) {

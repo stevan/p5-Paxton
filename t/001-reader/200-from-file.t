@@ -129,12 +129,12 @@ done_testing;
 This will pretty print the tokens and give you output that
 is suitable for building the C<@expected> array above.
 
-    my $r = Paxton::Streaming::Reader->new_from_stream(
+    my $r = Paxton::Streaming::Reader->new_from_handle(
         IO::File->new( 't/data/001-reader/200-from-file.json', 'r')
     );
 
     my $depth = 0;
-    while ( my $t = $r->next_token ) {
+    while ( my $t = $r->get_token ) {
         $depth-- if is_struct_end( $t );
         my $indent = ('    ' x $depth);
         print $indent, $t->as_string, ",\n";
