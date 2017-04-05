@@ -16,7 +16,7 @@ subtest '... simple object' => sub {
     my $w = Paxton::Streaming::Writer->new_to_string( \$json );
     isa_ok($w, 'Paxton::Streaming::Writer');
 
-    $w->put_token( $_ )
+    ($w->put_token( $_ ),warn($json))
         foreach (
             token(START_OBJECT),
                 token(START_PROPERTY, "foo"),

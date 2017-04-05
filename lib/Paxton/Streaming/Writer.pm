@@ -15,6 +15,7 @@ use Paxton::Core::API::Writer;
 
 use Paxton::Core::Exception;
 use Paxton::Core::Tokens;
+use Paxton::Core::Context;
 
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
@@ -28,6 +29,7 @@ our @DOES; BEGIN { @DOES = ('Paxton::Core::API::Writer') }
 our %HAS;  BEGIN {
     %HAS = (
         sink    => sub { die 'You must specify a `sink` to write to.'},
+        context => sub { Paxton::Core::Context->new },
     )
 }
 
@@ -62,6 +64,8 @@ sub BUILD {
     # check to make sure the handle
     # is actually writable.
     # - SL
+
+    $self->{context}->enter_root_context( \&start );
 }
 
 # ...
@@ -73,40 +77,59 @@ sub put_token {
         || Paxton::Core::Exception->new( message => 'Invalid token: '.$token )->throw;
 
     my $sink       = $self->{sink};
+    my $context    = $self->{context};
     my $token_type = $token->type;
+
+    if ( $context->in_value_context ) {
+        warn $token_type;
+        if ( $token_type != END_OBJECT && $token_type != END_ARRAY && $token_type != END_ARRAY ) {
+            $sink->print(',');
+        }
+        $context->leave_value_context;
+    }
 
     if ( $token_type == START_OBJECT ) {
         $sink->print('{');
+        $context->enter_object_context;
     }
     elsif ( $token_type == END_OBJECT ) {
+        $context->leave_object_context;
         $sink->print('}');
     }
     elsif ( $token_type == START_PROPERTY ) {
-        $sink->printf('"%s":' => $token->value);
+        $sink->print($self->make_json_string( $token->value ), ":");
+        $context->enter_property_context;
     }
     elsif ( $token_type == END_PROPERTY ) {
-        ;
+        $context->leave_property_context;
     }
     elsif ( $token_type == START_ARRAY ) {
         $sink->print('[');
+        $context->enter_array_context;
     }
     elsif ( $token_type == END_ARRAY ) {
+        $context->leave_array_context;
         $sink->print(']');
     }
     elsif ( is_numeric( $token ) ) {
         $sink->print($token->value);
+        $context->enter_value_context;
     }
     elsif ( $token_type == ADD_STRING ) {
-        $sink->printf('"%s"' => $token->value);
+        $sink->print( $self->make_json_string( $token->value ) );
+        $context->enter_value_context;
     }
     elsif ( $token_type == ADD_TRUE ) {
         $sink->print('true');
+        $context->enter_value_context;
     }
     elsif ( $token_type == ADD_FALSE ) {
         $sink->print('false');
+        $context->enter_value_context;
     }
     elsif ( $token_type == ADD_NULL ) {
         $sink->print('null');
+        $context->enter_value_context;
     }
     else {
         Paxton::Core::Exception->new( message => 'Unkown token type: '.$token_type )->throw;
@@ -119,6 +142,29 @@ sub log {
     my ($self, @msg) = @_;
     (DEBUG > 1) ? Carp::cluck( @msg ) : warn( @msg, "\n" );
     return;
+}
+
+# ...
+
+my %esc = (
+    "\n" => '\n',
+    "\r" => '\r',
+    "\t" => '\t',
+    "\f" => '\f',
+    "\b" => '\b',
+    "\"" => '\"',
+    "\\" => '\\\\',
+    "\'" => '\\\'',
+);
+
+sub make_json_string {
+    my (undef, $value) = @_;
+
+    $value =~ s/([\x22\x5c\n\r\t\f\b])/$esc{$1}/eg;
+    $value =~ s/\//\\\//g;
+    $value =~ s/([\x00-\x08\x0b\x0e-\x1f])/'\\u00' . unpack('H2', $1)/eg;
+
+    return '"'.$value.'"';
 }
 
 1;
