@@ -17,7 +17,6 @@ use constant ROOT        => Scalar::Util::dualvar( 1, 'ROOT'        );
 use constant IN_OBJECT   => Scalar::Util::dualvar( 2, 'IN_OBJECT'   );
 use constant IN_ARRAY    => Scalar::Util::dualvar( 3, 'IN_ARRAY'    );
 use constant IN_PROPERTY => Scalar::Util::dualvar( 4, 'IN_PROPERTY' );
-use constant IN_VALUE    => Scalar::Util::dualvar( 5, 'IN_VALUE'    );
 
 # constructor ...
 
@@ -50,12 +49,6 @@ sub in_property_context {
     my ($self) = @_;
     return unless scalar @$self && defined $self->[-1];
     return $self->[-1]->[0] == IN_PROPERTY;
-}
-
-sub in_value_context {
-    my ($self) = @_;
-    return unless scalar @$self && defined $self->[-1];
-    return $self->[-1]->[0] == IN_VALUE;
 }
 
 # enter ...
@@ -97,24 +90,6 @@ sub enter_property_context {
         || Paxton::Core::Exception->new( message => 'Unable to enter property context: stack is empty' )->throw;
 
     push @$self => [ IN_PROPERTY, $exit_handler ];
-    return;
-}
-
-sub enter_value_context {
-    my ($self, $exit_handler) = @_;
-
-    (scalar @$self)
-        || Paxton::Core::Exception->new( message => 'Unable to enter value context: stack is empty' )->throw;
-
-    # TODO:
-    # We can check here that we
-    # are inside a proper context
-    # meaning array or object, and
-    # throw an expection if we are
-    # inside anything else.
-    # - SL
-
-    push @$self => [ IN_VALUE, $exit_handler ];
     return;
 }
 
@@ -162,23 +137,6 @@ sub leave_property_context {
 
     ($self->[-1]->[0] == IN_PROPERTY)
         || Paxton::Core::Exception->new( message => 'Must be in `property` context, not '.$self->[-1]->[0] )->throw;
-
-    pop @$self;
-
-    # return nothing if we got nothing ...
-    return unless scalar @$self;
-    # otherwise restore the previous context ...
-    return $self->[-1]->[1];
-}
-
-sub leave_value_context {
-    my ($self) = @_;
-
-    (scalar @$self)
-        || Paxton::Core::Exception->new( message => 'Unable to leave context: stack exhausted' )->throw;
-
-    ($self->[-1]->[0] == IN_VALUE)
-        || Paxton::Core::Exception->new( message => 'Must be in `value` context, not '.$self->[-1]->[0] )->throw;
 
     pop @$self;
 

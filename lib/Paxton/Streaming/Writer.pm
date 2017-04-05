@@ -28,9 +28,9 @@ our @ISA;  BEGIN { @ISA  = ('UNIVERSAL::Object') }
 our @DOES; BEGIN { @DOES = ('Paxton::Core::API::Writer') }
 our %HAS;  BEGIN {
     %HAS = (
-        sink    => sub { die 'You must specify a `sink` to write to.'},
-        context => sub { Paxton::Core::Context->new },
-        may_need_comma => sub { 0 },
+        sink        => sub { die 'You must specify a `sink` to write to.'},
+        context     => sub { Paxton::Core::Context->new },
+        needs_comma => sub { 0 },
     )
 }
 
@@ -83,11 +83,11 @@ sub put_token {
 
     $self->log('>>> TOKEN:   ', $token->as_string                   ) if DEBUG;
     $self->log('    CONTEXT: ', join ', ' => map $_->[0], @$context ) if DEBUG;
-    $self->log('    COMMA:   ', $self->{may_need_comma}             ) if DEBUG;
+    $self->log('    COMMA:   ', $self->{needs_comma}                ) if DEBUG;
 
-    if ( $self->{may_need_comma} && not is_struct_end( $token ) ) {
+    if ( $self->{needs_comma} && not is_struct_end( $token ) ) {
         $sink->print(',');
-        $self->{may_need_comma} = 0;
+        $self->{needs_comma} = 0;
     }
 
     if ( $token_type == START_OBJECT ) {
@@ -97,7 +97,7 @@ sub put_token {
     elsif ( $token_type == END_OBJECT ) {
         $context->leave_object_context;
         $sink->print('}');
-        $self->{may_need_comma} = 1 unless $context->in_root_context;
+        $self->{needs_comma} = 1 unless $context->in_root_context;
     }
     elsif ( $token_type == START_PROPERTY ) {
         $sink->print($self->make_json_string( $token->value ), ":");
@@ -105,7 +105,7 @@ sub put_token {
     }
     elsif ( $token_type == END_PROPERTY ) {
         $context->leave_property_context;
-        $self->{may_need_comma} = 1;
+        $self->{needs_comma} = 1;
     }
     elsif ( $token_type == START_ARRAY ) {
         $sink->print('[');
@@ -114,27 +114,27 @@ sub put_token {
     elsif ( $token_type == END_ARRAY ) {
         $context->leave_array_context;
         $sink->print(']');
-        $self->{may_need_comma} = 1 unless $context->in_root_context;
+        $self->{needs_comma} = 1 unless $context->in_root_context;
     }
     elsif ( is_numeric( $token ) ) {
         $sink->print($token->value);
-        $self->{may_need_comma} = 1 if $context->in_array_context;
+        $self->{needs_comma} = 1 if $context->in_array_context;
     }
     elsif ( $token_type == ADD_STRING ) {
         $sink->print( $self->make_json_string( $token->value ) );
-        $self->{may_need_comma} = 1 if $context->in_array_context;
+        $self->{needs_comma} = 1 if $context->in_array_context;
     }
     elsif ( $token_type == ADD_TRUE ) {
         $sink->print('true');
-        $self->{may_need_comma} = 1 if $context->in_array_context;
+        $self->{needs_comma} = 1 if $context->in_array_context;
     }
     elsif ( $token_type == ADD_FALSE ) {
         $sink->print('false');
-        $self->{may_need_comma} = 1 if $context->in_array_context;
+        $self->{needs_comma} = 1 if $context->in_array_context;
     }
     elsif ( $token_type == ADD_NULL ) {
         $sink->print('null');
-        $self->{may_need_comma} = 1 if $context->in_array_context;
+        $self->{needs_comma} = 1 if $context->in_array_context;
     }
     else {
         Paxton::Core::Exception->new( message => 'Unkown token type: '.$token_type )->throw;
