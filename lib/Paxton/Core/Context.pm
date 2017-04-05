@@ -95,11 +95,48 @@ sub enter_property_context {
 
 # leave
 
-sub leave_current_context {
+sub leave_object_context {
     my ($self) = @_;
 
     (scalar @$self)
         || Paxton::Core::Exception->new( message => 'Unable to leave context: stack exhausted' )->throw;
+
+    ($self->[-1]->[0] == IN_OBJECT)
+        || Paxton::Core::Exception->new( message => 'Must be in `object` context, not '.$self->[-1]->[0] )->throw;
+
+    pop @$self;
+
+    # return nothing if we got nothing ...
+    return unless scalar @$self;
+    # otherwise restore the previous context ...
+    return $self->[-1]->[1];
+}
+
+sub leave_array_context {
+    my ($self) = @_;
+
+    (scalar @$self)
+        || Paxton::Core::Exception->new( message => 'Unable to leave context: stack exhausted' )->throw;
+
+    ($self->[-1]->[0] == IN_ARRAY)
+        || Paxton::Core::Exception->new( message => 'Must be in `array` context, not '.$self->[-1]->[0] )->throw;
+
+    pop @$self;
+
+    # return nothing if we got nothing ...
+    return unless scalar @$self;
+    # otherwise restore the previous context ...
+    return $self->[-1]->[1];
+}
+
+sub leave_property_context {
+    my ($self) = @_;
+
+    (scalar @$self)
+        || Paxton::Core::Exception->new( message => 'Unable to leave context: stack exhausted' )->throw;
+
+    ($self->[-1]->[0] == IN_PROPERTY)
+        || Paxton::Core::Exception->new( message => 'Must be in `property` context, not '.$self->[-1]->[0] )->throw;
 
     pop @$self;
 

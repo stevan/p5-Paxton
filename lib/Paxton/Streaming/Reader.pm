@@ -232,12 +232,7 @@ sub object {
 
             # now close any objects ...
             $self->skip_next_char;
-            if ( $self->{context}->in_object_context ) {
-                $self->{next_state} = $self->{context}->leave_current_context;
-            }
-            else {
-                $self->{next_state} = \&start;
-            }
+            $self->{next_state} = $self->{context}->leave_object_context;
             return token( END_OBJECT );
         }
         elsif ( $char eq ',' ) {
@@ -297,9 +292,7 @@ sub end_property {
 
     $self->log( 'Entering `end_property`' ) if DEBUG;
 
-    $self->{context}->leave_current_context
-        if $self->{context}->in_property_context;
-
+    $self->{context}->leave_property_context;
     $self->{next_state} = \&object;
     return token( END_PROPERTY );
 }
@@ -320,12 +313,7 @@ sub array {
         }
         elsif ( $char eq ']' ) {
             $self->skip_next_char;
-            if ( $self->{context}->in_array_context ) {
-                $self->{next_state} = $self->{context}->leave_current_context;
-            }
-            else {
-                $self->{next_state} = \&start;
-            }
+            $self->{next_state} = $self->{context}->leave_array_context;
             return token( END_ARRAY );
         }
         elsif ( $char eq ',' ) {
