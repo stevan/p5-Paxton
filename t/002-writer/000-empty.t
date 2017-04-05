@@ -10,22 +10,26 @@ BEGIN {
     use_ok('Paxton::Core::Tokens');
 }
 
-my $json = '';
+subtest '... simple object' => sub {
+    my $json = '';
 
-my $w = Paxton::Streaming::Writer->new_to_string( \$json );
-isa_ok($w, 'Paxton::Streaming::Writer');
+    my $w = Paxton::Streaming::Writer->new_to_string( \$json );
+    isa_ok($w, 'Paxton::Streaming::Writer');
 
-$w->put_token( $_ ) foreach (
-    token(START_OBJECT),
-        token(START_PROPERTY, "foo"),
-            token(ADD_STRING, "bar"),
-        token(END_PROPERTY),
-        token(START_PROPERTY, "baz"),
-            token(ADD_STRING, "gorch"),
-        token(END_PROPERTY),
-    token(END_OBJECT)
-);
+    $w->put_token( $_ )
+        foreach (
+            token(START_OBJECT),
+                token(START_PROPERTY, "foo"),
+                    token(ADD_STRING, "bar"),
+                token(END_PROPERTY),
+                token(START_PROPERTY, "baz"),
+                    token(ADD_STRING, "gorch"),
+                token(END_PROPERTY),
+            token(END_OBJECT)
+        );
 
-warn $json;
+    is($json, '{"foo":"bar","baz":"gorch"}', '... got the JSON we expected');
+};
+
 
 done_testing;
