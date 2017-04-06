@@ -78,7 +78,15 @@ sub context { $_[0]->{context} }
 
 # ...
 
-sub close { $_[0]->{sink}->close }
+sub close {
+    # TODO:
+    # add error checking here:
+    # - make sure we are root context
+    # - make sure the handle closed okay
+    # - make sure we weren't already closed (for whatever reason)
+    # - ... maybe more?
+    $_[0]->{sink}->close;
+}
 
 # iteration
 
