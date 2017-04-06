@@ -72,6 +72,12 @@ sub BUILD {
     $self->{context}->enter_root_context( \&start );
 }
 
+# accessors (nothing really needs to be secret)
+
+sub source     { $_[0]->{source}     }
+sub context    { $_[0]->{context}    }
+sub next_state { $_[0]->{next_state} }
+
 # iteration API
 
 sub get_token {
