@@ -89,7 +89,7 @@ sub put_token {
     else {
         my $value = $token->value;
         $value = 1     if $token_type == ADD_TRUE;
-        $value = ''    if $token_type == ADD_FALSE;
+        $value = 0     if $token_type == ADD_FALSE;
         $value = undef if $token_type == ADD_NULL;
         $self->_stash_value_correctly( $value )
     }

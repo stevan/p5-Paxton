@@ -7,6 +7,7 @@ use Test::More           ();
 use Paxton::Core::Tokens ('is_token');
 
 use Paxton::Streaming::Reader;
+use Paxton::Streaming::Decoder;
 
 ## ...
 
@@ -16,6 +17,7 @@ use constant VERBOSE => $ENV{PAXTON_TEST_VERBOSE} // 0;
 
 our @EXPORT = qw[
     tokens_match
+    tokens_decode_into
 ];
 
 ## ...
@@ -50,6 +52,27 @@ sub tokens_match {
 
         Test::More::is( $r->get_token, undef, '... parsing is complete' );
         Test::More::ok( $r->{source}->is_done, '... the reader is done' );
+    });
+}
+
+sub tokens_decode_into {
+    my ($decoded_into, $expected, $msg) = @_;
+
+    Test::More::subtest( $msg => sub {
+
+        my $decoder = Paxton::Streaming::Decoder->new;
+        Test::More::isa_ok($decoder, 'Paxton::Streaming::Decoder');
+
+        Test::More::ok(!$decoder->has_value, '... we do not have a value yet');
+
+        $decoder->put_token( $_ ) foreach @$expected;
+
+        Test::More::ok($decoder->has_value, '... we have a value now');
+        Test::More::is_deeply(
+            $decoder->get_value,
+            $decoded_into,
+            '... got the expected value'
+        );
     });
 }
 
