@@ -158,6 +158,20 @@ sub leave_property_context {
     return $self->[-1]->[1];
 }
 
+sub leave_current_context {
+    my ($self) = @_;
+
+    (scalar @$self)
+        || Paxton::Core::Exception->new( message => 'Unable to leave context: stack exhausted' )->throw;
+
+    pop @$self;
+
+    # return nothing if we got nothing ...
+    return unless scalar @$self;
+    # otherwise restore the previous context ...
+    return $self->[-1]->[1];
+}
+
 1;
 
 __END__

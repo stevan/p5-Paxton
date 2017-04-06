@@ -1,4 +1,4 @@
-package Paxton::Parser::Node;
+package Paxton::Streaming::Parser::Node;
 # ABSTRACT: One stop for all your JSON needs
 
 use strict;
