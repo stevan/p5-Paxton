@@ -8,6 +8,7 @@ our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
 
 sub get_token;
+sub is_done;
 
 1;
 

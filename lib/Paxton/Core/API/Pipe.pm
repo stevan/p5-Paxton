@@ -7,7 +7,8 @@ use warnings;
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
 
-sub process_token;
+sub process;
+sub is_done;
 
 1;
 

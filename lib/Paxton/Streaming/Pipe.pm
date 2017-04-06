@@ -54,17 +54,28 @@ sub BUILD {
 sub reader { $_[0]->{reader} }
 sub writer { $_[0]->{writer} }
 
-# ...
+## fulfill the Pipe, Reader & Writer APIs
+
+sub is_done {
+    my ($self) = @_;
+    $self->{reader}->is_done
+        &&
+    $self->{writer}->is_done;
+}
 
 sub get_token { $_[0]->{reader}->get_token }
 sub put_token { $_[0]->{writer}->put_token( $_[1] ) }
 
-sub process_token {
+sub process {
     my ($self) = @_;
-    my $token = $self->get_token;
-    return unless defined $token;
-    $self->put_token( $token );
-    return 1;
+    until ( $self->{reader}->is_done ) {
+        my $token = $self->get_token;
+        last unless defined $token;
+        $self->put_token( $token );
+    }
+    $self->{writer}->close
+        unless $self->{writer}->is_done;
+    return;
 }
 
 # logging

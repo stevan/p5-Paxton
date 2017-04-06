@@ -4,6 +4,7 @@ use strict;
 use warnings;
 
 use Test::More;
+use Test::Fatal;
 
 BEGIN {
     use_ok('Paxton::Streaming::Pipe');
@@ -33,7 +34,9 @@ isa_ok($p, 'Paxton::Streaming::Pipe');
 is($p->reader, $r, '... got the right reader');
 is($p->writer, $d, '... got the right writer');
 
-1 while $p->process_token;
+ok(!$p->is_done, '... the pipe is not done');
+is(exception { $p->process }, undef, '... ran the pipe successfully');
+ok($p->is_done, '... the pipe is done');
 
 ok($d->has_value, '... we have a value');
 is_deeply(
