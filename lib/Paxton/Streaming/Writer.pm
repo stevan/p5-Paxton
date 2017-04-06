@@ -90,7 +90,7 @@ sub put_token {
 
     $self->log('>>> TOKEN:   ', $token->as_string                   ) if DEBUG;
     $self->log('    CONTEXT: ', join ', ' => map $_->[0], @$context ) if DEBUG;
-    $self->log('    COMMA:   ', $self->{_needs_comma}                ) if DEBUG;
+    $self->log('    COMMA:   ', $self->{_needs_comma}               ) if DEBUG;
 
     if ( $self->{_needs_comma} && not is_struct_end( $token ) ) {
         $sink->print(',');
