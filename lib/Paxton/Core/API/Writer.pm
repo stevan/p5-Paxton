@@ -4,6 +4,9 @@ package Paxton::Core::API::Writer;
 use strict;
 use warnings;
 
+our $VERSION   = '0.01';
+our $AUTHORITY = 'cpan:STEVAN';
+
 sub put_token;
 
 1;

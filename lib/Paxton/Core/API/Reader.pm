@@ -4,6 +4,9 @@ package Paxton::Core::API::Reader;
 use strict;
 use warnings;
 
+our $VERSION   = '0.01';
+our $AUTHORITY = 'cpan:STEVAN';
+
 sub get_token;
 
 1;
