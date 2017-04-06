@@ -55,8 +55,18 @@ sub get_value {         $_[0]->{_value} }
 
 # ...
 
+sub is_done {
+    my ($self) = @_;
+    $self->has_value
+        &&
+    $self->{context}->in_root_context;
+}
+
 sub put_token {
     my ($self, $token) = @_;
+
+    (not $self->is_done)
+        || Paxton::Core::Exception->new( message => 'Parser is done, cannot `put` any more tokens' )->throw;
 
     (defined $token && is_token($token))
         || Paxton::Core::Exception->new( message => 'Invalid token: '.$token )->throw;

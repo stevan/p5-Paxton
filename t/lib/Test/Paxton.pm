@@ -51,7 +51,7 @@ sub tokens_match {
         }
 
         Test::More::is( $r->get_token, undef, '... parsing is complete' );
-        Test::More::ok( $r->{source}->is_done, '... the reader is done' );
+        Test::More::ok( $r->is_done, '... the reader is done' );
     });
 }
 
@@ -60,19 +60,21 @@ sub tokens_decode_into {
 
     Test::More::subtest( $msg => sub {
 
-        my $decoder = Paxton::Streaming::Decoder->new;
-        Test::More::isa_ok($decoder, 'Paxton::Streaming::Decoder');
+        my $d = Paxton::Streaming::Decoder->new;
+        Test::More::isa_ok($d, 'Paxton::Streaming::Decoder');
 
-        Test::More::ok(!$decoder->has_value, '... we do not have a value yet');
+        Test::More::ok(!$d->has_value, '... we do not have a value yet');
 
-        $decoder->put_token( $_ ) foreach @$expected;
+        $d->put_token( $_ ) foreach @$expected;
 
-        Test::More::ok($decoder->has_value, '... we have a value now');
+        Test::More::ok($d->has_value, '... we have a value now');
         Test::More::is_deeply(
-            $decoder->get_value,
+            $d->get_value,
             $decoded_into,
             '... got the expected value'
         );
+
+        Test::More::ok( $d->is_done, '... the decoder is done' );
     });
 }
 

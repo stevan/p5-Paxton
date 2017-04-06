@@ -29,10 +29,12 @@ subtest '... object node' => sub {
     isa_ok($p, 'Paxton::Streaming::Parser');
 
     ok(!$p->has_value, '... we do not have a value yet');
+    ok(!$p->is_done, '... we are not done yet');
 
     $p->put_token( $_ ) foreach @tokens;
 
     ok($p->has_value, '... we have a value now');
+    ok($p->is_done, '... we are done now');
 
     is($p->get_value->to_string, $expected, '... got the stringification we expected');
 
@@ -83,10 +85,12 @@ subtest '... array node' => sub {
     isa_ok($p, 'Paxton::Streaming::Parser');
 
     ok(!$p->has_value, '... we do not have a value yet');
+    ok(!$p->is_done, '... we are not done yet');
 
     $p->put_token( $_ ) foreach @tokens;
 
     ok($p->has_value, '... we have a value now');
+    ok($p->is_done, '... we are done now');
 
     is($p->get_value->to_string, $expected, '... got the stringification we expected');
 

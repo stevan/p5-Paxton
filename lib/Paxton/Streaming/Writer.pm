@@ -78,8 +78,20 @@ sub context { $_[0]->{context} }
 
 # ...
 
+sub close { $_[0]->{sink}->close }
+
+# iteration
+
+sub is_done {
+    my ($self) = @_;
+    not $self->{sink}->opened;
+}
+
 sub put_token {
     my ($self, $token) = @_;
+
+    (not $self->is_done)
+        || Paxton::Core::Exception->new( message => 'Writer is done, cannot `put` any more tokens' )->throw;
 
     (defined $token && is_token($token))
         || Paxton::Core::Exception->new( message => 'Invalid token: '.$token )->throw;

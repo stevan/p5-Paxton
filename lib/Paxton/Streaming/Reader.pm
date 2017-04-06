@@ -80,8 +80,17 @@ sub next_state { $_[0]->{next_state} }
 
 # iteration API
 
+sub is_done {
+    my ($self) = @_;
+    $self->{source}->is_done
+        &&
+    $self->{context}->in_root_context;
+}
+
 sub get_token {
     my ($self) = @_;
+
+    return if $self->is_done;
 
     if ( my $next = delete $self->{next_state} ) {
 
