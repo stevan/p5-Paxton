@@ -29,6 +29,8 @@ sub new {
 
 sub depth { scalar @{ $_[0] } }
 
+sub current_context_value { $_[0]->[-1]->[1] }
+
 # predicates
 
 sub in_root_context {
@@ -58,27 +60,27 @@ sub in_property_context {
 # enter ...
 
 sub enter_root_context {
-    my ($self, $exit_handler) = @_;
+    my ($self, $value) = @_;
 
     (scalar @$self == 0)
         || Paxton::Core::Exception->new( message => 'Unable to enter root context: stack not empty' )->throw;
 
-    push @$self => [ ROOT, $exit_handler ];
+    push @$self => [ ROOT, $value ];
     return;
 }
 
 sub enter_object_context {
-    my ($self, $exit_handler) = @_;
+    my ($self, $value) = @_;
 
     (scalar @$self)
         || Paxton::Core::Exception->new( message => 'Unable to enter object context: stack is empty' )->throw;
 
-    push @$self => [ IN_OBJECT, $exit_handler ];
+    push @$self => [ IN_OBJECT, $value ];
     return;
 }
 
 sub enter_array_context {
-    my ($self, $exit_handler) = @_;
+    my ($self, $value) = @_;
 
     (scalar @$self)
         || Paxton::Core::Exception->new( message => 'Unable to enter array context: stack is empty' )->throw;
@@ -86,12 +88,12 @@ sub enter_array_context {
     (not $self->in_object_context)
         || Paxton::Core::Exception->new( message => 'Unable to enter array context from within object context (must be in property context)' )->throw;
 
-    push @$self => [ IN_ARRAY, $exit_handler ];
+    push @$self => [ IN_ARRAY, $value ];
     return;
 }
 
 sub enter_property_context {
-    my ($self, $exit_handler) = @_;
+    my ($self, $value) = @_;
 
     (scalar @$self)
         || Paxton::Core::Exception->new( message => 'Unable to enter property context: stack is empty' )->throw;
@@ -99,7 +101,7 @@ sub enter_property_context {
     ($self->in_object_context)
         || Paxton::Core::Exception->new( message => 'Unable to enter property context from within anything but object context' )->throw;
 
-    push @$self => [ IN_PROPERTY, $exit_handler ];
+    push @$self => [ IN_PROPERTY, $value ];
     return;
 }
 
