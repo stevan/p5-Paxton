@@ -67,10 +67,10 @@ sub put_token {
     require Data::Dumper if DEBUG;
     $self->log('>>> TOKEN:   ', $token->as_string                                  ) if DEBUG;
     $self->log('    CONTEXT: ', join ', ' => map $_->[0], @$context                ) if DEBUG;
-    $self->log('    PARTIAL: ', Data::Dumper::Dumper($self->{_partial}) =~ s/\n$//r) if DEBUG;
-    $self->log('    VALUE:   ', Data::Dumper::Dumper($self->{_value})   =~ s/\n$//r) if DEBUG;
+    $self->log('    PARTIAL: ', Data::Dumper::Dumper($self->{_partial}) =~ s/\n$//r) if DEBUG; #/
+    $self->log('    VALUE:   ', Data::Dumper::Dumper($self->{_value})   =~ s/\n$//r) if DEBUG; #/
     $self->log('    STATE:   ', join ' | ' => grep defined, map $_->[1], @$context) if DEBUG;
-    $self->log('    STATE:   ', join ' | ' => map Data::Dumper::Dumper($_->[1])=~s/\n$//r, @$context) if DEBUG;
+    $self->log('    STATE:   ', join ' | ' => map Data::Dumper::Dumper($_->[1])=~s/\n$//r, @$context) if DEBUG; #/
 
     if ( $token_type == START_OBJECT ) {
         $context->enter_object_context({});
