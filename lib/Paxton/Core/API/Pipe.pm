@@ -8,6 +8,7 @@ our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
 
 sub process;
+sub process_token;
 sub is_done;
 
 1;
