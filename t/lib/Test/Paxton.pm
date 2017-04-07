@@ -8,6 +8,7 @@ use Paxton::Core::Tokens ('is_token');
 
 use Paxton::Streaming::Reader;
 use Paxton::Streaming::Decoder;
+use Paxton::Streaming::Encoder;
 
 ## ...
 
@@ -18,6 +19,7 @@ use constant VERBOSE => $ENV{PAXTON_TEST_VERBOSE} // 0;
 our @EXPORT = qw[
     tokens_match
     tokens_decode_into
+    tokens_encoded_from
 ];
 
 ## ...
@@ -75,6 +77,28 @@ sub tokens_decode_into {
         );
 
         Test::More::ok( $d->is_done, '... the decoder is done' );
+    });
+}
+
+sub tokens_encoded_from {
+    my ($source, $tokens, $msg) = @_;
+
+    my @tokens = @$tokens;
+
+    Test::More::subtest( $msg => sub {
+
+        my $e = Paxton::Streaming::Encoder->new( source => $source );
+        Test::More::isa_ok($e, 'Paxton::Streaming::Encoder');
+
+        while ( my $got = $e->get_token ) {
+            my $expected = shift @tokens;
+            Test::More::diag $got->as_string      if VERBOSE;
+            Test::More::diag $expected->as_string if VERBOSE;
+            Test::More::is_deeply( $got, $expected, '... got the expected token' );
+        }
+
+        Test::More::is(scalar(@tokens), 0, '... exhausted all the tokens');
+        Test::More::ok($e->is_done, '... the encoder is now done');
     });
 }
 
