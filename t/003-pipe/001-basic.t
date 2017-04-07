@@ -28,11 +28,11 @@ isa_ok($r, 'Paxton::Streaming::Reader');
 my $d = Paxton::Streaming::Decoder->new;
 isa_ok($d, 'Paxton::Streaming::Decoder');
 
-my $p = Paxton::Streaming::Pipe->new( reader => $r, writer => $d );
+my $p = Paxton::Streaming::Pipe->new( producer => $r, consumer => $d );
 isa_ok($p, 'Paxton::Streaming::Pipe');
 
-is($p->reader, $r, '... got the right reader');
-is($p->writer, $d, '... got the right writer');
+is($p->producer, $r, '... got the right producer');
+is($p->consumer, $d, '... got the right consumer');
 
 ok(!$p->is_done, '... the pipe is not done');
 is(exception { $p->process }, undef, '... ran the pipe successfully');

@@ -27,8 +27,8 @@ our @DOES; BEGIN {
 }
 our %HAS;  BEGIN {
     %HAS = (
-        reader => sub { die 'You must specify an `reader`' },
-        writer => sub { die 'You must specify an `writer`' },
+        producer => sub { die 'You must specify an `producer`' },
+        consumer => sub { die 'You must specify an `consumer`' },
     )
 }
 
@@ -40,8 +40,8 @@ sub BUILD {
     # TODO:
     # We need to test that:
     #
-    # - the reader does the Core::API::Reader role
-    # - the writer does the Core::API::Writer role
+    # - the producer does the Core::API::Reader role
+    # - the consumer does the Core::API::Writer role
     #
     # Just need a nice way to check it,
     # and need to actually compose the
@@ -51,30 +51,34 @@ sub BUILD {
 
 # accessors
 
-sub reader { $_[0]->{reader} }
-sub writer { $_[0]->{writer} }
+sub producer { $_[0]->{producer} }
+sub consumer { $_[0]->{consumer} }
 
 ## fulfill the Pipe, Reader & Writer APIs
 
 sub is_done {
     my ($self) = @_;
-    $self->{reader}->is_done
+    $self->{producer}->is_done
         &&
-    $self->{writer}->is_done;
+    $self->{consumer}->is_done;
 }
 
-sub get_token { $_[0]->{reader}->get_token }
-sub put_token { $_[0]->{writer}->put_token( $_[1] ) }
+sub get_token { $_[0]->{producer}->get_token }
+sub put_token { $_[0]->{consumer}->put_token( $_[1] ) }
+
+sub process_token {
+    my ($self) = @_;
+    my $token = $self->get_token;
+    $self->put_token( $token )
+        if defined $token;
+}
 
 sub process {
     my ($self) = @_;
-    until ( $self->{reader}->is_done ) {
-        my $token = $self->get_token;
-        last unless defined $token;
-        $self->put_token( $token );
-    }
-    $self->{writer}->close
-        unless $self->{writer}->is_done;
+    $self->process_token
+        until $self->{producer}->is_done;
+    $self->{consumer}->close
+        unless $self->{consumer}->is_done;
     return;
 }
 
