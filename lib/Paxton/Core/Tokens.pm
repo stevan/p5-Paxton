@@ -56,6 +56,7 @@ BEGIN {
         is_boolean
         is_numeric
         is_error
+        is_scalar
         is_struct_start
         is_struct_end
 
@@ -111,30 +112,34 @@ sub Paxton::Core::Tokens::Token::as_string {
     return $out.' )';
 }
 
+## useful predicates
+
 sub is_token {
     (Scalar::Util::blessed($_[0]) && $_[0]->isa('Paxton::Core::Tokens::Token'))
 }
 
-## useful predicates
-
 sub is_boolean {
-    ($_[0]->type == $TOKEN_MAP{ADD_TRUE} || $_[0]->type == $TOKEN_MAP{ADD_FALSE})
+    ($_[0]->type == ADD_TRUE || $_[0]->type == ADD_FALSE)
 }
 
 sub is_numeric {
-    ($_[0]->type == $TOKEN_MAP{ADD_INT} || $_[0]->type == $TOKEN_MAP{ADD_FLOAT})
+    ($_[0]->type == ADD_INT || $_[0]->type == ADD_FLOAT)
 }
 
 sub is_error {
-    ($_[0]->type == $TOKEN_MAP{ERROR} || $_[0]->type == $TOKEN_MAP{NO_TOKEN} || $_[0]->type == $TOKEN_MAP{NOT_AVAILABLE})
+    ($_[0]->type == ERROR || $_[0]->type == NO_TOKEN || $_[0]->type == NOT_AVAILABLE)
+}
+
+sub is_scalar {
+    ($_[0]->type == ADD_STRING || $_[0]->type == ADD_NULL || is_numeric( $_[0] ) || is_boolean( $_[0] ))
 }
 
 sub is_struct_start {
-    ($_[0]->type == $TOKEN_MAP{START_OBJECT} || $_[0]->type == $TOKEN_MAP{START_ARRAY} || $_[0]->type == $TOKEN_MAP{START_PROPERTY})
+    ($_[0]->type == START_OBJECT || $_[0]->type == START_ARRAY || $_[0]->type == START_PROPERTY)
 }
 
 sub is_struct_end {
-    ($_[0]->type == $TOKEN_MAP{END_OBJECT} || $_[0]->type == $TOKEN_MAP{END_ARRAY} || $_[0]->type == $TOKEN_MAP{END_PROPERTY})
+    ($_[0]->type == END_OBJECT || $_[0]->type == END_ARRAY || $_[0]->type == END_PROPERTY)
 }
 
 1;

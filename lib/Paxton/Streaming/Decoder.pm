@@ -96,7 +96,7 @@ sub put_token {
         $context->leave_array_context;
         $self->_stash_value_correctly($array);
     }
-    else {
+    elsif ( is_scalar( $token ) ) {
         my $value = $token->value;
         $value = 1     if $token_type == ADD_TRUE;
         $value = 0     if $token_type == ADD_FALSE;

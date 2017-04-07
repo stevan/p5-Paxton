@@ -114,7 +114,7 @@ sub put_token {
             $self->{_value} = $child;
         }
     }
-    else {
+    elsif ( is_scalar( $token ) ) {
         push @{ $context->current_context_value->children } => (
             Paxton::Streaming::Parser::Node->new(
                 type  => $TOKEN_TYPE_TO_NODE_TYPE{ $token_type },
