@@ -24,8 +24,9 @@ our @ISA;  BEGIN { @ISA  = ('UNIVERSAL::Object') }
 our @DOES; BEGIN { @DOES = ('Paxton::Core::API::Reader') }
 our %HAS;  BEGIN {
     %HAS = (
-        source  => sub { die 'You must specify a `source` to encode.'},
-        context => sub { Paxton::Core::Context->new },
+        source     => sub { die 'You must specify a `source` to encode.'},
+        next_state => sub { \&root },
+        context    => sub { Paxton::Core::Context->new },
         # private ...
         _done   => sub { 0 },
     )
@@ -34,9 +35,7 @@ our %HAS;  BEGIN {
 sub BUILD {
     my ($self) = @_;
     # initialize the state ...
-    $self->{context}->enter_root_context(
-        [ \&start, $self->{source} ]
-    );
+    $self->{context}->enter_root_context( [ undef, $self->{source}, [] ] );
 }
 
 # ...
@@ -51,99 +50,139 @@ sub get_token {
 
     return if $self->{_done};
 
-    my ($next, $data, $state) = @{ $self->{context}->current_context_value };
+    if ( my $next = delete $self->{next_state} ) {
 
-    require Data::Dumper if DEBUG;
-    $self->log( '>> CURRENT => ', MOP::Method->new( $next )->name                 ) if DEBUG;
-    $self->log( '   CONTEXT => ', join ', ' => map $_->[0], @{ $self->{context} } ) if DEBUG;
-    $self->log( '   DATA    => ', Data::Dumper::Dumper( $data )  =~ s/\n$//r      ) if DEBUG;
-    $self->log( '   STATE   => ', Data::Dumper::Dumper( $state ) =~ s/\n$//r      ) if DEBUG;
+        my (undef, $data, $state) = @{ $self->{context}->current_context_value };
 
-    my $token = $self->$next();
+        require Data::Dumper if DEBUG;
+        $self->log( '>> CURRENT => ', MOP::Method->new( $next )->name                 ) if DEBUG;
+        $self->log( '   CONTEXT => ', join ', ' => map $_->[0], @{ $self->{context} } ) if DEBUG;
+        $self->log( '   DATA    => ', Data::Dumper::Dumper( $data )  =~ s/\n$//r      ) if DEBUG;
+        $self->log( '   STATE   => ', Data::Dumper::Dumper( $state ) =~ s/\n$//r      ) if DEBUG;
 
-    (defined $token && is_token( $token ))
-        || Paxton::Core::Exception->new( message => 'Invalid token ('.$token.')' )->throw;
+        my $token = $self->$next();
 
-    return if $token->type == NO_TOKEN;
+        (defined $token && is_token( $token ))
+            || Paxton::Core::Exception->new( message => 'Invalid token ('.$token.')' )->throw;
 
-    if ( is_error( $token ) ) {
-        $self->log( 'Encountered error: ', $token->value ) if DEBUG;
+        return if $token->type == NO_TOKEN;
+
+        if ( is_error( $token ) ) {
+            $self->log( 'Encountered error: ', $token->value ) if DEBUG;
+        }
+        elsif ( not exists $self->{next_state} ) {
+            Paxton::Core::Exception
+                ->new( message => 'Next state is not specified after '.$token->as_string )
+                ->throw;
+        }
+
+        $self->log( '<< NEXT <= ', $self->{next_state} ? MOP::Method->new( $self->{next_state} )->name : 'NONE' ) if DEBUG;
+
+        # if we are back into root context
+        # that pretty much means we are done
+        # so we can do this ...
+        if ( $self->{context}->in_root_context ) {
+            $self->{_done} = 1;
+        }
+
+        return $token;
     }
 
-    # if we are back into root context
-    # that pretty much means we are done
-    # so we can do this ...
-    if ( $self->{context}->in_root_context ) {
-        $self->{_done} = 1;
-    }
-
-    return $token;
+    return;
 }
 
 # ...
 
+sub root {
+    my ($self) = @_;
+
+    $self->log( 'Entering `root`' ) if DEBUG;
+
+    my $context = $self->{context};
+    my (undef, $data, undef) = @{ $context->current_context_value };
+
+    if ( defined $data ) {
+        if ( ref $data eq 'HASH' || ref $data eq 'ARRAY' ) {
+            return $self->start;
+        }
+        else {
+            return token( ERROR, 'Root node must be either array or object' );
+        }
+    }
+    else {
+        return $self->end;
+    }
+}
+
 sub start {
     my ($self) = @_;
 
+    $self->log( 'Entering `start`' ) if DEBUG;
+
     my $context = $self->{context};
-    my $depth   = $context->depth;
     my (undef, $data, undef) = @{ $context->current_context_value };
 
-    if ( ref $data eq 'HASH' ) {
-        return $self->object;
-    }
-    elsif ( ref $data eq 'ARRAY' ) {
-        return $self->array;
-    }
-    else {
-        return $self->literal( $data );
-    }
+    return $self->_dispatch_on_type( $data );
+}
+
+sub end {
+    my ($self) = @_;
+
+    $self->log( 'Entering `end`' ) if DEBUG;
+
+    # NOTE:
+    # this token type works for
+    # now, but we might want to
+    # be more specific later.
+    # - SL
+    return token( NO_TOKEN );
 }
 
 sub object {
     my ($self) = @_;
 
+    $self->log( 'Entering `object`' ) if DEBUG;
+
     my $context = $self->{context};
-    my $depth   = $context->depth;
     my (undef, $data, $state) = @{ $context->current_context_value };
 
-    if ( not $context->in_object_context ) {
-        $context->enter_object_context( [ \&object, $data, [ sort keys %$data ] ] );
-        return token( START_OBJECT );
+    if ( scalar @$state ) {
+        return $self->property;
     }
     else {
-        if ( scalar @$state ) {
-            return $self->property;
-        }
-        else {
-            $context->leave_object_context;
-            return token( END_OBJECT );
-        }
+        return $self->end_property
+            if $context->in_property_context;
+
+        $self->{next_state} = $context->leave_object_context->[0];
+        return token( END_OBJECT );
     }
 }
 
 sub property {
     my ($self) = @_;
 
+    $self->log( 'Entering `property`' ) if DEBUG;
+
     my $context = $self->{context};
-    my $depth   = $context->depth;
     my (undef, $data, $state) = @{ $context->current_context_value };
 
     if ( not $context->in_property_context ) {
         my $key = shift @$state;
-        $context->enter_property_context( [ \&property, $data->{ $key } ] );
+
+        # if we have no keys, just
+        # return back to object ...
+        return $self->object if not defined $key;
+
+        $context->enter_property_context( [ \&end_property, $data->{ $key }, [] ] );
+        $self->{next_state} = \&property;
         return token( START_PROPERTY, $key );
     }
     else {
-        my $value = $self->start;
+        my $value = $self->_dispatch_on_type( $data );
 
         return $value if is_error( $value );
 
-        # if we have not moved
-        # into a new context, then
-        # we can end the property
-        $context->current_context_value->[0] = \&end_property
-            if $context->depth == $depth;
+        $self->{next_state} ||= \&end_property;
 
         return $value;
     }
@@ -152,41 +191,47 @@ sub property {
 sub end_property {
     my ($self) = @_;
 
-    my $context = $self->{context};
-    my $depth   = $context->depth;
-    my (undef, undef, undef) = @{ $context->current_context_value };
+    $self->log( 'Entering `end_property`' ) if DEBUG;
 
-    $context->leave_property_context;
+    $self->{context}->leave_property_context;
+    $self->{next_state} = \&object;
     return token( END_PROPERTY );
 }
 
 sub array {
     my ($self) = @_;
 
+    $self->log( 'Entering `array`' ) if DEBUG;
+
     my $context = $self->{context};
-    my $depth   = $context->depth;
     my (undef, $data, $state) = @{ $context->current_context_value };
 
-    if ( not $context->in_array_context ) {
-        $context->enter_array_context( [ \&array, $data, [ 0 .. $#{$data} ] ] );
-        return token( START_ARRAY );
+    if ( scalar @$state ) {
+        my $i = shift @$state;
+        $self->{next_state} = \&array;
+        return $self->_dispatch_on_type( $data->[ $i ] );
     }
     else {
-        my (undef, $array, $indices) = @{ $context->current_context_value };
-
-        if ( scalar @$indices ) {
-            my $idx = shift @$indices;
-            return $self->literal( $array->[ $idx ] );
-        }
-        else {
-            $context->leave_array_context;
-            return token( END_ARRAY );
-        }
+        $self->{next_state} = $context->leave_array_context->[0];
+        return token( END_ARRAY );
     }
 }
 
-sub literal {
+sub _dispatch_on_type {
     my ($self, $data) = @_;
+
+    $self->log( 'Entering `_dispatch_on_type`' ) if DEBUG;
+
+    if ( ref $data eq 'HASH' ) {
+        $self->{context}->enter_object_context( [ \&object, $data, [ sort keys %$data ] ] );
+        $self->{next_state} = \&property;
+        return token( START_OBJECT );
+    }
+    elsif ( ref $data eq 'ARRAY' ) {
+        $self->{context}->enter_array_context( [ \&array, $data, [ 0 .. $#{$data} ] ] );
+        $self->{next_state} = \&array;
+        return token( START_ARRAY );
+    }
 
     return token( ADD_NULL ) if not defined $data;
 
