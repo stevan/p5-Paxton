@@ -53,7 +53,7 @@ sub tokens_match {
         }
 
         Test::More::is( $r->get_token, undef, '... parsing is complete' );
-        Test::More::ok( $r->is_done, '... the reader is done' );
+        Test::More::ok( $r->is_exhausted, '... the reader is done' );
     });
 }
 
@@ -76,7 +76,7 @@ sub tokens_decode_into {
             '... got the expected value'
         );
 
-        Test::More::ok( $d->is_done, '... the decoder is done' );
+        Test::More::ok( $d->is_full, '... the decoder is done' );
     });
 }
 
@@ -98,7 +98,7 @@ sub tokens_encoded_from {
         }
 
         Test::More::is(scalar(@tokens), 0, '... exhausted all the tokens');
-        Test::More::ok($e->is_done, '... the encoder is now done');
+        Test::More::ok($e->is_exhausted, '... the encoder is now done');
     });
 }
 

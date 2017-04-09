@@ -45,7 +45,7 @@ sub get_value {         $_[0]->{_value} }
 
 # ...
 
-sub is_done {
+sub is_full {
     my ($self) = @_;
     $self->has_value
         &&
@@ -55,7 +55,7 @@ sub is_done {
 sub put_token {
     my ($self, $token) = @_;
 
-    (not $self->is_done)
+    (not $self->is_full)
         || Paxton::Core::Exception->new( message => 'Decoder is done, cannot `put` any more tokens' )->throw;
 
     (defined $token && is_token($token))

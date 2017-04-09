@@ -34,9 +34,7 @@ isa_ok($p, 'Paxton::Streaming::Pipe');
 is($p->producer, $r, '... got the right producer');
 is($p->consumer, $d, '... got the right consumer');
 
-ok(!$p->is_done, '... the pipe is not done');
 is(exception { $p->process }, undef, '... ran the pipe successfully');
-ok($p->is_done, '... the pipe is done');
 
 ok($d->has_value, '... we have a value');
 is_deeply(

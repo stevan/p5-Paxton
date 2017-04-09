@@ -40,8 +40,8 @@ sub BUILD {
     # TODO:
     # We need to test that:
     #
-    # - the producer does the Core::API::Reader role
-    # - the consumer does the Core::API::Writer role
+    # - the producer does the Core::API::Token::Producer role
+    # - the consumer does the Core::API::Token::Consumer role
     #
     # Just need a nice way to check it,
     # and need to actually compose the
@@ -54,31 +54,35 @@ sub BUILD {
 sub producer { $_[0]->{producer} }
 sub consumer { $_[0]->{consumer} }
 
-## fulfill the Pipe, Reader & Writer APIs
-
-sub is_done {
-    my ($self) = @_;
-    $self->{producer}->is_done
-        &&
-    $self->{consumer}->is_done;
-}
+## fulfill the APIs
 
 sub get_token { $_[0]->{producer}->get_token }
 sub put_token { $_[0]->{consumer}->put_token( $_[1] ) }
 
 sub process_token {
-    my ($self) = @_;
-    my $token = $self->get_token;
-    $self->put_token( $token )
-        if defined $token;
+    my ($self, $token) = @_;
+    return $token;
 }
 
 sub process {
     my ($self) = @_;
-    $self->process_token
-        until $self->{producer}->is_done;
+
+    until ( $self->{producer}->is_exhausted ) {
+        my $token = $self->get_token;
+        $token = $self->process_token( $token );
+        $self->put_token( $token )
+            if defined $token;
+    }
+
+    # NOTE:
+    # this is problematic because
+    # the `close` method is not part
+    # of every consumer and not part
+    # of the core API, sooooo, we need
+    # to fix that (either way works)
+    # - SL
     $self->{consumer}->close
-        unless $self->{consumer}->is_done;
+        unless $self->{consumer}->is_full;
     return;
 }
 

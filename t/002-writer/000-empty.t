@@ -32,9 +32,9 @@ subtest '... simple object' => sub {
         $w->put_token( $_ );
     }
 
-    ok(!$w->is_done, '... we are not done yet');
+    ok(!$w->is_full, '... we are not done yet');
     is(exception { $w->close }, undef, '... closed the writer');
-    ok($w->is_done, '... we are done now');
+    ok($w->is_full, '... we are done now');
 
     is($json, '{"foo":"bar","baz":"gorch"}', '... got the JSON we expected');
 };
@@ -58,9 +58,9 @@ subtest '... simple array' => sub {
         $w->put_token( $_ );
     }
 
-    ok(!$w->is_done, '... we are not done yet');
+    ok(!$w->is_full, '... we are not done yet');
     is(exception { $w->close }, undef, '... closed the writer');
-    ok($w->is_done, '... we are done now');
+    ok($w->is_full, '... we are done now');
 
     is($json, '["bar","gorch",10,5.5]', '... got the JSON we expected');
 };

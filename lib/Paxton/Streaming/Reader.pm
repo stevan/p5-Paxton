@@ -80,7 +80,7 @@ sub next_state { $_[0]->{next_state} }
 
 # iteration API
 
-sub is_done {
+sub is_exhausted {
     my ($self) = @_;
     $self->{source}->is_done
         &&
@@ -90,7 +90,7 @@ sub is_done {
 sub get_token {
     my ($self) = @_;
 
-    return if $self->is_done;
+    return if $self->is_exhausted;
 
     if ( my $next = delete $self->{next_state} ) {
 

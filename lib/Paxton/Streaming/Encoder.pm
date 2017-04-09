@@ -40,7 +40,7 @@ sub BUILD {
 
 # ...
 
-sub is_done {
+sub is_exhausted {
     my ($self) = @_;
     return $self->{_done};
 }

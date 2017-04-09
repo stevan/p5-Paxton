@@ -8,7 +8,7 @@ our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
 
 sub get_token;
-sub is_done;
+sub is_exhausted;
 
 1;
 
@@ -18,7 +18,7 @@ __END__
 
 =head1 SYNOPSIS
 
-    until ( $producer->is_done ) {
+    until ( $producer->is_exhausted ) {
         process_token( $producer->get_token );
     }
 
