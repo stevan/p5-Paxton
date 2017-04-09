@@ -28,7 +28,10 @@ isa_ok($r, 'Paxton::Streaming::Reader');
 my $d = Paxton::Streaming::Decoder->new;
 isa_ok($d, 'Paxton::Streaming::Decoder');
 
-my $p = Paxton::Streaming::Pipe->new( producer => $r, consumer => $d );
+my $p = Paxton::Streaming::Pipe->new(
+    producer => $r,
+    consumer => $d,
+);
 isa_ok($p, 'Paxton::Streaming::Pipe');
 
 is($p->producer, $r, '... got the right producer');

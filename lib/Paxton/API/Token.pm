@@ -17,14 +17,11 @@ __END__
 
     my $producer  = ...;
     my $consumer  = ...;
-    my $processer = ...;
 
     until ( $producer->is_exhausted || $consumer->is_full ) {
-        $consumer->put_token(
-            $processer->process_token(
-                $producer->get_token
-            )
-        );
+        my $token = $producer->get_token;
+        last unless defined $token;
+        $consumer->put_token( $token );
     }
 
 =head1 DESCRIPTION
