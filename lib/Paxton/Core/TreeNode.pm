@@ -16,15 +16,25 @@ use constant DEBUG => $ENV{PAXTON_PARSER_DEBUG} // 0;
 
 ## constants
 
-use constant OBJECT   => Scalar::Util::dualvar( 1, 'OBJECT'   );
-use constant PROPERTY => Scalar::Util::dualvar( 2, 'PROPERTY' );
-use constant ARRAY    => Scalar::Util::dualvar( 3, 'ARRAY'    );
-use constant STRING   => Scalar::Util::dualvar( 4, 'STRING'   );
-use constant INT      => Scalar::Util::dualvar( 5, 'INT'      );
-use constant FLOAT    => Scalar::Util::dualvar( 6, 'FLOAT'    );
-use constant TRUE     => Scalar::Util::dualvar( 7, 'TRUE'     );
-use constant FALSE    => Scalar::Util::dualvar( 8, 'FALSE'    );
-use constant NULL     => Scalar::Util::dualvar( 9, 'NULL'     );
+our %TYPE_MAP;
+BEGIN {
+    %TYPE_MAP = (
+        OBJECT   => Scalar::Util::dualvar( 1, 'OBJECT'   ),
+        PROPERTY => Scalar::Util::dualvar( 2, 'PROPERTY' ),
+        ARRAY    => Scalar::Util::dualvar( 3, 'ARRAY'    ),
+        STRING   => Scalar::Util::dualvar( 4, 'STRING'   ),
+        INT      => Scalar::Util::dualvar( 5, 'INT'      ),
+        FLOAT    => Scalar::Util::dualvar( 6, 'FLOAT'    ),
+        TRUE     => Scalar::Util::dualvar( 7, 'TRUE'     ),
+        FALSE    => Scalar::Util::dualvar( 8, 'FALSE'    ),
+        NULL     => Scalar::Util::dualvar( 9, 'NULL'     ),
+    );
+
+    foreach my $name ( keys %TYPE_MAP ) {
+        no strict 'refs';
+        *{$name} = sub () { $TYPE_MAP{ $name } };
+    }
+}
 
 # ...
 
@@ -40,7 +50,6 @@ our %HAS; BEGIN {
 sub type     { $_[0]->{type}     }
 sub value    { $_[0]->{value}    }
 sub children { $_[0]->{children} }
-
 
 # NOTE:
 # this doesn't actually make sense, we
