@@ -19,15 +19,16 @@ use constant DEBUG => $ENV{PAXTON_PARSER_DEBUG} // 0;
 our %TYPE_MAP;
 BEGIN {
     %TYPE_MAP = (
-        OBJECT   => Scalar::Util::dualvar( 1, 'OBJECT'   ),
-        PROPERTY => Scalar::Util::dualvar( 2, 'PROPERTY' ),
-        ARRAY    => Scalar::Util::dualvar( 3, 'ARRAY'    ),
-        STRING   => Scalar::Util::dualvar( 4, 'STRING'   ),
-        INT      => Scalar::Util::dualvar( 5, 'INT'      ),
-        FLOAT    => Scalar::Util::dualvar( 6, 'FLOAT'    ),
-        TRUE     => Scalar::Util::dualvar( 7, 'TRUE'     ),
-        FALSE    => Scalar::Util::dualvar( 8, 'FALSE'    ),
-        NULL     => Scalar::Util::dualvar( 9, 'NULL'     ),
+        OBJECT   => Scalar::Util::dualvar( 1,  'OBJECT'   ),
+        PROPERTY => Scalar::Util::dualvar( 2,  'PROPERTY' ),
+        ARRAY    => Scalar::Util::dualvar( 3,  'ARRAY'    ),
+        ITEM     => Scalar::Util::dualvar( 4,  'ITEM'     ),
+        STRING   => Scalar::Util::dualvar( 5,  'STRING'   ),
+        INT      => Scalar::Util::dualvar( 6,  'INT'      ),
+        FLOAT    => Scalar::Util::dualvar( 7,  'FLOAT'    ),
+        TRUE     => Scalar::Util::dualvar( 8,  'TRUE'     ),
+        FALSE    => Scalar::Util::dualvar( 9,  'FALSE'    ),
+        NULL     => Scalar::Util::dualvar( 10, 'NULL'     ),
     );
 
     foreach my $name ( keys %TYPE_MAP ) {
@@ -68,6 +69,9 @@ sub to_string {
     }
     elsif ( $type == ARRAY ) {
         return '[' . (join ',' => map $_->to_string, @{$self->{children}}) . ']';
+    }
+    elsif ( $type == ITEM ) {
+        return $self->{children}->[0]->to_string;
     }
     elsif ( $type == STRING ) {
         return '"' . $self->value . '"';
