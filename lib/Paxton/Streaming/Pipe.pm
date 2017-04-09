@@ -67,22 +67,16 @@ sub process_token {
 sub process {
     my ($self) = @_;
 
-    until ( $self->{producer}->is_exhausted ) {
-        my $token = $self->get_token;
+    until ( $self->{producer}->is_exhausted || $self->{consumer}->is_full ) {
+        my $token = $self->{producer}->get_token;
         $token = $self->process_token( $token );
-        $self->put_token( $token )
-            if defined $token;
+        $self->{consumer}->put_token( $token );
     }
 
-    # NOTE:
-    # this is problematic because
-    # the `close` method is not part
-    # of every consumer and not part
-    # of the core API, sooooo, we need
-    # to fix that (either way works)
+    # TODO:
+    # deal with some error conditions perhaps
     # - SL
-    $self->{consumer}->close
-        unless $self->{consumer}->is_full;
+
     return;
 }
 
