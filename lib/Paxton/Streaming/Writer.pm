@@ -143,25 +143,27 @@ sub put_token {
         $sink->print(']');
         $self->{_needs_comma} = 1 unless $context->in_root_context;
     }
+    elsif ( $token_type == START_ITEM ) {
+        $context->enter_item_context;
+    }
+    elsif ( $token_type == END_ITEM ) {
+        $context->leave_item_context;
+        $self->{_needs_comma} = 1;
+    }
     elsif ( is_numeric( $token ) ) {
         $sink->print($token->value);
-        $self->{_needs_comma} = 1 if $context->in_array_context;
     }
     elsif ( $token_type == ADD_STRING ) {
         $sink->print( $self->make_json_string( $token->value ) );
-        $self->{_needs_comma} = 1 if $context->in_array_context;
     }
     elsif ( $token_type == ADD_TRUE ) {
         $sink->print('true');
-        $self->{_needs_comma} = 1 if $context->in_array_context;
     }
     elsif ( $token_type == ADD_FALSE ) {
         $sink->print('false');
-        $self->{_needs_comma} = 1 if $context->in_array_context;
     }
     elsif ( $token_type == ADD_NULL ) {
         $sink->print('null');
-        $self->{_needs_comma} = 1 if $context->in_array_context;
     }
     else {
         Paxton::Core::Exception->new( message => 'Unkown token type: '.$token_type )->throw;
