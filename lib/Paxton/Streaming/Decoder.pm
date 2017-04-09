@@ -80,6 +80,7 @@ sub put_token {
         $context->leave_object_context;
         $self->_stash_value_correctly($obj);
     }
+
     elsif ( $token_type == START_PROPERTY ) {
         $context->enter_property_context( $token->value );
     }
@@ -88,6 +89,7 @@ sub put_token {
         my $obj = $context->leave_property_context;
         $obj->{ $key } = $self->{_partial};
     }
+
     elsif ( $token_type == START_ARRAY ) {
         $context->enter_array_context([]);
     }
@@ -96,6 +98,16 @@ sub put_token {
         $context->leave_array_context;
         $self->_stash_value_correctly($array);
     }
+
+    elsif ( $token_type == START_ITEM ) {
+        $context->enter_item_context( $token->value );
+    }
+    elsif ( $token_type == END_ITEM ) {
+        my $idx = $context->current_context_value;
+        my $arr = $context->leave_item_context;
+        $arr->[ $idx ] = $self->{_partial};
+    }
+
     elsif ( is_scalar( $token ) ) {
         my $value = $token->value;
         $value = 1     if $token_type == ADD_TRUE;

@@ -361,9 +361,10 @@ sub item {
             return $self->array;
         }
         elsif ( not $self->{context}->in_item_context ) {
+            my $idx = $self->{context}->get_current_item_count;
             $self->{context}->enter_item_context( \&end_item );
             $self->{next_state} = \&item;
-            return token( START_ITEM, 0 );
+            return token( START_ITEM, $idx );
         }
         else {
             my $value = $self->start;

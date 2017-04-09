@@ -77,13 +77,13 @@ subtest '... array node' => sub {
             token(START_ITEM, 0),
                 token(ADD_STRING, "bar"),
             token(END_ITEM),
-            token(START_ITEM, 0),
+            token(START_ITEM, 1),
                 token(ADD_STRING, "gorch"),
             token(END_ITEM),
-            token(START_ITEM, 0),
+            token(START_ITEM, 2),
                 token(ADD_INT, 10),
             token(END_ITEM),
-            token(START_ITEM, 0),
+            token(START_ITEM, 3),
                 token(ADD_FLOAT, 5.5),
             token(END_ITEM),
         token(END_ARRAY)
@@ -117,7 +117,7 @@ subtest '... array node' => sub {
             ),
             Paxton::Core::TreeNode->new(
                 type     => Paxton::Core::TreeNode->ITEM,
-                value    => 0,
+                value    => 1,
                 children => [
                     Paxton::Core::TreeNode->new(
                         type  => Paxton::Core::TreeNode->STRING,
@@ -127,7 +127,7 @@ subtest '... array node' => sub {
             ),
             Paxton::Core::TreeNode->new(
                 type     => Paxton::Core::TreeNode->ITEM,
-                value    => 0,
+                value    => 2,
                 children => [
                     Paxton::Core::TreeNode->new(
                         type  => Paxton::Core::TreeNode->INT,
@@ -137,7 +137,7 @@ subtest '... array node' => sub {
             ),
             Paxton::Core::TreeNode->new(
                 type     => Paxton::Core::TreeNode->ITEM,
-                value    => 0,
+                value    => 3,
                 children => [
                     Paxton::Core::TreeNode->new(
                         type  => Paxton::Core::TreeNode->FLOAT,

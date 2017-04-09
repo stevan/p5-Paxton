@@ -207,14 +207,55 @@ sub array {
     my (undef, $data, $state) = @{ $context->current_context_value };
 
     if ( scalar @$state ) {
-        my $i = shift @$state;
-        $self->{next_state} = \&array;
-        return $self->_dispatch_on_type( $data->[ $i ] );
+        return $self->item;
     }
     else {
+        return $self->end_item
+            if $context->in_item_context;
+
         $self->{next_state} = $context->leave_array_context->[0];
         return token( END_ARRAY );
     }
+}
+
+sub item {
+    my ($self) = @_;
+
+    $self->log( 'Entering `item`' ) if DEBUG;
+
+    my $context = $self->{context};
+    my (undef, $data, $state) = @{ $context->current_context_value };
+
+    if ( not $context->in_item_context ) {
+        my $idx = shift @$state;
+
+        # if we have no indicies, just
+        # return back to array ...
+        return $self->array if not defined $idx;
+
+        $context->enter_item_context( [ \&end_item, $data->[ $idx ], [] ] );
+        $self->{next_state} = \&item;
+        return token( START_ITEM, $idx );
+    }
+    else {
+        my $value = $self->_dispatch_on_type( $data );
+
+        return $value if is_error( $value );
+
+        $self->{next_state} ||= \&end_item;
+
+        return $value;
+    }
+}
+
+sub end_item {
+    my ($self) = @_;
+
+    $self->log( 'Entering `end_item`' ) if DEBUG;
+
+    $self->{context}->leave_item_context;
+    $self->{next_state} = \&array;
+    return token( END_ITEM );
 }
 
 sub _dispatch_on_type {
@@ -229,7 +270,7 @@ sub _dispatch_on_type {
     }
     elsif ( ref $data eq 'ARRAY' ) {
         $self->{context}->enter_array_context( [ \&array, $data, [ 0 .. $#{$data} ] ] );
-        $self->{next_state} = \&array;
+        $self->{next_state} = \&item;
         return token( START_ARRAY );
     }
 

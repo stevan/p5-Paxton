@@ -64,6 +64,20 @@ sub in_item_context {
     return $self->[-1]->[0] == IN_ITEM;
 }
 
+# data ...
+
+sub get_current_item_count {
+    my ($self) = @_;
+    return unless scalar @$self && defined $self->[-1];
+    return $self->[-1]->[2];
+}
+
+sub get_current_property_count {
+    my ($self) = @_;
+    return unless scalar @$self && defined $self->[-1];
+    return $self->[-1]->[2];
+}
+
 # enter ...
 
 sub enter_root_context {
@@ -82,7 +96,7 @@ sub enter_object_context {
     (scalar @$self)
         || Paxton::Core::Exception->new( message => 'Unable to enter object context: stack is empty' )->throw;
 
-    push @$self => [ IN_OBJECT, $value ];
+    push @$self => [ IN_OBJECT, $value, 0 ];
     return;
 }
 
@@ -95,7 +109,7 @@ sub enter_array_context {
     (not $self->in_object_context)
         || Paxton::Core::Exception->new( message => 'Unable to enter array context from within object context (must be in property context)' )->throw;
 
-    push @$self => [ IN_ARRAY, $value ];
+    push @$self => [ IN_ARRAY, $value, 0 ];
     return;
 }
 
@@ -107,6 +121,9 @@ sub enter_property_context {
 
     ($self->in_object_context)
         || Paxton::Core::Exception->new( message => 'Unable to enter property context from within anything but object context' )->throw;
+
+    # increment the property counter
+    $self->[-1]->[2]++;
 
     push @$self => [ IN_PROPERTY, $value ];
     return;
@@ -120,6 +137,9 @@ sub enter_item_context {
 
     ($self->in_array_context)
         || Paxton::Core::Exception->new( message => 'Unable to enter item context from within anything but array context' )->throw;
+
+    # increment the property counter
+    $self->[-1]->[2]++;
 
     push @$self => [ IN_ITEM, $value ];
     return;
