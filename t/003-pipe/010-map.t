@@ -12,7 +12,7 @@ BEGIN {
     use_ok('Paxton::Streaming::Pipe::Map');
     use_ok('Paxton::Streaming::Reader');
     use_ok('Paxton::Streaming::Decoder');
-    use_ok('Paxton::Core::Tokens');
+    use_ok('Paxton::Util::Tokens');
 }
 
 my $json = q|

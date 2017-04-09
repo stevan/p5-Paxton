@@ -10,7 +10,7 @@ use Test::Paxton;
 
 use Path::Tiny ();
 
-use Paxton::Core::Tokens;
+use Paxton::Util::Tokens;
 
 tokens_match(
     (Path::Tiny::path('t/data/001-reader/200-from-file.json')->slurp),

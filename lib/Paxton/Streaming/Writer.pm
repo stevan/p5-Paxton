@@ -14,7 +14,7 @@ use IO::Scalar;
 use Paxton::Core::API::Writer;
 
 use Paxton::Core::Exception;
-use Paxton::Core::Tokens;
+use Paxton::Util::Tokens;
 use Paxton::Core::Context;
 
 our $VERSION   = '0.01';

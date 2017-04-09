@@ -10,7 +10,7 @@ use MOP::Method;
 use Paxton::Core::API::Reader;
 
 use Paxton::Core::Exception;
-use Paxton::Core::Tokens;
+use Paxton::Util::Tokens;
 use Paxton::Core::Context;
 
 our $VERSION   = '0.01';

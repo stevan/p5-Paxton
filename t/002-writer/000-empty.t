@@ -8,7 +8,7 @@ use Test::Fatal;
 
 BEGIN {
     use_ok('Paxton::Streaming::Writer');
-    use_ok('Paxton::Core::Tokens');
+    use_ok('Paxton::Util::Tokens');
 }
 
 subtest '... simple object' => sub {

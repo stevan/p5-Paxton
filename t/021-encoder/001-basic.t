@@ -9,7 +9,7 @@ use Test::More;
 use Test::Paxton;
 
 BEGIN {
-    use_ok('Paxton::Core::Tokens');
+    use_ok('Paxton::Util::Tokens');
 }
 
 tokens_encoded_from(

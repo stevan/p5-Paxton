@@ -8,7 +8,7 @@ use Test::More;
 BEGIN {
     use_ok('Paxton::Streaming::Parser');
     use_ok('Paxton::Streaming::Parser::Node');
-    use_ok('Paxton::Core::Tokens');
+    use_ok('Paxton::Util::Tokens');
 }
 
 subtest '... object node' => sub {

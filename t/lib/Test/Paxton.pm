@@ -4,7 +4,7 @@ use strict;
 use warnings;
 
 use Test::More           ();
-use Paxton::Core::Tokens ('is_token');
+use Paxton::Util::Tokens ('is_token');
 
 use Paxton::Streaming::Reader;
 use Paxton::Streaming::Decoder;

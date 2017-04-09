@@ -8,7 +8,7 @@ use lib 't/lib/';
 use Test::More;
 use Test::Paxton;
 
-use Paxton::Core::Tokens;
+use Paxton::Util::Tokens;
 
 tokens_match(
     '[]',
