@@ -7,7 +7,7 @@ use Test::More;
 
 BEGIN {
     use_ok('Paxton::Streaming::Parser');
-    use_ok('Paxton::Streaming::Parser::Node');
+    use_ok('Paxton::Core::TreeNode');
     use_ok('Paxton::Util::Tokens');
 }
 
@@ -38,25 +38,25 @@ subtest '... object node' => sub {
 
     is($p->get_value->to_string, $expected, '... got the stringification we expected');
 
-    my $object_node = Paxton::Streaming::Parser::Node->new(
-        type     => Paxton::Streaming::Parser::Node->OBJECT,
+    my $object_node = Paxton::Core::TreeNode->new(
+        type     => Paxton::Core::TreeNode->OBJECT,
         children => [
-            Paxton::Streaming::Parser::Node->new(
-                type     => Paxton::Streaming::Parser::Node->PROPERTY,
+            Paxton::Core::TreeNode->new(
+                type     => Paxton::Core::TreeNode->PROPERTY,
                 value    => "foo",
                 children => [
-                    Paxton::Streaming::Parser::Node->new(
-                        type  => Paxton::Streaming::Parser::Node->STRING,
+                    Paxton::Core::TreeNode->new(
+                        type  => Paxton::Core::TreeNode->STRING,
                         value => "bar"
                     )
                 ]
             ),
-            Paxton::Streaming::Parser::Node->new(
-                type     => Paxton::Streaming::Parser::Node->PROPERTY,
+            Paxton::Core::TreeNode->new(
+                type     => Paxton::Core::TreeNode->PROPERTY,
                 value    => "baz",
                 children => [
-                    Paxton::Streaming::Parser::Node->new(
-                        type  => Paxton::Streaming::Parser::Node->STRING,
+                    Paxton::Core::TreeNode->new(
+                        type  => Paxton::Core::TreeNode->STRING,
                         value => "gorch"
                     )
                 ]
@@ -94,23 +94,23 @@ subtest '... array node' => sub {
 
     is($p->get_value->to_string, $expected, '... got the stringification we expected');
 
-    my $array_node = Paxton::Streaming::Parser::Node->new(
-        type     => Paxton::Streaming::Parser::Node->ARRAY,
+    my $array_node = Paxton::Core::TreeNode->new(
+        type     => Paxton::Core::TreeNode->ARRAY,
         children => [
-            Paxton::Streaming::Parser::Node->new(
-                type  => Paxton::Streaming::Parser::Node->STRING,
+            Paxton::Core::TreeNode->new(
+                type  => Paxton::Core::TreeNode->STRING,
                 value => "bar"
             ),
-            Paxton::Streaming::Parser::Node->new(
-                type  => Paxton::Streaming::Parser::Node->STRING,
+            Paxton::Core::TreeNode->new(
+                type  => Paxton::Core::TreeNode->STRING,
                 value => "gorch"
             ),
-            Paxton::Streaming::Parser::Node->new(
-                type  => Paxton::Streaming::Parser::Node->INT,
+            Paxton::Core::TreeNode->new(
+                type  => Paxton::Core::TreeNode->INT,
                 value => 10
             ),
-            Paxton::Streaming::Parser::Node->new(
-                type  => Paxton::Streaming::Parser::Node->FLOAT,
+            Paxton::Core::TreeNode->new(
+                type  => Paxton::Core::TreeNode->FLOAT,
                 value => 5.5
             )
         ]

@@ -12,7 +12,7 @@ use Paxton::Core::Exception;
 use Paxton::Util::Tokens;
 use Paxton::Core::Context;
 
-use Paxton::Streaming::Parser::Node;
+use Paxton::Core::TreeNode;
 
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
@@ -22,12 +22,12 @@ use constant DEBUG => $ENV{PAXTON_PARSER_DEBUG} // 0;
 # ...
 
 our %TOKEN_TYPE_TO_NODE_TYPE = (
-    ADD_STRING => Paxton::Streaming::Parser::Node->STRING,
-    ADD_INT    => Paxton::Streaming::Parser::Node->INT,
-    ADD_FLOAT  => Paxton::Streaming::Parser::Node->FLOAT,
-    ADD_TRUE   => Paxton::Streaming::Parser::Node->TRUE,
-    ADD_FALSE  => Paxton::Streaming::Parser::Node->FALSE,
-    ADD_NULL   => Paxton::Streaming::Parser::Node->NULL,
+    ADD_STRING => Paxton::Core::TreeNode->STRING,
+    ADD_INT    => Paxton::Core::TreeNode->INT,
+    ADD_FLOAT  => Paxton::Core::TreeNode->FLOAT,
+    ADD_TRUE   => Paxton::Core::TreeNode->TRUE,
+    ADD_FALSE  => Paxton::Core::TreeNode->FALSE,
+    ADD_NULL   => Paxton::Core::TreeNode->NULL,
 );
 
 our @ISA;  BEGIN { @ISA  = ('UNIVERSAL::Object') }
@@ -77,29 +77,29 @@ sub put_token {
     require Data::Dumper if DEBUG;
     $self->log('>>> TOKEN:   ', $token->as_string                                  ) if DEBUG;
     $self->log('    CONTEXT: ', join ', ' => map $_->[0], @$context                ) if DEBUG;
-    $self->log('    VALUE:   ', Data::Dumper::Dumper($self->{_value})   =~ s/\n$//r) if DEBUG;
+    $self->log('    VALUE:   ', Data::Dumper::Dumper($self->{_value})   =~ s/\n$//r) if DEBUG; #/
     $self->log('    STATE:   ', join ' | ' => grep defined, map $_->[1], @$context) if DEBUG;
-    $self->log('         :   ', join ' | ' => map Data::Dumper::Dumper($_->[1])=~s/\n$//r, @$context) if DEBUG;
+    $self->log('         :   ', join ' | ' => map Data::Dumper::Dumper($_->[1])=~s/\n$//r, @$context) if DEBUG; #/
 
     if ( $token_type == START_OBJECT ) {
         $context->enter_object_context(
-            Paxton::Streaming::Parser::Node->new(
-                type => Paxton::Streaming::Parser::Node->OBJECT
+            Paxton::Core::TreeNode->new(
+                type => Paxton::Core::TreeNode->OBJECT
             )
         );
     }
     elsif ( $token_type == START_PROPERTY ) {
         $context->enter_property_context(
-            Paxton::Streaming::Parser::Node->new(
-                type  => Paxton::Streaming::Parser::Node->PROPERTY,
+            Paxton::Core::TreeNode->new(
+                type  => Paxton::Core::TreeNode->PROPERTY,
                 value => $token->value,
             )
         );
     }
     elsif ( $token_type == START_ARRAY ) {
         $context->enter_array_context(
-            Paxton::Streaming::Parser::Node->new(
-                type => Paxton::Streaming::Parser::Node->ARRAY
+            Paxton::Core::TreeNode->new(
+                type => Paxton::Core::TreeNode->ARRAY
             )
         );
     }
@@ -116,7 +116,7 @@ sub put_token {
     }
     elsif ( is_scalar( $token ) ) {
         push @{ $context->current_context_value->children } => (
-            Paxton::Streaming::Parser::Node->new(
+            Paxton::Core::TreeNode->new(
                 type  => $TOKEN_TYPE_TO_NODE_TYPE{ $token_type },
                 ($token->value) ? (value => $token->value) : (),
             )
