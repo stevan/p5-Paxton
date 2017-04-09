@@ -74,10 +74,18 @@ subtest '... array node' => sub {
 
     my @tokens = (
         token(START_ARRAY),
-            token(ADD_STRING, "bar"),
-            token(ADD_STRING, "gorch"),
-            token(ADD_INT, 10),
-            token(ADD_FLOAT, 5.5),
+            token(START_ITEM, 0),
+                token(ADD_STRING, "bar"),
+            token(END_ITEM),
+            token(START_ITEM, 0),
+                token(ADD_STRING, "gorch"),
+            token(END_ITEM),
+            token(START_ITEM, 0),
+                token(ADD_INT, 10),
+            token(END_ITEM),
+            token(START_ITEM, 0),
+                token(ADD_FLOAT, 5.5),
+            token(END_ITEM),
         token(END_ARRAY)
     );
 
@@ -98,21 +106,45 @@ subtest '... array node' => sub {
         type     => Paxton::Core::TreeNode->ARRAY,
         children => [
             Paxton::Core::TreeNode->new(
-                type  => Paxton::Core::TreeNode->STRING,
-                value => "bar"
+                type     => Paxton::Core::TreeNode->ITEM,
+                value    => 0,
+                children => [
+                    Paxton::Core::TreeNode->new(
+                        type  => Paxton::Core::TreeNode->STRING,
+                        value => "bar"
+                    ),
+                ]
             ),
             Paxton::Core::TreeNode->new(
-                type  => Paxton::Core::TreeNode->STRING,
-                value => "gorch"
+                type     => Paxton::Core::TreeNode->ITEM,
+                value    => 0,
+                children => [
+                    Paxton::Core::TreeNode->new(
+                        type  => Paxton::Core::TreeNode->STRING,
+                        value => "gorch"
+                    ),
+                ]
             ),
             Paxton::Core::TreeNode->new(
-                type  => Paxton::Core::TreeNode->INT,
-                value => 10
+                type     => Paxton::Core::TreeNode->ITEM,
+                value    => 0,
+                children => [
+                    Paxton::Core::TreeNode->new(
+                        type  => Paxton::Core::TreeNode->INT,
+                        value => 10
+                    ),
+            ]
             ),
             Paxton::Core::TreeNode->new(
-                type  => Paxton::Core::TreeNode->FLOAT,
-                value => 5.5
-            )
+                type     => Paxton::Core::TreeNode->ITEM,
+                value    => 0,
+                children => [
+                    Paxton::Core::TreeNode->new(
+                        type  => Paxton::Core::TreeNode->FLOAT,
+                        value => 5.5
+                    )
+                ]
+            ),
         ]
     );
 

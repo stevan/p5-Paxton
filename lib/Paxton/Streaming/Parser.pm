@@ -103,6 +103,14 @@ sub put_token {
             )
         );
     }
+    elsif ( $token_type == START_ITEM ) {
+        $context->enter_item_context(
+            Paxton::Core::TreeNode->new(
+                type  => Paxton::Core::TreeNode->ITEM,
+                value => $token->value,
+            )
+        );
+    }
     elsif ( is_struct_end( $token ) || is_element_end( $token ) ) {
         my $child  = $context->current_context_value;
         my $parent = $context->leave_current_context;
