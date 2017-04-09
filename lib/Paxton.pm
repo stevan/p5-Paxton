@@ -17,19 +17,46 @@ __END__
 
 =head1 DESCRIPTION
 
-=head2 TokenProducer
+One stop for all your JSON needs.
 
-=head3 Encoder
+=head2 L<Paxton::Core::API::Token::Producer>
 
-=head3 Reader
+These classes produce a token stream by calling the C<get_token>
+method in a loop until the C<is_done> method returns true.
 
-=head2 TokenConsumer
+=over 4
 
-=head3 Decoder
+=item L<Paxton::Streaming::Reader>
 
-=head3 Parser
+Convert a JSON string into a stream of tokens.
 
-=head3 Writer
+=item L<Paxton::Streaming::Encoder>
+
+Convert an in-memory data structure into a stream of tokens.
+
+=back
+
+=head2 L<Paxton::Core::API::Token::Consumer>
+
+These classes consume a token stream by feedins tokens to the
+C<put_token> method in a loop until the C<is_done> method returns
+true.
+
+=over 4
+
+=item L<Paxton::Streaming::Writer>
+
+Convert a stream of tokens into a JSON string.
+
+=item L<Paxton::Streaming::Decoder>
+
+Convert a stream of tokens into an in-memory data structure.
+
+=item L<Paxton::Streaming::Parser>
+
+Convert a stream of tokens into a L<Paxton::Core::TreeNode> tree.
+
+=back
 
 =head1 SEE ALSO
 

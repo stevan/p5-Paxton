@@ -6,9 +6,9 @@ use warnings;
 
 use UNIVERSAL::Object;
 
-use Paxton::Core::API::Pipe;
-use Paxton::Core::API::TokenProducer;
-use Paxton::Core::API::TokenConsumer;
+use Paxton::Core::API::Token::Processor;
+use Paxton::Core::API::Token::Producer;
+use Paxton::Core::API::Token::Consumer;
 
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
@@ -20,9 +20,9 @@ use constant DEBUG => $ENV{PAXTON_PIPE_DEBUG} // 0;
 our @ISA;  BEGIN { @ISA  = ('UNIVERSAL::Object') }
 our @DOES; BEGIN {
     @DOES = (
-        'Paxton::Core::API::Pipe',
-        'Paxton::Core::API::TokenProducer',
-        'Paxton::Core::API::TokenConsumer'
+        'Paxton::Core::API::Token::Processor',
+        'Paxton::Core::API::Token::Producer',
+        'Paxton::Core::API::Token::Consumer'
     )
 }
 our %HAS;  BEGIN {

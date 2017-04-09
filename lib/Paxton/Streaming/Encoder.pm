@@ -1,5 +1,5 @@
 package Paxton::Streaming::Encoder;
-# ABSTRACT: One stop for all your JSON needs
+# ABSTRACT: Convert an in-memory data structure into a stream of tokens
 
 use strict;
 use warnings;
@@ -7,7 +7,7 @@ use warnings;
 use UNIVERSAL::Object;
 use MOP::Method;
 
-use Paxton::Core::API::TokenProducer;
+use Paxton::Core::API::Token::Producer;
 
 use Paxton::Core::Exception;
 use Paxton::Util::Tokens;
@@ -21,7 +21,7 @@ use constant DEBUG => $ENV{PAXTON_ENCODER_DEBUG} // 0;
 # ...
 
 our @ISA;  BEGIN { @ISA  = ('UNIVERSAL::Object') }
-our @DOES; BEGIN { @DOES = ('Paxton::Core::API::TokenProducer') }
+our @DOES; BEGIN { @DOES = ('Paxton::Core::API::Token::Producer') }
 our %HAS;  BEGIN {
     %HAS = (
         source     => sub { die 'You must specify a `source` to encode.'},

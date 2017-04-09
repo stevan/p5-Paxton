@@ -1,12 +1,12 @@
 package Paxton::Streaming::Parser;
-# ABSTRACT: One stop for all your JSON needs
+# ABSTRACT: Convert a stream of tokens into a Paxton::Core::TreeNode tree
 
 use strict;
 use warnings;
 
 use UNIVERSAL::Object;
 
-use Paxton::Core::API::TokenConsumer;
+use Paxton::Core::API::Token::Consumer;
 
 use Paxton::Core::Exception;
 use Paxton::Util::Tokens;
@@ -31,7 +31,7 @@ our %TOKEN_TYPE_TO_NODE_TYPE = (
 );
 
 our @ISA;  BEGIN { @ISA  = ('UNIVERSAL::Object') }
-our @DOES; BEGIN { @DOES = ('Paxton::Core::API::TokenConsumer') }
+our @DOES; BEGIN { @DOES = ('Paxton::Core::API::Token::Consumer') }
 our %HAS;  BEGIN {
     %HAS = (
         context => sub { Paxton::Core::Context->new },
