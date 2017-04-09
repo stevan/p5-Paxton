@@ -199,6 +199,18 @@ sub make_json_string {
     return '"'.$value.'"';
 }
 
+# ROLE COMPOSITON
+
+BEGIN {
+    use MOP::Role;
+    use MOP::Internal::Util;
+    MOP::Internal::Util::APPLY_ROLES(
+        MOP::Role->new(name => __PACKAGE__),
+        \@DOES,
+        to => 'class'
+    );
+}
+
 1;
 
 __END__

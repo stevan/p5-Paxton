@@ -123,6 +123,17 @@ sub _stash_value_correctly {
             : ($_[0]->{_partial} = $_[1])
 }
 
+# ROLE COMPOSITON
+
+BEGIN {
+    use MOP::Role;
+    use MOP::Internal::Util;
+    MOP::Internal::Util::APPLY_ROLES(
+        MOP::Role->new(name => __PACKAGE__),
+        \@DOES,
+        to => 'class'
+    );
+}
 
 1;
 
