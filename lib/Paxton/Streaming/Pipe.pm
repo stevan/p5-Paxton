@@ -49,22 +49,33 @@ sub BUILD {
     # - SL
 }
 
-# accessors
+# fulfill the APIs
 
-sub producer { $_[0]->{producer} }
-sub consumer { $_[0]->{consumer} }
+sub producer     { $_[0]->{producer} }
+sub consumer     { $_[0]->{consumer} }
 
-## fulfill the APIs
+sub is_exhausted { $_[0]->{producer}->is_exhausted }
+sub is_full      { $_[0]->{consumer}->is_full }
 
-sub get_token { $_[0]->{producer}->get_token }
-sub put_token { $_[0]->{consumer}->put_token( $_[1] ) }
+# NOTE:
+# the {get,put}_token API is properly
+# passed through the `process_token`
+# method, making it possible to re-use
+# a pipe as a sigular producer or
+# consumer themselves.
+# - SL
+
+sub get_token    { $_[0]->process_token( $_[0]->{producer}->get_token ) }
+sub put_token    { $_[0]->{consumer}->put_token( $_[0]->process_token( $_[1] ) ) }
 
 sub process_token {
     my ($self, $token) = @_;
     return $token;
 }
 
-sub process {
+## ...
+
+sub run {
     my ($self) = @_;
 
     until ( $self->{producer}->is_exhausted || $self->{consumer}->is_full ) {
@@ -86,6 +97,18 @@ sub log {
     my ($self, @msg) = @_;
     (DEBUG > 1) ? Carp::cluck( @msg ) : warn( @msg, "\n" );
     return;
+}
+
+# ROLE COMPOSITON
+
+BEGIN {
+    use MOP::Role;
+    use MOP::Internal::Util;
+    MOP::Internal::Util::APPLY_ROLES(
+        MOP::Role->new(name => __PACKAGE__),
+        \@DOES,
+        to => 'class'
+    );
 }
 
 1;
