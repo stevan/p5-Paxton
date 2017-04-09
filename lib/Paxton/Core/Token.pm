@@ -34,6 +34,9 @@ BEGIN {
         START_ARRAY    => Scalar::Util::dualvar( $idx++, 'START_ARRAY'    ),
         END_ARRAY      => Scalar::Util::dualvar( $idx++, 'END_ARRAY'      ),
 
+        START_ITEM     => Scalar::Util::dualvar( $idx++, 'START_ITEM'     ),
+        END_ITEM       => Scalar::Util::dualvar( $idx++, 'END_ITEM'       ),
+
         ADD_STRING     => Scalar::Util::dualvar( $idx++, 'ADD_STRING'     ),
         ADD_INT        => Scalar::Util::dualvar( $idx++, 'ADD_INT'        ),
         ADD_FLOAT      => Scalar::Util::dualvar( $idx++, 'ADD_FLOAT'      ),

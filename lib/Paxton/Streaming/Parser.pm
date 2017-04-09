@@ -103,7 +103,7 @@ sub put_token {
             )
         );
     }
-    elsif ( is_struct_end( $token ) ) {
+    elsif ( is_struct_end( $token ) || is_element_end( $token ) ) {
         my $child  = $context->current_context_value;
         my $parent = $context->leave_current_context;
         if ( $parent ) {

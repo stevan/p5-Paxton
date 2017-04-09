@@ -17,6 +17,7 @@ use constant ROOT        => Scalar::Util::dualvar( 1, 'ROOT'        );
 use constant IN_OBJECT   => Scalar::Util::dualvar( 2, 'IN_OBJECT'   );
 use constant IN_ARRAY    => Scalar::Util::dualvar( 3, 'IN_ARRAY'    );
 use constant IN_PROPERTY => Scalar::Util::dualvar( 4, 'IN_PROPERTY' );
+use constant IN_ITEM     => Scalar::Util::dualvar( 5, 'IN_ITEM'     );
 
 # constructor ...
 
@@ -55,6 +56,12 @@ sub in_property_context {
     my ($self) = @_;
     return unless scalar @$self && defined $self->[-1];
     return $self->[-1]->[0] == IN_PROPERTY;
+}
+
+sub in_item_context {
+    my ($self) = @_;
+    return unless scalar @$self && defined $self->[-1];
+    return $self->[-1]->[0] == IN_ITEM;
 }
 
 # enter ...
@@ -105,6 +112,19 @@ sub enter_property_context {
     return;
 }
 
+sub enter_item_context {
+    my ($self, $value) = @_;
+
+    (scalar @$self)
+        || Paxton::Core::Exception->new( message => 'Unable to enter item context: stack is empty' )->throw;
+
+    ($self->in_array_context)
+        || Paxton::Core::Exception->new( message => 'Unable to enter item context from within anything but array context' )->throw;
+
+    push @$self => [ IN_ITEM, $value ];
+    return;
+}
+
 # leave
 
 sub leave_object_context {
@@ -149,6 +169,23 @@ sub leave_property_context {
 
     ($self->[-1]->[0] == IN_PROPERTY)
         || Paxton::Core::Exception->new( message => 'Must be in `property` context, not '.$self->[-1]->[0] )->throw;
+
+    pop @$self;
+
+    # return nothing if we got nothing ...
+    return unless scalar @$self;
+    # otherwise restore the previous context ...
+    return $self->[-1]->[1];
+}
+
+sub leave_item_context {
+    my ($self) = @_;
+
+    (scalar @$self)
+        || Paxton::Core::Exception->new( message => 'Unable to leave context: stack exhausted' )->throw;
+
+    ($self->[-1]->[0] == IN_ITEM)
+        || Paxton::Core::Exception->new( message => 'Must be in `item` context, not '.$self->[-1]->[0] )->throw;
 
     pop @$self;
 

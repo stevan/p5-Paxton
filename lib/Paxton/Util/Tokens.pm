@@ -33,8 +33,12 @@ BEGIN {
         is_numeric
         is_error
         is_scalar
+
         is_struct_start
         is_struct_end
+
+        is_element_start
+        is_element_end
 
         token
         is_token
@@ -80,11 +84,19 @@ sub is_scalar {
 }
 
 sub is_struct_start {
-    ($_[0]->type == START_OBJECT || $_[0]->type == START_ARRAY || $_[0]->type == START_PROPERTY)
+    ($_[0]->type == START_OBJECT || $_[0]->type == START_ARRAY)
 }
 
 sub is_struct_end {
-    ($_[0]->type == END_OBJECT || $_[0]->type == END_ARRAY || $_[0]->type == END_PROPERTY)
+    ($_[0]->type == END_OBJECT || $_[0]->type == END_ARRAY)
+}
+
+sub is_element_start {
+    ($_[0]->type == START_PROPERTY || $_[0]->type == START_ITEM)
+}
+
+sub is_element_end {
+    ($_[0]->type == END_PROPERTY || $_[0]->type == END_ITEM)
 }
 
 1;
