@@ -6,7 +6,7 @@ use warnings;
 
 use UNIVERSAL::Object;
 
-use Paxton::Core::API::Writer;
+use Paxton::Core::API::TokenConsumer;
 
 use Paxton::Core::Exception;
 use Paxton::Util::Tokens;
@@ -20,7 +20,7 @@ use constant DEBUG => $ENV{PAXTON_DECODER_DEBUG} // 0;
 # ...
 
 our @ISA;  BEGIN { @ISA  = ('UNIVERSAL::Object') }
-our @DOES; BEGIN { @DOES = ('Paxton::Core::API::Writer') }
+our @DOES; BEGIN { @DOES = ('Paxton::Core::API::TokenConsumer') }
 our %HAS;  BEGIN {
     %HAS = (
         context => sub { Paxton::Core::Context->new },

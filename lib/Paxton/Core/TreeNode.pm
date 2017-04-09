@@ -51,12 +51,7 @@ sub type     { $_[0]->{type}     }
 sub value    { $_[0]->{value}    }
 sub children { $_[0]->{children} }
 
-# NOTE:
-# this doesn't actually make sense, we
-# actually want to be able to conver this
-# into a token-stream, but that is
-# trickier.
-# - SL
+# cheap serializer
 sub to_string {
     my $self = $_[0];
 

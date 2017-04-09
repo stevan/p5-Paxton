@@ -7,8 +7,8 @@ use warnings;
 use UNIVERSAL::Object;
 
 use Paxton::Core::API::Pipe;
-use Paxton::Core::API::Reader;
-use Paxton::Core::API::Writer;
+use Paxton::Core::API::TokenProducer;
+use Paxton::Core::API::TokenConsumer;
 
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
@@ -21,8 +21,8 @@ our @ISA;  BEGIN { @ISA  = ('UNIVERSAL::Object') }
 our @DOES; BEGIN {
     @DOES = (
         'Paxton::Core::API::Pipe',
-        'Paxton::Core::API::Reader',
-        'Paxton::Core::API::Writer'
+        'Paxton::Core::API::TokenProducer',
+        'Paxton::Core::API::TokenConsumer'
     )
 }
 our %HAS;  BEGIN {

@@ -17,6 +17,20 @@ __END__
 
 =head1 DESCRIPTION
 
+=head2 TokenProducer
+
+=head3 Encoder
+
+=head3 Reader
+
+=head2 TokenConsumer
+
+=head3 Decoder
+
+=head3 Parser
+
+=head3 Writer
+
 =head1 SEE ALSO
 
 =head2 What kind of name is Paxton?

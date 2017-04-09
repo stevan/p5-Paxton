@@ -1,4 +1,4 @@
-package Paxton::Core::API::Writer;
+package Paxton::Core::API::TokenConsumer;
 # ABSTRACT: One stop for all your JSON needs
 
 use strict;

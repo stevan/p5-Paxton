@@ -7,7 +7,7 @@ use warnings;
 use UNIVERSAL::Object;
 use MOP::Method;
 
-use Paxton::Core::API::Reader;
+use Paxton::Core::API::TokenProducer;
 
 use Paxton::Core::Exception;
 use Paxton::Util::Tokens;
@@ -21,7 +21,7 @@ use constant DEBUG => $ENV{PAXTON_ENCODER_DEBUG} // 0;
 # ...
 
 our @ISA;  BEGIN { @ISA  = ('UNIVERSAL::Object') }
-our @DOES; BEGIN { @DOES = ('Paxton::Core::API::Reader') }
+our @DOES; BEGIN { @DOES = ('Paxton::Core::API::TokenProducer') }
 our %HAS;  BEGIN {
     %HAS = (
         source     => sub { die 'You must specify a `source` to encode.'},
