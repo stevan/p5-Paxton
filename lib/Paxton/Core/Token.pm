@@ -71,6 +71,12 @@ sub BUILD {
 
     (exists $TOKEN_MAP{ $self->{type} })
         || Paxton::Core::Exception->new( message => 'Unknown token type (' . $self->{type} . ')' )->throw;
+
+    # XXX
+    # Might want to check which kinds of
+    # tokens require values and which do
+    # not, and then verify accordingly.
+    # - SL
 }
 
 # ...

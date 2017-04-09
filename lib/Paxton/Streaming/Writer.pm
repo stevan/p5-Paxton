@@ -124,8 +124,8 @@ sub put_token {
     elsif ( $token_type == END_OBJECT ) {
         $context->leave_object_context;
         $sink->print('}');
-        $self->{_needs_comma} = 1 unless $context->in_root_context;
     }
+
     elsif ( $token_type == START_PROPERTY ) {
         $sink->print($self->make_json_string( $token->value ), ":");
         $context->enter_property_context;
@@ -134,6 +134,7 @@ sub put_token {
         $context->leave_property_context;
         $self->{_needs_comma} = 1;
     }
+
     elsif ( $token_type == START_ARRAY ) {
         $sink->print('[');
         $context->enter_array_context;
@@ -141,8 +142,8 @@ sub put_token {
     elsif ( $token_type == END_ARRAY ) {
         $context->leave_array_context;
         $sink->print(']');
-        $self->{_needs_comma} = 1 unless $context->in_root_context;
     }
+
     elsif ( $token_type == START_ITEM ) {
         $context->enter_item_context;
     }
@@ -150,6 +151,7 @@ sub put_token {
         $context->leave_item_context;
         $self->{_needs_comma} = 1;
     }
+
     elsif ( is_numeric( $token ) ) {
         $sink->print($token->value);
     }

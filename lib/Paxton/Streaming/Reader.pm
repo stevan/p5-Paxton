@@ -323,24 +323,74 @@ sub array {
         if ( $char eq '[' ) {
             $self->skip_next_char;
             $self->{context}->enter_array_context( \&array );
-            $self->{next_state} = \&array;
+            $self->{next_state} = \&item;
             return token( START_ARRAY );
         }
         elsif ( $char eq ']' ) {
+            # close any open properties ...
+            return $self->end_item
+                if $self->{context}->in_item_context;
+
+            # now close any objects ...
             $self->skip_next_char;
             $self->{next_state} = $self->{context}->leave_array_context;
             return token( END_ARRAY );
         }
         elsif ( $char eq ',' ) {
             $self->skip_next_char;
+            return $self->item;
         }
-
-        $self->{next_state} = \&array;
-        return $self->start;
+        else {
+            return token( ERROR, 'Expected end of array or start of item name but found ('.$char.')' );
+        }
     }
     else {
         return $self->end;
     }
+}
+
+sub item {
+    my ($self) = @_;
+
+    $self->log( 'Entering `item`' ) if DEBUG;
+
+    my $char = $self->discard_whitespace_and_peek;
+
+    if ( defined $char ) {
+        if ( $char eq ']' ) {
+            return $self->array;
+        }
+        elsif ( not $self->{context}->in_item_context ) {
+            $self->{context}->enter_item_context( \&end_item );
+            $self->{next_state} = \&item;
+            return token( START_ITEM, 0 );
+        }
+        else {
+            my $value = $self->start;
+
+            return $value if is_error( $value );
+
+            # if no next-state has been
+            # queued up, we can end the
+            # item
+            $self->{next_state} ||= \&end_item;
+
+            return $value;
+        }
+    }
+    else {
+        return $self->end;
+    }
+}
+
+sub end_item {
+    my ($self) = @_;
+
+    $self->log( 'Entering `end_item`' ) if DEBUG;
+
+    $self->{context}->leave_item_context;
+    $self->{next_state} = \&array;
+    return token( END_ITEM );
 }
 
 ## ....
