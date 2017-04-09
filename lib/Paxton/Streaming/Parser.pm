@@ -6,7 +6,7 @@ use warnings;
 
 use UNIVERSAL::Object;
 
-use Paxton::Core::API::Token::Consumer;
+use Paxton::API::Token::Consumer;
 
 use Paxton::Core::Exception;
 use Paxton::Util::Tokens;
@@ -31,7 +31,7 @@ our %TOKEN_TYPE_TO_NODE_TYPE = (
 );
 
 our @ISA;  BEGIN { @ISA  = ('UNIVERSAL::Object') }
-our @DOES; BEGIN { @DOES = ('Paxton::Core::API::Token::Consumer') }
+our @DOES; BEGIN { @DOES = ('Paxton::API::Token::Consumer') }
 our %HAS;  BEGIN {
     %HAS = (
         context => sub { Paxton::Core::Context->new },

@@ -1,4 +1,4 @@
-package Paxton::Core::API::Token::Producer;
+package Paxton::API::Token::Producer;
 # ABSTRACT: One stop for all your JSON needs
 
 use strict;
@@ -19,7 +19,8 @@ __END__
 =head1 SYNOPSIS
 
     until ( $producer->is_exhausted ) {
-        process_token( $producer->get_token );
+        my $token = $producer->get_token;
+        # ...
     }
 
 =head1 DESCRIPTION

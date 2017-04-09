@@ -1,4 +1,4 @@
-package Paxton::Core::API::Token::Consumer;
+package Paxton::API::Token::Consumer;
 # ABSTRACT: One stop for all your JSON needs
 
 use strict;
@@ -19,7 +19,7 @@ __END__
 =head1 SYNOPSIS
 
     until ( $consumer->is_full ) {
-        $consumer->put_token( get_next_token() );
+        $consumer->put_token( $token );
     }
 
 =head1 DESCRIPTION

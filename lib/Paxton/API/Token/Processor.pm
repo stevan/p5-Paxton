@@ -1,4 +1,4 @@
-package Paxton::Core::API::Token::Processor;
+package Paxton::API::Token::Processor;
 # ABSTRACT: One stop for all your JSON needs
 
 use strict;
@@ -12,3 +12,13 @@ sub process_token;
 1;
 
 __END__
+
+=pod
+
+=head1 SYNOPSIS
+
+    $processor->process_token( $token );
+
+=head1 DESCRIPTION
+
+=cut
