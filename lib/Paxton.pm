@@ -58,18 +58,28 @@ Convert a stream of tokens into a L<Paxton::Core::TreeNode> tree.
 
 =back
 
-=head1 SEE ALSO
-
 =head2 What kind of name is Paxton?
 
-So this is largely inspired by the Jackson Java library, so
-I was looking for a name similar to that, but distinct. The
+So this was originally inspired by the Jackson Java library,
+so I was looking for a name similar to that, but distinct. The
 Python port is called (wait for it), Pyckson and the Ruby
 port is called Rackson, so for sure I didn't want to call it
 Perkson, but Packson kind of worked. Then I remembered that
-Bill Paxton died recently and since I grew watching his
-movies I figured, why not!
+Bill Paxton died recently and since I grew watching and
+enjoying his movies I figured, why not!
 
 L<https://en.wikipedia.org/wiki/Bill_Paxton>
+
+=head1 SEE ALSO
+
+=over 4
+
+=item L<Jackson for Java|https://github.com/FasterXML/jackson>
+
+=item L<Rapid JSON for C++|http://rapidjson.org/>
+
+=item L<JSON Spec for Python|https://json-spec.readthedocs.io/index.html>
+
+=back
 
 =cut
