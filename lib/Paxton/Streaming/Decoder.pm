@@ -66,7 +66,7 @@ sub put_token {
 
     require Data::Dumper if DEBUG;
     $self->log('>>> TOKEN:   ', $token->to_string                                  ) if DEBUG;
-    $self->log('    CONTEXT: ', join ', ' => map $_->[0], @$context                ) if DEBUG;
+    $self->log('    CONTEXT: ', join ', ' => map $_->{type}, @$context                ) if DEBUG;
     $self->log('    PARTIAL: ', Data::Dumper::Dumper($self->{_partial}) =~ s/\n$//r) if DEBUG; #/
     $self->log('    VALUE:   ', Data::Dumper::Dumper($self->{_value})   =~ s/\n$//r) if DEBUG; #/
     $self->log('    STATE:   ', join ' | ' => grep defined, map $_->[1], @$context) if DEBUG;

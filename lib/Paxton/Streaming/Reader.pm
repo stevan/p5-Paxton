@@ -95,7 +95,7 @@ sub get_token {
     if ( my $next = delete $self->{next_state} ) {
 
         $self->log( '>> CURRENT => ', MOP::Method->new( $next )->name ) if DEBUG;
-        $self->log( '   CONTEXT => ', join ', ' => map $_->[0], @{ $self->{context}->{stack}} ) if DEBUG;
+        $self->log( '   CONTEXT => ', join ', ' => map $_->{type}, @{ $self->{context} } ) if DEBUG;
         $self->log( '   BUFFER  => \'', $self->{source}->{buffer}, '\'' ) if DEBUG;
 
         my $token = $self->$next();

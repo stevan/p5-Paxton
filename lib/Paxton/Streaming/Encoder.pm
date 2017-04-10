@@ -56,7 +56,7 @@ sub get_token {
 
         require Data::Dumper if DEBUG;
         $self->log( '>> CURRENT => ', MOP::Method->new( $next )->name                 ) if DEBUG;
-        $self->log( '   CONTEXT => ', join ', ' => map $_->[0], @{ $self->{context} } ) if DEBUG;
+        $self->log( '   CONTEXT => ', join ', ' => map $_->{type}, @{ $self->{context} } ) if DEBUG;
         $self->log( '   DATA    => ', Data::Dumper::Dumper( $data )  =~ s/\n$//r      ) if DEBUG; #/
         $self->log( '   STATE   => ', Data::Dumper::Dumper( $state ) =~ s/\n$//r      ) if DEBUG; #/
 

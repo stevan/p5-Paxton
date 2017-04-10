@@ -63,10 +63,10 @@ sub put_token     { $_[0]->{consumer}->put_token( $_[1] ) }
 sub run {
     my ($self) = @_;
 
-    until ( $self->{producer}->is_exhausted || $self->{consumer}->is_full ) {
-        my $token = $self->{producer}->get_token;
+    until ( $self->is_exhausted || $self->is_full ) {
+        my $token = $self->get_token;
         last unless defined $token;
-        $self->{consumer}->put_token( $token );
+        $self->put_token( $token );
     }
 
     # TODO:
