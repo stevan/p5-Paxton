@@ -20,32 +20,31 @@ use constant DEBUG => $ENV{PAXTON_TOKEN_DEBUG} // 0;
 
 our %TOKEN_MAP;
 BEGIN {
-    my $idx = 1;
     %TOKEN_MAP = (
-        NOT_AVAILABLE  => Scalar::Util::dualvar( -1,     'NOT_AVAILABLE'  ),
-        NO_TOKEN       => Scalar::Util::dualvar( 0,      'NO_TOKEN'       ),
+        NOT_AVAILABLE  => Scalar::Util::dualvar( -1, 'NOT_AVAILABLE'  ),
+        NO_TOKEN       => Scalar::Util::dualvar( 0,  'NO_TOKEN'       ),
 
-        START_OBJECT   => Scalar::Util::dualvar( $idx++, 'START_OBJECT'   ),
-        END_OBJECT     => Scalar::Util::dualvar( $idx++, 'END_OBJECT'     ),
+        START_OBJECT   => Scalar::Util::dualvar( 1,  'START_OBJECT'   ),
+        END_OBJECT     => Scalar::Util::dualvar( 2,  'END_OBJECT'     ),
 
-        START_PROPERTY => Scalar::Util::dualvar( $idx++, 'START_PROPERTY' ),
-        END_PROPERTY   => Scalar::Util::dualvar( $idx++, 'END_PROPERTY'   ),
+        START_PROPERTY => Scalar::Util::dualvar( 3,  'START_PROPERTY' ),
+        END_PROPERTY   => Scalar::Util::dualvar( 4,  'END_PROPERTY'   ),
 
-        START_ARRAY    => Scalar::Util::dualvar( $idx++, 'START_ARRAY'    ),
-        END_ARRAY      => Scalar::Util::dualvar( $idx++, 'END_ARRAY'      ),
+        START_ARRAY    => Scalar::Util::dualvar( 5,  'START_ARRAY'    ),
+        END_ARRAY      => Scalar::Util::dualvar( 6,  'END_ARRAY'      ),
 
-        START_ITEM     => Scalar::Util::dualvar( $idx++, 'START_ITEM'     ),
-        END_ITEM       => Scalar::Util::dualvar( $idx++, 'END_ITEM'       ),
+        START_ITEM     => Scalar::Util::dualvar( 7,  'START_ITEM'     ),
+        END_ITEM       => Scalar::Util::dualvar( 8,  'END_ITEM'       ),
 
-        ADD_STRING     => Scalar::Util::dualvar( $idx++, 'ADD_STRING'     ),
-        ADD_INT        => Scalar::Util::dualvar( $idx++, 'ADD_INT'        ),
-        ADD_FLOAT      => Scalar::Util::dualvar( $idx++, 'ADD_FLOAT'      ),
+        ADD_STRING     => Scalar::Util::dualvar( 9,  'ADD_STRING'     ),
+        ADD_INT        => Scalar::Util::dualvar( 10, 'ADD_INT'        ),
+        ADD_FLOAT      => Scalar::Util::dualvar( 11, 'ADD_FLOAT'      ),
 
-        ADD_TRUE       => Scalar::Util::dualvar( $idx++, 'ADD_TRUE'       ),
-        ADD_FALSE      => Scalar::Util::dualvar( $idx++, 'ADD_FALSE'      ),
-        ADD_NULL       => Scalar::Util::dualvar( $idx++, 'ADD_NULL'       ),
+        ADD_TRUE       => Scalar::Util::dualvar( 12, 'ADD_TRUE'       ),
+        ADD_FALSE      => Scalar::Util::dualvar( 13, 'ADD_FALSE'      ),
+        ADD_NULL       => Scalar::Util::dualvar( 14, 'ADD_NULL'       ),
 
-        ERROR          => Scalar::Util::dualvar( $idx++, 'ERROR'          ),
+        ERROR          => Scalar::Util::dualvar( 15, 'ERROR'          ),
     );
 
     foreach my $name ( keys %TOKEN_MAP ) {
