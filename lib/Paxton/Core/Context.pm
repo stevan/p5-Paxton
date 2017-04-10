@@ -30,38 +30,38 @@ sub new {
 
 sub depth { scalar @{ $_[0] } }
 
-sub current_context_value { $_[0]->[-1]->[1] }
+sub current_context_value { $_[0]->[-1]->{value} }
 
 # predicates
 
 sub in_root_context {
     my ($self) = @_;
     return unless scalar @$self && defined $self->[-1];
-    return $self->[-1]->[0] == ROOT;
+    return $self->[-1]->{type} == ROOT;
 }
 
 sub in_object_context {
     my ($self) = @_;
     return unless scalar @$self && defined $self->[-1];
-    return $self->[-1]->[0] == IN_OBJECT;
+    return $self->[-1]->{type} == IN_OBJECT;
 }
 
 sub in_array_context {
     my ($self) = @_;
     return unless scalar @$self && defined $self->[-1];
-    return $self->[-1]->[0] == IN_ARRAY;
+    return $self->[-1]->{type} == IN_ARRAY;
 }
 
 sub in_property_context {
     my ($self) = @_;
     return unless scalar @$self && defined $self->[-1];
-    return $self->[-1]->[0] == IN_PROPERTY;
+    return $self->[-1]->{type} == IN_PROPERTY;
 }
 
 sub in_item_context {
     my ($self) = @_;
     return unless scalar @$self && defined $self->[-1];
-    return $self->[-1]->[0] == IN_ITEM;
+    return $self->[-1]->{type} == IN_ITEM;
 }
 
 # data ...
@@ -69,13 +69,13 @@ sub in_item_context {
 sub get_current_item_count {
     my ($self) = @_;
     return unless scalar @$self && defined $self->[-1];
-    return $self->[-1]->[2];
+    return $self->[-1]->{item_count};
 }
 
 sub get_current_property_count {
     my ($self) = @_;
     return unless scalar @$self && defined $self->[-1];
-    return $self->[-1]->[2];
+    return $self->[-1]->{property_count};
 }
 
 # enter ...
@@ -86,7 +86,7 @@ sub enter_root_context {
     (scalar @$self == 0)
         || Paxton::Core::Exception->new( message => 'Unable to enter root context: stack not empty' )->throw;
 
-    push @$self => [ ROOT, $value ];
+    push @$self => { type => ROOT, value => $value };
     return;
 }
 
@@ -96,7 +96,7 @@ sub enter_object_context {
     (scalar @$self)
         || Paxton::Core::Exception->new( message => 'Unable to enter object context: stack is empty' )->throw;
 
-    push @$self => [ IN_OBJECT, $value, 0 ];
+    push @$self => { type => IN_OBJECT, value => $value, property_count => 0 };
     return;
 }
 
@@ -109,7 +109,7 @@ sub enter_array_context {
     (not $self->in_object_context)
         || Paxton::Core::Exception->new( message => 'Unable to enter array context from within object context (must be in property context)' )->throw;
 
-    push @$self => [ IN_ARRAY, $value, 0 ];
+    push @$self => { type => IN_ARRAY, value => $value, item_count => 0 };
     return;
 }
 
@@ -123,9 +123,9 @@ sub enter_property_context {
         || Paxton::Core::Exception->new( message => 'Unable to enter property context from within anything but object context' )->throw;
 
     # increment the property counter
-    $self->[-1]->[2]++;
+    $self->[-1]->{property_count}++;
 
-    push @$self => [ IN_PROPERTY, $value ];
+    push @$self => { type => IN_PROPERTY, value => $value };
     return;
 }
 
@@ -139,9 +139,9 @@ sub enter_item_context {
         || Paxton::Core::Exception->new( message => 'Unable to enter item context from within anything but array context' )->throw;
 
     # increment the property counter
-    $self->[-1]->[2]++;
+    $self->[-1]->{item_count}++;
 
-    push @$self => [ IN_ITEM, $value ];
+    push @$self => { type => IN_ITEM, value => $value };
     return;
 }
 
@@ -153,15 +153,15 @@ sub leave_object_context {
     (scalar @$self)
         || Paxton::Core::Exception->new( message => 'Unable to leave context: stack exhausted' )->throw;
 
-    ($self->[-1]->[0] == IN_OBJECT)
-        || Paxton::Core::Exception->new( message => 'Must be in `object` context, not '.$self->[-1]->[0] )->throw;
+    ($self->[-1]->{type} == IN_OBJECT)
+        || Paxton::Core::Exception->new( message => 'Must be in `object` context, not '.$self->[-1]->{type} )->throw;
 
     pop @$self;
 
     # return nothing if we got nothing ...
     return unless scalar @$self;
     # otherwise restore the previous context ...
-    return $self->[-1]->[1];
+    return $self->[-1]->{value};
 }
 
 sub leave_array_context {
@@ -170,15 +170,15 @@ sub leave_array_context {
     (scalar @$self)
         || Paxton::Core::Exception->new( message => 'Unable to leave context: stack exhausted' )->throw;
 
-    ($self->[-1]->[0] == IN_ARRAY)
-        || Paxton::Core::Exception->new( message => 'Must be in `array` context, not '.$self->[-1]->[0] )->throw;
+    ($self->[-1]->{type} == IN_ARRAY)
+        || Paxton::Core::Exception->new( message => 'Must be in `array` context, not '.$self->[-1]->{type} )->throw;
 
     pop @$self;
 
     # return nothing if we got nothing ...
     return unless scalar @$self;
     # otherwise restore the previous context ...
-    return $self->[-1]->[1];
+    return $self->[-1]->{value};
 }
 
 sub leave_property_context {
@@ -187,15 +187,15 @@ sub leave_property_context {
     (scalar @$self)
         || Paxton::Core::Exception->new( message => 'Unable to leave context: stack exhausted' )->throw;
 
-    ($self->[-1]->[0] == IN_PROPERTY)
-        || Paxton::Core::Exception->new( message => 'Must be in `property` context, not '.$self->[-1]->[0] )->throw;
+    ($self->[-1]->{type} == IN_PROPERTY)
+        || Paxton::Core::Exception->new( message => 'Must be in `property` context, not '.$self->[-1]->{type} )->throw;
 
     pop @$self;
 
     # return nothing if we got nothing ...
     return unless scalar @$self;
     # otherwise restore the previous context ...
-    return $self->[-1]->[1];
+    return $self->[-1]->{value};
 }
 
 sub leave_item_context {
@@ -204,15 +204,15 @@ sub leave_item_context {
     (scalar @$self)
         || Paxton::Core::Exception->new( message => 'Unable to leave context: stack exhausted' )->throw;
 
-    ($self->[-1]->[0] == IN_ITEM)
-        || Paxton::Core::Exception->new( message => 'Must be in `item` context, not '.$self->[-1]->[0] )->throw;
+    ($self->[-1]->{type} == IN_ITEM)
+        || Paxton::Core::Exception->new( message => 'Must be in `item` context, not '.$self->[-1]->{type} )->throw;
 
     pop @$self;
 
     # return nothing if we got nothing ...
     return unless scalar @$self;
     # otherwise restore the previous context ...
-    return $self->[-1]->[1];
+    return $self->[-1]->{value};
 }
 
 sub leave_current_context {
@@ -226,7 +226,7 @@ sub leave_current_context {
     # return nothing if we got nothing ...
     return unless scalar @$self;
     # otherwise restore the previous context ...
-    return $self->[-1]->[1];
+    return $self->[-1]->{value};
 }
 
 1;
