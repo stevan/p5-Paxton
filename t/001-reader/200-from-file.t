@@ -159,7 +159,7 @@ is suitable for building the C<@expected> array above.
     while ( my $t = $r->get_token ) {
         $depth-- if is_struct_end( $t );
         my $indent = ('    ' x $depth);
-        print $indent, $t->as_string, ",\n";
+        print $indent, $t->to_string, ",\n";
         $depth++ if is_struct_start( $t );
     }
 =cut

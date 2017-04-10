@@ -92,8 +92,8 @@ sub tokens_encoded_from {
 
         while ( my $got = $e->get_token ) {
             my $expected = shift @tokens;
-            Test::More::diag $got->as_string      if VERBOSE;
-            Test::More::diag $expected->as_string if VERBOSE;
+            Test::More::diag $got->to_string      if VERBOSE;
+            Test::More::diag $expected->to_string if VERBOSE;
             Test::More::is_deeply( $got, $expected, '... got the expected token' );
         }
 

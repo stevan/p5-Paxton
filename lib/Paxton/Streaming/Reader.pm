@@ -110,7 +110,7 @@ sub get_token {
         }
         elsif ( not exists $self->{next_state} ) {
             Paxton::Core::Exception
-                ->new( message => 'Next state is not specified after '.$token->as_string )
+                ->new( message => 'Next state is not specified after '.$token->to_string )
                 ->throw;
         }
 

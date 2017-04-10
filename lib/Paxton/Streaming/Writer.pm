@@ -108,7 +108,7 @@ sub put_token {
     my $context    = $self->{context};
     my $token_type = $token->type;
 
-    $self->log('>>> TOKEN:   ', $token->as_string                   ) if DEBUG;
+    $self->log('>>> TOKEN:   ', $token->to_string                   ) if DEBUG;
     $self->log('    CONTEXT: ', join ', ' => map $_->[0], @$context ) if DEBUG;
     $self->log('    COMMA:   ', $self->{_needs_comma}               ) if DEBUG;
 

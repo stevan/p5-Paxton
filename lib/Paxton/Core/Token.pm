@@ -83,12 +83,14 @@ sub BUILD {
 sub type  { $_[0]->{type}  }
 sub value { $_[0]->{value} }
 
+sub has_value { !! $_[0]->{value} }
+
 sub dump {
     require Data::Dumper;
     Data::Dumper::Dumper( $_[0] );
 }
 
-sub as_string {
+sub to_string {
     my $out  = 'token( '.$_[0]->type;
 
     if ( defined $_[0]->value ) {
