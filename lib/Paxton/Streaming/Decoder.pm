@@ -110,8 +110,8 @@ sub put_token {
 
     elsif ( is_scalar( $token ) ) {
         my $value = $token->value;
-        $value = 1     if $token_type == ADD_TRUE;
-        $value = 0     if $token_type == ADD_FALSE;
+        $value = \1    if $token_type == ADD_TRUE;
+        $value = \0    if $token_type == ADD_FALSE;
         $value = undef if $token_type == ADD_NULL;
         $self->_stash_value_correctly( $value )
     }

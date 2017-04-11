@@ -65,7 +65,7 @@ tokens_decode_into(
         Str    => 'a string',
         Int    => 10,
         Num    => 50.25,
-        Array  => [ 'another string', 200, 50.5, { bob => 'alice' }, 1 ],
+        Array  => [ 'another string', 200, 50.5, { bob => 'alice' }, \1 ],
         Object => { foo => 'bar', baz => [ 'gorch', 100, {}, undef ] }
     },
     [
