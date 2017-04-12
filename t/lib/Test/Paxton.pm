@@ -4,6 +4,7 @@ use strict;
 use warnings;
 
 use Test::More           ();
+use Test::Fatal          ('exception');
 use Paxton::Util::Tokens ('is_token');
 
 use Paxton::Streaming::Reader;
@@ -20,6 +21,7 @@ our @EXPORT = qw[
     tokens_match
     tokens_decode_into
     tokens_encoded_from
+    tokens_written_to
 ];
 
 ## ...
@@ -54,6 +56,25 @@ sub tokens_match {
 
         Test::More::is( $r->get_token, undef, '... parsing is complete' );
         Test::More::ok( $r->is_exhausted, '... the reader is done' );
+    });
+}
+
+sub tokens_written_to {
+    my ($tokens_to_write, $expected, $msg) = @_;
+
+    Test::More::subtest($msg => sub {
+        my $json = '';
+
+        my $w = Paxton::Streaming::Writer->new_to_string( \$json );
+        Test::More::isa_ok($w, 'Paxton::Streaming::Writer');
+
+        $w->put_token( $_ ) foreach @$tokens_to_write;
+
+        Test::More::ok(!$w->is_full, '... we are not done yet');
+        Test::More::is(exception { $w->close }, undef, '... closed the writer');
+        Test::More::ok($w->is_full, '... we are done now');
+
+        Test::More::is($json, $expected, '... got the JSON we expected');
     });
 }
 
