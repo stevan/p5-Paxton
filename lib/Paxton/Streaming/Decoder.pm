@@ -17,6 +17,14 @@ our $AUTHORITY = 'cpan:STEVAN';
 
 use constant DEBUG => $ENV{PAXTON_DECODER_DEBUG} // 0;
 
+# NOTE:
+# we need a way of disambiguating
+# between storing `undef` and not
+# having a value stored yet, this
+# is a marker to tell us no value
+# has been set yet.
+use constant NO_VALUE => \undef;
+
 # ...
 
 our @ISA;  BEGIN { @ISA  = ('UNIVERSAL::Object') }
@@ -26,7 +34,7 @@ our %HAS;  BEGIN {
         context => sub { Paxton::Core::Context->new },
         # private
         _partial => sub {},
-        _value   => sub {},
+        _value   => sub { NO_VALUE },
     )
 }
 
@@ -40,8 +48,8 @@ sub BUILD {
 
 sub context { $_[0]->{context} }
 
-sub has_value { defined $_[0]->{_value} }
-sub get_value {         $_[0]->{_value} }
+sub has_value { not( ref $_[0]->{_value} && $_[0]->{_value} == NO_VALUE ) }
+sub get_value { $_[0]->{_value} }
 
 # ...
 
