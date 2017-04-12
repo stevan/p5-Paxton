@@ -1,34 +1,13 @@
 TODO:
 
-- write a simple visitor
-    - write a JSON-Pointer in it
-    - then maybe convert the rest
+- Streaming::TokenIterator
+    - takes an array of tokens and hands them out one at a time
 
-- ...
+- Streaming::TokenMatcher
+    - given a Pointer, ... ???
 
----------------------------------------------------------------------------------------------------
 
-- JSON-Pointer support should be in the form of a Consumer
-    = it should consume the stream
-        = find a match
-            = then delegate to another consumer
-                = to build something usable
-
----------------------------------------------------------------------------------------------------
-
-- Need the concept of a "Visitor", but not sure how to do it
-    = Is a visitor just a consumer?
-        = does it have events for token types (SAX)?
-            !? if we do this then perhaps
-                maybe I could re-write all
-                             consumers as visitors ?!
-                (^^ THIS SOUNDS LIKE A SENSIBLE IDEA)
-                                       if you look at all the consumers, they all have
-                                       the exact same pattern, so yeah, good idea i think
-
-- I think I could generalize the Producers as well
-    = they have a similar pattern of behavior
-
----------------------------------------------------------------------------------------------------
-
-- Need to write a TokenIterator and LazyTokenIterator
+Pipe->new(
+    producer => Reader->new,
+    consumer => Writer->new,
+)->map()

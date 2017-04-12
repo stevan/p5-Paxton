@@ -46,8 +46,8 @@ sub path { $_[0]->{path} }
 
 sub path_segments {
     my ($self) = @_;
-    return map s/~1/\//r,
-           map s/~0/\~/r,
+    return map s/~1/\//r, #/
+           map s/~0/\~/r, #/
            grep $_,
            split /\// => $_[0]->{path};
 }
