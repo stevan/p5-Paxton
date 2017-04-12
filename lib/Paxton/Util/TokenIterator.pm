@@ -1,5 +1,5 @@
-package Paxton::Streaming::TokenIterator;
-# ABSTRACT: Convert an in-memory data structure into a stream of tokens
+package Paxton::Util::TokenIterator;
+# ABSTRACT: Stream an array of tokens, maintining context
 
 use strict;
 use warnings;
