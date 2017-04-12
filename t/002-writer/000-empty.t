@@ -3,13 +3,23 @@
 use strict;
 use warnings;
 
+use lib 't/lib/';
+
 use Test::More;
 use Test::Fatal;
+use Test::Paxton;
 
 BEGIN {
     use_ok('Paxton::Streaming::Writer');
     use_ok('Paxton::Util::Tokens');
 }
+
+tokens_written_to([ token(ADD_STRING, 'foo') ], '"foo"', '... string');
+tokens_written_to([ token(ADD_INT, 10)       ], '10',    '... int');
+tokens_written_to([ token(ADD_FLOAT, 10.5)   ], '10.5',  '... float');
+tokens_written_to([ token(ADD_TRUE)          ], 'true',  '... true');
+tokens_written_to([ token(ADD_FALSE)         ], 'false', '... false');
+tokens_written_to([ token(ADD_NULL)          ], 'null',  '... null');
 
 subtest '... simple object' => sub {
     my $json = '';

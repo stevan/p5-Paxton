@@ -12,6 +12,13 @@ BEGIN {
     use_ok('Paxton::Util::Tokens');
 }
 
+tokens_decode_into('foo', [ token(ADD_STRING, 'foo') ], '... string');
+tokens_decode_into(10,    [ token(ADD_INT,     10  ) ], '... int');
+tokens_decode_into(10.5,  [ token(ADD_FLOAT,   10.5) ], '... float');
+tokens_decode_into(\1,    [ token(ADD_TRUE)          ], '... true');
+tokens_decode_into(\0,    [ token(ADD_FALSE)         ], '... false');
+tokens_decode_into(undef, [ token(ADD_NULL)          ], '... null');
+
 tokens_decode_into(
     {},
     [ token(START_OBJECT), token(END_OBJECT) ],

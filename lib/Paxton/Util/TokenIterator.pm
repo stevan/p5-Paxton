@@ -27,8 +27,8 @@ our %HAS;  BEGIN {
         tokens     => sub { die 'You must specify an array of `tokens` to iterate over.'},
         context    => sub { Paxton::Core::Context->new },
         # private ...
-        _idx    => sub { 0 },
-        _done   => sub { 0 },
+        _index => sub { 0 },
+        _done  => sub { 0 },
     )
 }
 
@@ -54,10 +54,10 @@ sub get_token {
 
     return if $self->{_done};
 
-    my $idx = $self->{_idx};
-    $self->{_idx}++;
+    my $idx = $self->{_index};
+    $self->{_index}++;
 
-    if ( $self->{_idx} >= scalar @{ $self->{tokens} } ) {
+    if ( $self->{_index} >= scalar @{ $self->{tokens} } ) {
         $self->{_done} = 1;
     }
 

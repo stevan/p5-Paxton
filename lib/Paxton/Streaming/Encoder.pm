@@ -70,19 +70,20 @@ sub get_token {
         if ( is_error( $token ) ) {
             $self->log( 'Encountered error: ', $token->value ) if DEBUG;
         }
+        elsif ( $self->{context}->in_root_context ) {
+            # if we are back into root context
+            # that pretty much means we are done
+            # so we can do this ...
+            $self->{_done} = 1;
+        }
         elsif ( not exists $self->{next_state} ) {
             Paxton::Core::Exception
                 ->new( message => 'Next state is not specified after '.$token->to_string )
                 ->throw;
+
         }
-
-        $self->log( '<< NEXT <= ', $self->{next_state} ? MOP::Method->new( $self->{next_state} )->name : 'NONE' ) if DEBUG;
-
-        # if we are back into root context
-        # that pretty much means we are done
-        # so we can do this ...
-        if ( $self->{context}->in_root_context ) {
-            $self->{_done} = 1;
+        else {
+            $self->log( '<< NEXT <= ', $self->{next_state} ? MOP::Method->new( $self->{next_state} )->name : 'NONE' ) if DEBUG;
         }
 
         return $token;
@@ -101,13 +102,8 @@ sub root {
     my $context = $self->{context};
     my (undef, $data, undef) = @{ $context->current_context_value };
 
-    if ( defined $data ) {
-        if ( ref $data eq 'HASH' || ref $data eq 'ARRAY' ) {
-            return $self->start;
-        }
-        else {
-            return token( ERROR, 'Root node must be either array or object' );
-        }
+    if ( my $token = $self->start ) {
+        return $token;
     }
     else {
         return $self->end;
@@ -273,10 +269,10 @@ sub _dispatch_on_type {
         $self->{next_state} = \&item;
         return token( START_ARRAY );
     }
-
-    return token( ADD_NULL ) if not defined $data;
-
-    if ( ref $data eq 'SCALAR' ) {
+    elsif ( not defined $data ) {
+        return token( ADD_NULL );
+    }
+    elsif ( ref $data eq 'SCALAR' ) {
         if ( $$data ) {
             return token( ADD_TRUE );
         }
@@ -284,8 +280,7 @@ sub _dispatch_on_type {
             return token( ADD_FALSE );
         }
     }
-
-    if ( Scalar::Util::looks_like_number( $data ) ) {
+    elsif ( Scalar::Util::looks_like_number( $data ) ) {
         if ( $data =~ /\./ ) {
             return token( ADD_FLOAT, $data );
         }
@@ -293,8 +288,14 @@ sub _dispatch_on_type {
             return token( ADD_INT, $data );
         }
     }
-
-    return token( ADD_STRING, $data );
+    elsif ( ref $data ) {
+        # catch some random errors before
+        # we just say "f-it, it is a string"
+        return token( ERROR, 'Do not recognize the data type (' . $data . ')');
+    }
+    else {
+        return token( ADD_STRING, $data );
+    }
 }
 
 # logging
