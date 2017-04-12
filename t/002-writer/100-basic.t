@@ -3,20 +3,19 @@
 use strict;
 use warnings;
 
+use lib 't/lib/';
+
 use Test::More;
+use Test::Fatal;
+use Test::Paxton;
 
 BEGIN {
     use_ok('Paxton::Streaming::Writer');
     use_ok('Paxton::Util::Tokens');
 }
 
-subtest '... simple object' => sub {
-    my $json = '';
-
-    my $w = Paxton::Streaming::Writer->new_to_string( \$json );
-    isa_ok($w, 'Paxton::Streaming::Writer');
-
-    my @tokens = (
+tokens_written_to(
+    [
         token(START_OBJECT),
             token(START_PROPERTY, "Str"),
                 token(ADD_STRING, "a string"),
@@ -75,18 +74,10 @@ subtest '... simple object' => sub {
                 token(END_OBJECT),
             token(END_PROPERTY),
         token(END_OBJECT),
-    );
-
-    foreach ( @tokens ) {
-        $w->put_token( $_ );
-    }
-
-    is(
-        $json,
-        '{"Str":"a string","Int":10,"Num":50.25,"Array":["another string",200,50.5,{"bob":"alice"},true],"Object":{"foo":"bar","baz":["gorch",100,{},null]}}',
-        '... got the JSON we expected'
-    );
-};
+    ],
+    '{"Str":"a string","Int":10,"Num":50.25,"Array":["another string",200,50.5,{"bob":"alice"},true],"Object":{"foo":"bar","baz":["gorch",100,{},null]}}',
+    '... complex object'
+);
 
 
 done_testing;

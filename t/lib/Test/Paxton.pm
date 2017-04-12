@@ -10,6 +10,7 @@ use Paxton::Util::Tokens ('is_token');
 use Paxton::Streaming::Reader;
 use Paxton::Streaming::Decoder;
 use Paxton::Streaming::Encoder;
+use Paxton::Streaming::Writer;
 
 ## ...
 
