@@ -23,6 +23,12 @@ subtest '... testing simple pointer' => sub {
         '... got the expected path segments back'
     );
 
+    is_deeply(
+        [ $p->tokenize ],
+        [ [ Paxton::Core::Pointer->PROPERTY, 'foo' ], [ Paxton::Core::Pointer->PROPERTY, 'bar' ] ],
+        '... got the expected path segments back'
+    );
+
 };
 
 subtest '... testing simple pointer (again)' => sub {

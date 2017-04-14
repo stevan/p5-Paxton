@@ -15,6 +15,24 @@ our $AUTHORITY = 'cpan:STEVAN';
 
 use constant DEBUG => $ENV{PAXTON_POINTER_DEBUG} // 0;
 
+# constants
+
+our %PATH_SEGMENT_TOKEN_MAP;
+BEGIN {
+    %PATH_SEGMENT_TOKEN_MAP = (
+        PROPERTY => Scalar::Util::dualvar( 1,  'PROPERTY' ),
+        ITEM     => Scalar::Util::dualvar( 2,  'ITEM'     ),
+        # leave room for other possibilities here ...
+        # REGEX => ... match a regex against keys ...
+        # RANGE => ... match a range of items ...
+    );
+
+    foreach my $name ( keys %PATH_SEGMENT_TOKEN_MAP ) {
+        no strict 'refs';
+        *{$name} = sub () { $PATH_SEGMENT_TOKEN_MAP{ $name } };
+    }
+}
+
 # ...
 
 our @ISA; BEGIN { @ISA = ('UNIVERSAL::Object::Immutable') }
@@ -24,7 +42,7 @@ our %HAS; BEGIN {
     )
 }
 
-
+# ...
 
 sub BUILDARGS {
     my ($class, @args) = @_;
@@ -50,6 +68,14 @@ sub path_segments {
            map s/~0/\~/r, #/
            grep $_,
            split /\// => $_[0]->{path};
+}
+
+sub tokenize {
+    my ($self) = @_;
+    return map {
+        /^\d$/ ? [ ITEM,     $_ ]
+               : [ PROPERTY, $_ ]
+    } $self->path_segments;
 }
 
 1;
