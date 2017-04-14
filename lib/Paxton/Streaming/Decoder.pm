@@ -6,7 +6,7 @@ use warnings;
 
 use UNIVERSAL::Object;
 
-use Paxton::API::Token::Consumer;
+use Paxton::API::Tokenizer::Consumer;
 
 use Paxton::Core::Exception;
 use Paxton::Util::Tokens;
@@ -28,7 +28,7 @@ use constant NO_VALUE => \undef;
 # ...
 
 our @ISA;  BEGIN { @ISA  = ('UNIVERSAL::Object') }
-our @DOES; BEGIN { @DOES = ('Paxton::API::Token::Consumer') }
+our @DOES; BEGIN { @DOES = ('Paxton::API::Tokenizer::Consumer') }
 our %HAS;  BEGIN {
     %HAS = (
         context => sub { Paxton::Core::Context->new },
@@ -60,7 +60,7 @@ sub is_full {
     $self->{context}->in_root_context;
 }
 
-sub put_token {
+sub consume_token {
     my ($self, $token) = @_;
 
     (not $self->is_full)

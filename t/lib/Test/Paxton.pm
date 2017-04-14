@@ -48,14 +48,14 @@ sub tokens_match {
         Test::More::isa_ok($r, 'Paxton::Streaming::Reader');
 
         foreach my $e ( @$expected ) {
-            my $t = $r->get_token;
+            my $t = $r->produce_token;
             Test::More::ok(is_token( $t ), '... we got a token');
             Test::More::is($t->type, $e->type, '... and it is the expected token type('.$e->type.')');
             Test::More::is($t->value, $e->value, '... and it is the expected token value('.($e->value // 'undef').')');
             Test::More::diag( $t->dump ) if VERBOSE;
         }
 
-        Test::More::is( $r->get_token, undef, '... parsing is complete' );
+        Test::More::is( $r->produce_token, undef, '... parsing is complete' );
         Test::More::ok( $r->is_exhausted, '... the reader is done' );
     });
 }
@@ -69,7 +69,7 @@ sub tokens_written_to {
         my $w = Paxton::Streaming::Writer->new_to_string( \$json );
         Test::More::isa_ok($w, 'Paxton::Streaming::Writer');
 
-        $w->put_token( $_ ) foreach @$tokens_to_write;
+        $w->consume_token( $_ ) foreach @$tokens_to_write;
 
         Test::More::ok(!$w->is_full, '... we are not done yet');
         Test::More::is(exception { $w->close }, undef, '... closed the writer');
@@ -89,7 +89,7 @@ sub tokens_decode_into {
 
         Test::More::ok(!$d->has_value, '... we do not have a value yet');
 
-        $d->put_token( $_ ) foreach @$expected;
+        $d->consume_token( $_ ) foreach @$expected;
 
         Test::More::ok($d->has_value, '... we have a value now');
         Test::More::is_deeply(
@@ -112,7 +112,7 @@ sub tokens_encoded_from {
         my $e = Paxton::Streaming::Encoder->new( source => $source );
         Test::More::isa_ok($e, 'Paxton::Streaming::Encoder');
 
-        while ( my $got = $e->get_token ) {
+        while ( my $got = $e->produce_token ) {
             my $expected = shift @tokens;
             Test::More::diag $got->to_string      if VERBOSE;
             Test::More::diag $expected->to_string if VERBOSE;

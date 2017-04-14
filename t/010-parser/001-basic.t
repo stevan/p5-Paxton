@@ -31,7 +31,7 @@ subtest '... object node' => sub {
     ok(!$p->has_value, '... we do not have a value yet');
     ok(!$p->is_full, '... we are not done yet');
 
-    $p->put_token( $_ ) foreach @tokens;
+    $p->consume_token( $_ ) foreach @tokens;
 
     ok($p->has_value, '... we have a value now');
     ok($p->is_full, '... we are done now');
@@ -95,7 +95,7 @@ subtest '... array node' => sub {
     ok(!$p->has_value, '... we do not have a value yet');
     ok(!$p->is_full, '... we are not done yet');
 
-    $p->put_token( $_ ) foreach @tokens;
+    $p->consume_token( $_ ) foreach @tokens;
 
     ok($p->has_value, '... we have a value now');
     ok($p->is_full, '... we are done now');

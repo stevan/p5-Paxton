@@ -156,7 +156,7 @@ is suitable for building the C<@expected> array above.
     );
 
     my $depth = 0;
-    while ( my $t = $r->get_token ) {
+    while ( my $t = $r->produce_token ) {
         $depth-- if is_struct_end( $t );
         my $indent = ('    ' x $depth);
         print $indent, $t->to_string, ",\n";

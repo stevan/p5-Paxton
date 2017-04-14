@@ -6,7 +6,7 @@ use warnings;
 
 use UNIVERSAL::Object;
 
-use Paxton::API::Token::Consumer;
+use Paxton::API::Tokenizer::Consumer;
 
 use Paxton::Core::Exception;
 use Paxton::Util::Tokens;
@@ -21,7 +21,7 @@ use constant DEBUG => $ENV{PAXTON_MATCHER_DEBUG} // 0;
 # ...
 
 our @ISA;  BEGIN { @ISA  = ('UNIVERSAL::Object') }
-our @DOES; BEGIN { @DOES = ('Paxton::API::Token::Consumer') }
+our @DOES; BEGIN { @DOES = ('Paxton::API::Tokenizer::Consumer') }
 our %HAS;  BEGIN {
     %HAS = (
         pointer => sub { die 'You must specify a `pointer` to match with' },
@@ -68,7 +68,7 @@ sub is_full {
     $self->{_done};
 }
 
-sub put_token {
+sub consume_token {
     my ($self, $token) = @_;
 
     (not $self->is_full)
