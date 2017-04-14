@@ -31,16 +31,24 @@ subtest '... testing simple pointer' => sub {
 
 };
 
+
+
 subtest '... testing simple pointer (again)' => sub {
 
-    my $p = Paxton::Core::Pointer->new( '/foo/bar' );
+    my $p = Paxton::Core::Pointer->new( '/0/bar' );
     isa_ok($p, 'Paxton::Core::Pointer');
 
-    is($p->path, '/foo/bar', '... got the expected path back');
+    is($p->path, '/0/bar', '... got the expected path back');
 
     is_deeply(
         [ $p->path_segments ],
-        [ 'foo', 'bar' ],
+        [ '0', 'bar' ],
+        '... got the expected path segments back'
+    );
+
+    is_deeply(
+        [ $p->tokenize ],
+        [ [ Paxton::Core::Pointer->ITEM, 0 ], [ Paxton::Core::Pointer->PROPERTY, 'bar' ] ],
         '... got the expected path segments back'
     );
 

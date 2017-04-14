@@ -82,7 +82,7 @@ sub put_token {
         || Paxton::Core::Exception->new( message => 'Matcher is done, cannot `put` any more tokens' )->throw;
 
     (defined $token && is_token($token))
-        || Paxton::Core::Exception->new( message => 'Invalid token: '.$token )->throw;
+        || Paxton::Core::Exception->new( message => 'Invalid token: '.($token//'undef') )->throw;
 
     my $context    = $self->{context};
     my $token_type = $token->type;
@@ -97,6 +97,14 @@ sub put_token {
     $self->log('    BUFFER:    ', join ', ' => map $_->to_string, @{$self->{_buffer}}) if DEBUG;
     $self->log('--------------------------------------------------------') if DEBUG;
 
+    my $current_ptr_token = $self->{_pointer_tokens}->[0];
+    $self->log('Attempting to match '.$token->to_string.' to ['.(join ', ',@{ $current_ptr_token // [] }).']') if DEBUG;
+
+    my $num_segments_matched = $self->{pointer}->length - scalar @{$self->{_pointer_tokens}};
+    $self->log('We have matched ' . $num_segments_matched . ' segments so far') if DEBUG;
+
+    my $max_depth = (($num_segments_matched + 1) * 2);
+
     if ( $token_type == START_OBJECT ) {
         $context->enter_object_context;
     }
@@ -104,16 +112,14 @@ sub put_token {
         $context->leave_object_context;
     }
     elsif ( $token_type == START_PROPERTY ) {
-        $context->enter_property_context;
-
-        unless ( $self->{_match_context} ) {
-
-            my $current_ptr_token = $self->{_pointer_tokens}->[0];
-
-            $self->log('Attempting to match '.$token->value.' to ['.(join ', ',@$current_ptr_token).']') if DEBUG;
-
+        # If we do not already have a match in progress
+        # and the depth is  (meaning that we
+        # have missed our opportunity for an initial
+        # match) then attempt to match ...
+        $self->log('... looking for a PROPERTY match') if DEBUG;
+        if ( not(defined $self->{_match_context}) && $context->depth == $max_depth ) {
             if (
-                $current_ptr_token->[0] eq $self->{pointer}->PROPERTY
+                $current_ptr_token->[0] == $self->{pointer}->PROPERTY
                     &&
                 $token->value eq $current_ptr_token->[1]
             ) {
@@ -121,6 +127,8 @@ sub put_token {
                 shift @{ $self->{_pointer_tokens} };
             }
         }
+        # now we can enter out next level context ...
+        $context->enter_property_context;
     }
     elsif ( $token_type == END_PROPERTY ) {
         $context->leave_property_context;
@@ -132,6 +140,19 @@ sub put_token {
         $context->leave_array_context;
     }
     elsif ( $token_type == START_ITEM ) {
+
+        $self->log('... looking for an ITEM match') if DEBUG;
+        if ( not(defined $self->{_match_context}) && $context->depth == $max_depth ) {
+            if (
+                $current_ptr_token->[0] == $self->{pointer}->ITEM
+                    &&
+                $token->value == $current_ptr_token->[1]
+            ) {
+                $self->log('Found match with ['.(join', ',@{$current_ptr_token}).']') if DEBUG;
+                shift @{ $self->{_pointer_tokens} };
+            }
+        }
+        # now we can enter out next level context ...
         $context->enter_item_context;
     }
     elsif ( $token_type == END_ITEM ) {

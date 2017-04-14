@@ -66,9 +66,11 @@ sub path_segments {
     my ($self) = @_;
     return map s/~1/\//r, #/
            map s/~0/\~/r, #/
-           grep $_,
+           grep defined $_ && $_ ne '',
            split /\// => $_[0]->{path};
 }
+
+sub length { scalar $_[0]->path_segments }
 
 sub tokenize {
     my ($self) = @_;
