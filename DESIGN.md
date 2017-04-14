@@ -10,25 +10,9 @@ A JSON Framework for Perl
 
 A low-level, streaming reader API for JSON.
 
-Capablities include:
-
-- easy skipping of structures
-- recording of line/col of input
-- easy capturing of stats
-
 #### JSON Streaming Writer
 
 A low-level, streaming writer API for JSON.
-
-Capablities include:
-
-- different types of output of buffering (line, char, n-char, etc.)
-- easy capturing of stats
-
-#### JSON Streams
-
-An abstraction over the reader & writer pair which can be composed
-into processing pipelines.
 
 ### Models
 
@@ -97,8 +81,6 @@ properties exists it should validate against the
 sub-schema, or we have a validation fail.
 
 ## See Also
-
-
 
 https://google.github.io/styleguide/jsoncstyleguide.xml
 
