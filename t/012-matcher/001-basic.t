@@ -4,6 +4,7 @@ use strict;
 use warnings;
 
 use Test::More;
+use Test::Fatal;
 
 BEGIN {
     use_ok('Paxton::Util::TokenIterator');
@@ -11,52 +12,50 @@ BEGIN {
 
     use_ok('Paxton::Core::Pointer');
 
+    use_ok('Paxton::Streaming::Pipe');
     use_ok('Paxton::Streaming::Matcher');
     use_ok('Paxton::Streaming::Decoder');
 }
 
 subtest '... basic matcher' => sub {
 
-    my @tokens = (
-        token(START_OBJECT),
-            token(START_PROPERTY, "foo"),
+    my $in = Paxton::Streaming::Pipe->new(
+        producer => Paxton::Util::TokenIterator->new(
+            tokens => [
                 token(START_OBJECT),
-                    token(START_PROPERTY, "bar"),
+                    token(START_PROPERTY, "foo"),
                         token(START_OBJECT),
-                            token(START_PROPERTY, "baz"),
-                                token(ADD_STRING, "gorch"),
+                            token(START_PROPERTY, "bar"),
+                                token(START_OBJECT),
+                                    token(START_PROPERTY, "baz"),
+                                        token(ADD_STRING, "gorch"),
+                                    token(END_PROPERTY),
+                                token(END_OBJECT),
                             token(END_PROPERTY),
                         token(END_OBJECT),
                     token(END_PROPERTY),
                 token(END_OBJECT),
-            token(END_PROPERTY),
-        token(END_OBJECT),
+            ]
+        ),
+        consumer => Paxton::Streaming::Matcher->new(
+            pointer => Paxton::Core::Pointer->new( '/foo' )
+        ),
     );
+    isa_ok($in, 'Paxton::Streaming::Pipe');
 
-    my $in = Paxton::Util::TokenIterator->new( tokens => \@tokens );
-    isa_ok($in, 'Paxton::Util::TokenIterator');
+    is(exception { $in->run }, undef, '... ran the pipe successfully');
 
-    my $ptr = Paxton::Core::Pointer->new( '/foo' );
-    isa_ok($ptr, 'Paxton::Core::Pointer');
+    my $out = Paxton::Streaming::Pipe->new(
+        producer => Paxton::Util::TokenIterator->new(
+            tokens => [ $in->consumer->get_matched_tokens ]
+        ),
+        consumer => Paxton::Streaming::Decoder->new,
+    );
+    isa_ok($out, 'Paxton::Streaming::Pipe');
 
-    my $m = Paxton::Streaming::Matcher->new( pointer => $ptr );
-    isa_ok($m, 'Paxton::Streaming::Matcher');
+    is(exception { $out->run }, undef, '... ran the pipe successfully');
 
-    my $d = Paxton::Streaming::Decoder->new;
-    isa_ok($d, 'Paxton::Streaming::Decoder');
-
-    until ( $m->is_full ) {
-        $m->put_token( $in->get_token );
-    }
-
-    my $out = $m->get_matched_token_iterator;
-    isa_ok($out, 'Paxton::Util::TokenIterator');
-
-    until ( $d->is_full ) {
-        $d->put_token( $out->get_token );
-    }
-
-    is_deeply($d->get_value, { bar => { baz => 'gorch' } }, '... got the expected decoded value');
+    is_deeply($out->consumer->get_value, { bar => { baz => 'gorch' } }, '... got the expected decoded value');
 
 };
 

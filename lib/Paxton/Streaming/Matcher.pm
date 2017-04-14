@@ -13,8 +13,6 @@ use Paxton::Util::Tokens;
 use Paxton::Core::Context;
 use Paxton::Core::Pointer;
 
-use Paxton::Util::TokenIterator;
-
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
 
@@ -59,13 +57,8 @@ sub context { $_[0]->{context} }
 sub get_matched_tokens {
     my ($self) = @_;
     ($self->is_full)
-        || Paxton::Core::Exception->new( message => 'Cannot get matched tokens until matcher is done' )->throw;
+        || Paxton::Core::Exception->new( message => 'Cannot get matched tokens until matcher is full' )->throw;
     @{ $self->{_buffer} };
-}
-
-sub get_matched_token_iterator {
-    my ($self) = @_;
-    Paxton::Util::TokenIterator->new( tokens => $self->{_buffer} );
 }
 
 ## fullfil the APIs
