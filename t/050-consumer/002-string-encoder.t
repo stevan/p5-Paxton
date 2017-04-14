@@ -7,7 +7,6 @@ use Test::More;
 use Test::Fatal;
 
 BEGIN {
-    use_ok('Paxton::Streaming::Pipe');
     use_ok('Paxton::Streaming::Writer');
     use_ok('Paxton::Streaming::Encoder');
 }
@@ -28,16 +27,7 @@ isa_ok($e, 'Paxton::Streaming::Encoder');
 my $w = Paxton::Streaming::Writer->new_to_string( \$json );
 isa_ok($w, 'Paxton::Streaming::Writer');
 
-my $p = Paxton::Streaming::Pipe->new(
-    producer => $e,
-    consumer => $w,
-);
-isa_ok($p, 'Paxton::Streaming::Pipe');
-
-is($p->producer, $e, '... got the right producer');
-is($p->consumer, $w, '... got the right consumer');
-
-is(exception { $p->run }, undef, '... ran the pipe successfully');
+is(exception { $w->consume( $e ) }, undef, '... ran the consumer successfully');
 
 is_deeply(
     $json,

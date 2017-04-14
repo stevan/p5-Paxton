@@ -7,7 +7,6 @@ use Test::More;
 use Test::Fatal;
 
 BEGIN {
-    use_ok('Paxton::Streaming::Pipe');
     use_ok('Paxton::Streaming::Decoder');
     use_ok('Paxton::Streaming::Encoder');
 }
@@ -28,16 +27,7 @@ isa_ok($e, 'Paxton::Streaming::Encoder');
 my $d = Paxton::Streaming::Decoder->new;
 isa_ok($d, 'Paxton::Streaming::Decoder');
 
-my $p = Paxton::Streaming::Pipe->new(
-    producer => $e,
-    consumer => $d,
-);
-isa_ok($p, 'Paxton::Streaming::Pipe');
-
-is($p->producer, $e, '... got the right producer');
-is($p->consumer, $d, '... got the right consumer');
-
-is(exception { $p->run }, undef, '... ran the pipe successfully');
+is(exception { $d->consume( $e ) }, undef, '... ran the consumer successfully');
 
 ok($d->has_value, '... we have a value');
 

@@ -18,17 +18,16 @@ __END__
     my $producer  = ...;
     my $consumer  = ...;
 
-    until ( $producer->is_exhausted || $consumer->is_full ) {
+    until ( $consumer->is_full || $producer->is_exhausted ) {
         my $token = $producer->produce_token;
         last unless defined $token;
         $consumer->consume_token( $token );
     }
 
-    until ( $producer->is_exhausted || $consumer->is_full ) {
-        last unless $producer->process_token( $consumer );
+    until ( $consumer->is_full || $producer->is_exhausted ) {
+        last unless $consumer->consume_one( $producer );
     }
 
-    $producer->process( $consumer );
     $consumer->consume( $producer );
 
 

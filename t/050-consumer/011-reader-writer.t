@@ -7,7 +7,6 @@ use Test::More;
 use Test::Fatal;
 
 BEGIN {
-    use_ok('Paxton::Streaming::Pipe');
     use_ok('Paxton::Streaming::Reader');
     use_ok('Paxton::Streaming::Writer');
 }
@@ -21,16 +20,7 @@ isa_ok($r, 'Paxton::Streaming::Reader');
 my $w = Paxton::Streaming::Writer->new_to_string( \$end );
 isa_ok($w, 'Paxton::Streaming::Writer');
 
-my $p = Paxton::Streaming::Pipe->new(
-    producer => $r,
-    consumer => $w,
-);
-isa_ok($p, 'Paxton::Streaming::Pipe');
-
-is($p->producer, $r, '... got the right producer');
-is($p->consumer, $w, '... got the right consumer');
-
-is(exception { $p->run }, undef, '... ran the pipe successfully');
+is(exception { $w->consume( $r ) }, undef, '... ran the consumer successfully');
 
 is($start, $end, '... got the string we expected');
 

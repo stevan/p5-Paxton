@@ -14,7 +14,6 @@ BEGIN {
 
     use_ok('Paxton::Core::Pointer');
 
-    use_ok('Paxton::Streaming::Pipe');
     use_ok('Paxton::Streaming::Reader');
     use_ok('Paxton::Streaming::Matcher');
     use_ok('Paxton::Streaming::Decoder');
@@ -22,29 +21,29 @@ BEGIN {
 
 subtest '... basic matcher' => sub {
 
-    my $in = Paxton::Streaming::Pipe->new(
-        producer => Paxton::Streaming::Reader->new_from_handle(
-            IO::File->new( 't/data/012-matcher/010-complex.json', 'r')
-        ),
-        consumer => Paxton::Streaming::Matcher->new(
-            pointer => Paxton::Core::Pointer->new( '/0/friends/1/name' )
-        ),
+    my $in = Paxton::Streaming::Reader->new_from_handle(
+        IO::File->new( 't/data/012-matcher/010-complex.json', 'r')
     );
-    isa_ok($in, 'Paxton::Streaming::Pipe');
+    isa_ok($in, 'Paxton::Streaming::Reader');
 
-    is(exception { $in->run }, undef, '... ran the pipe successfully');
-
-    my $out = Paxton::Streaming::Pipe->new(
-        producer => Paxton::Util::TokenIterator->new(
-            tokens => [ $in->consumer->get_matched_tokens ]
-        ),
-        consumer => Paxton::Streaming::Decoder->new,
+    my $matcher = Paxton::Streaming::Matcher->new(
+        pointer => Paxton::Core::Pointer->new( '/0/friends/1/name' )
     );
-    isa_ok($out, 'Paxton::Streaming::Pipe');
+    isa_ok($matcher, 'Paxton::Streaming::Matcher');
 
-    is(exception { $out->run }, undef, '... ran the pipe successfully');
+    is(exception { $matcher->consume( $in ) }, undef, '... ran the consumer successfully');
 
-    is($out->consumer->get_value, 'Valdez Mcbride', '... got the expected decoded value');
+    my $matched = Paxton::Util::TokenIterator->new(
+        tokens => [ $matcher->get_matched_tokens ]
+    );
+    isa_ok($matched, 'Paxton::Util::TokenIterator');
+
+    my $decoder = Paxton::Streaming::Decoder->new;
+    isa_ok($decoder, 'Paxton::Streaming::Decoder');
+
+    is(exception { $decoder->consume( $matched ) }, undef, '... ran the consumer successfully');
+
+    is($decoder->get_value, 'Valdez Mcbride', '... got the expected decoded value');
 
 };
 
