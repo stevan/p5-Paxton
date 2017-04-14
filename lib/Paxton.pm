@@ -56,6 +56,11 @@ Convert a stream of tokens into an in-memory data structure.
 
 Convert a stream of tokens into a L<Paxton::Core::TreeNode> tree.
 
+=item L<Paxton::Streaming::Matcher>
+
+Convert a stream of tokens into a substream containing only tokens
+relevant to a match criteria.
+
 =back
 
 =head2 What kind of name is Paxton?

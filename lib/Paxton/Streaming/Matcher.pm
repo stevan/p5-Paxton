@@ -1,5 +1,5 @@
 package Paxton::Streaming::Matcher;
-# ABSTRACT: Consume a stream and fire callback when a JSON Pointer is matched
+# ABSTRACT: Convert a stream of tokens into a substream containing only tokens relevant to a match criteria.
 
 use strict;
 use warnings;
