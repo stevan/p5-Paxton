@@ -7,10 +7,10 @@ use Test::More           ();
 use Test::Fatal          ('exception');
 use Paxton::Util::Tokens ('is_token');
 
-use Paxton::Streaming::Reader;
+use Paxton::Streaming::IO::Reader;
 use Paxton::Streaming::Decoder;
 use Paxton::Streaming::Encoder;
-use Paxton::Streaming::Writer;
+use Paxton::Streaming::IO::Writer;
 
 ## ...
 
@@ -44,8 +44,8 @@ sub tokens_match {
     Test::More::subtest( $msg => sub {
         Test::More::diag( $json ) if VERBOSE;
 
-        my $r = Paxton::Streaming::Reader->new_from_string( \$json );
-        Test::More::isa_ok($r, 'Paxton::Streaming::Reader');
+        my $r = Paxton::Streaming::IO::Reader->new_from_string( \$json );
+        Test::More::isa_ok($r, 'Paxton::Streaming::IO::Reader');
 
         foreach my $e ( @$expected ) {
             my $t = $r->produce_token;
@@ -66,8 +66,8 @@ sub tokens_written_to {
     Test::More::subtest($msg => sub {
         my $json = '';
 
-        my $w = Paxton::Streaming::Writer->new_to_string( \$json );
-        Test::More::isa_ok($w, 'Paxton::Streaming::Writer');
+        my $w = Paxton::Streaming::IO::Writer->new_to_string( \$json );
+        Test::More::isa_ok($w, 'Paxton::Streaming::IO::Writer');
 
         $w->consume_token( $_ ) foreach @$tokens_to_write;
 

@@ -14,17 +14,17 @@ BEGIN {
 
     use_ok('Paxton::Core::Pointer');
 
-    use_ok('Paxton::Streaming::Reader');
+    use_ok('Paxton::Streaming::IO::Reader');
     use_ok('Paxton::Streaming::Matcher');
     use_ok('Paxton::Streaming::Decoder');
 }
 
 subtest '... basic matcher' => sub {
 
-    my $in = Paxton::Streaming::Reader->new_from_handle(
+    my $in = Paxton::Streaming::IO::Reader->new_from_handle(
         IO::File->new( 't/data/012-matcher/010-complex.json', 'r')
     );
-    isa_ok($in, 'Paxton::Streaming::Reader');
+    isa_ok($in, 'Paxton::Streaming::IO::Reader');
 
     my $matcher = Paxton::Streaming::Matcher->new(
         pointer => Paxton::Core::Pointer->new( '/0/friends/1/name' )

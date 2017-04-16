@@ -1,4 +1,4 @@
-package Paxton::Streaming::Writer;
+package Paxton::Streaming::IO::Writer;
 # ABSTRACT: Convert a stream of tokens into a JSON string
 
 use strict;

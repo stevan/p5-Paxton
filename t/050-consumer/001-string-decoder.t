@@ -7,7 +7,7 @@ use Test::More;
 use Test::Fatal;
 
 BEGIN {
-    use_ok('Paxton::Streaming::Reader');
+    use_ok('Paxton::Streaming::IO::Reader');
     use_ok('Paxton::Streaming::Decoder');
 }
 
@@ -21,8 +21,8 @@ my $json = q|
     }
 |;
 
-my $r = Paxton::Streaming::Reader->new_from_string( \$json );
-isa_ok($r, 'Paxton::Streaming::Reader');
+my $r = Paxton::Streaming::IO::Reader->new_from_string( \$json );
+isa_ok($r, 'Paxton::Streaming::IO::Reader');
 
 my $d = Paxton::Streaming::Decoder->new;
 isa_ok($d, 'Paxton::Streaming::Decoder');

@@ -26,7 +26,7 @@ method in a loop until the C<is_exhausted> method returns true.
 
 =over 4
 
-=item L<Paxton::Streaming::Reader>
+=item L<Paxton::Streaming::IO::Reader>
 
 Convert a JSON string into a stream of tokens.
 
@@ -44,7 +44,7 @@ true.
 
 =over 4
 
-=item L<Paxton::Streaming::Writer>
+=item L<Paxton::Streaming::IO::Writer>
 
 Convert a stream of tokens into a JSON string.
 

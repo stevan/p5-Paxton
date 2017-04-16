@@ -151,7 +151,7 @@ done_testing;
 This will pretty print the tokens and give you output that
 is suitable for building the C<@expected> array above.
 
-    my $r = Paxton::Streaming::Reader->new_from_handle(
+    my $r = Paxton::Streaming::IO::Reader->new_from_handle(
         IO::File->new( 't/data/001-reader/200-from-file.json', 'r')
     );
 

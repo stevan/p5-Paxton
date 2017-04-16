@@ -1,4 +1,4 @@
-package Paxton::Streaming::Reader;
+package Paxton::Streaming::IO::Reader;
 # ABSTRACT: Convert a JSON string into a stream of tokens
 
 use strict;

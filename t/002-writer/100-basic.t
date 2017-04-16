@@ -10,7 +10,7 @@ use Test::Fatal;
 use Test::Paxton;
 
 BEGIN {
-    use_ok('Paxton::Streaming::Writer');
+    use_ok('Paxton::Streaming::IO::Writer');
     use_ok('Paxton::Util::Tokens');
 }
 

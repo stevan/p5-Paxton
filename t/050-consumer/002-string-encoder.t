@@ -7,7 +7,7 @@ use Test::More;
 use Test::Fatal;
 
 BEGIN {
-    use_ok('Paxton::Streaming::Writer');
+    use_ok('Paxton::Streaming::IO::Writer');
     use_ok('Paxton::Streaming::Encoder');
 }
 
@@ -24,8 +24,8 @@ my $json = '';
 my $e = Paxton::Streaming::Encoder->new( source => $source );
 isa_ok($e, 'Paxton::Streaming::Encoder');
 
-my $w = Paxton::Streaming::Writer->new_to_string( \$json );
-isa_ok($w, 'Paxton::Streaming::Writer');
+my $w = Paxton::Streaming::IO::Writer->new_to_string( \$json );
+isa_ok($w, 'Paxton::Streaming::IO::Writer');
 
 is(exception { $w->consume( $e ) }, undef, '... ran the consumer successfully');
 
