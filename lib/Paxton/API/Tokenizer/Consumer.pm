@@ -15,11 +15,16 @@ sub consume_one {
     my $token = $producer->produce_token;
     return unless defined $token;
     $self->consume_token( $token );
-    return 1;
+    return $token;
 }
 
 sub consume {
     my ($self, $producer) = @_;
+    # Ideally a producer and consumer will be
+    # exhausted and full respectively at the
+    # same time. But if that is not the case,
+    # then we check producer first, because
+    # there is no sense in consuming nothing
     until ( $producer->is_exhausted || $self->is_full ) {
         last unless $self->consume_one( $producer );
     }
