@@ -145,6 +145,7 @@ sub log {
 BEGIN {
     use MOP::Role;
     use MOP::Internal::Util;
+
     MOP::Internal::Util::APPLY_ROLES(
         MOP::Role->new(name => __PACKAGE__),
         \@DOES,

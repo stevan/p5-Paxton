@@ -76,6 +76,15 @@ sub to_string {
     elsif ( $type == STRING ) {
         return '"' . $self->value . '"';
     }
+    elsif ( $type == TRUE ) {
+        return 'true';
+    }
+    elsif ( $type == FALSE ) {
+        return 'false';
+    }
+    elsif ( $type == NULL ) {
+        return 'null';
+    }
     else {
         return $self->value;
     }
