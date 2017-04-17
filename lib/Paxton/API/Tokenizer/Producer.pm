@@ -23,7 +23,7 @@ sub broadcast {
     #warn "Running...";
     until ( $self->is_exhausted || (scalar @consumers == 0) ) {
         #warn "broadcasting ...";
-        $self->broadcast_one( @consumers );
+        last unless $self->broadcast_one( @consumers );
         #warn "got consumers : " . join ', ' => @consumers;
         @consumers = grep not($_->is_full), @consumers;
         #warn "got (filtered) consumers : " . join ', ' => @consumers;
