@@ -1,4 +1,4 @@
-package Paxton::API::Schema::Type;
+package Paxton::Schema::API::Type;
 # ABSTRACT: One stop for all your JSON needs
 
 use strict;

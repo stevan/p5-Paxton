@@ -11,7 +11,7 @@ use UNIVERSAL::Object;
 use IO::Handle;
 use IO::Scalar;
 
-use Paxton::API::Tokenizer::Consumer;
+use Paxton::Streaming::API::Consumer;
 
 use Paxton::Util::Errors;
 use Paxton::Util::Tokens;
@@ -26,7 +26,7 @@ use constant DEBUG => $ENV{PAXTON_WRITER_DEBUG} // 0;
 # ...
 
 our @ISA;  BEGIN { @ISA  = ('UNIVERSAL::Object') }
-our @DOES; BEGIN { @DOES = ('Paxton::API::Tokenizer::Consumer') }
+our @DOES; BEGIN { @DOES = ('Paxton::Streaming::API::Consumer') }
 our %HAS;  BEGIN {
     %HAS = (
         sink    => sub { die 'You must specify a `sink` to write to.'},

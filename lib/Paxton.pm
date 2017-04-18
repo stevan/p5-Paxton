@@ -19,7 +19,7 @@ __END__
 
 One stop for all your JSON needs.
 
-=head2 L<Paxton::API::Tokenizer::Producer>
+=head2 L<Paxton::Streaming::API::Producer>
 
 These classes produce a token stream by calling the C<produce_token>
 method in a loop until the C<is_exhausted> method returns true.
@@ -36,7 +36,7 @@ Convert an in-memory data structure into a stream of tokens.
 
 =back
 
-=head2 L<Paxton::API::Tokenizer::Consumer>
+=head2 L<Paxton::Streaming::API::Consumer>
 
 These classes consume a token stream by feedins tokens to the
 C<consume_token> method in a loop until the C<is_full> method returns

@@ -7,12 +7,12 @@ use warnings;
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
 
-use Paxton::API::Schema::Type;
+use Paxton::Schema::API::Type;
 
 use UNIVERSAL::Object::Immutable;
 
 our @ISA;  BEGIN { @ISA  = ('UNIVERSAL::Object::Immutable') }
-our @DOES; BEGIN { @DOES = ('Paxton::API::Schema::Type') }
+our @DOES; BEGIN { @DOES = ('Paxton::Schema::API::Type') }
 our %HAS;  BEGIN {
     %HAS = (
         maxLength => sub {},

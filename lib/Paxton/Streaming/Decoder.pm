@@ -6,7 +6,7 @@ use warnings;
 
 use UNIVERSAL::Object;
 
-use Paxton::API::Tokenizer::Consumer;
+use Paxton::Streaming::API::Consumer;
 
 use Paxton::Util::Errors;
 use Paxton::Util::Tokens;
@@ -29,7 +29,7 @@ use constant NO_VALUE => \undef;
 # ...
 
 our @ISA;  BEGIN { @ISA  = ('UNIVERSAL::Object') }
-our @DOES; BEGIN { @DOES = ('Paxton::API::Tokenizer::Consumer') }
+our @DOES; BEGIN { @DOES = ('Paxton::Streaming::API::Consumer') }
 our %HAS;  BEGIN {
     %HAS = (
         context => sub { Paxton::Core::Context->new },

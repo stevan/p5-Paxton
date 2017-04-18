@@ -12,7 +12,7 @@ use MOP::Method;
 use IO::Handle;
 use IO::Scalar;
 
-use Paxton::API::Tokenizer::Producer;
+use Paxton::Streaming::API::Producer;
 
 use Paxton::Util::Errors;
 use Paxton::Util::Tokens;
@@ -28,7 +28,7 @@ use constant DEBUG => $ENV{PAXTON_READER_DEBUG} // 0;
 # ...
 
 our @ISA;  BEGIN { @ISA  = ('UNIVERSAL::Object') }
-our @DOES; BEGIN { @DOES = ('Paxton::API::Tokenizer::Producer') }
+our @DOES; BEGIN { @DOES = ('Paxton::Streaming::API::Producer') }
 our %HAS;  BEGIN {
     %HAS = (
         source     => sub { die 'You must specify a `source` to read from.'},

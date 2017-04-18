@@ -9,10 +9,10 @@ our $AUTHORITY = 'cpan:STEVAN';
 
 use UNIVERSAL::Object::Immutable;
 
-use Paxton::API::Schema::Type;
+use Paxton::Schema::API::Type;
 
 our @ISA;  BEGIN { @ISA  = ('UNIVERSAL::Object::Immutable') }
-our @DOES; BEGIN { @DOES = ('Paxton::API::Schema::Type') }
+our @DOES; BEGIN { @DOES = ('Paxton::Schema::API::Type') }
 our %HAS;  BEGIN {
     %HAS = (
         maxProperties        => sub {},
