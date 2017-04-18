@@ -7,7 +7,7 @@ use warnings;
 use Scalar::Util ();
 use UNIVERSAL::Object;
 
-use Paxton::Core::Exception;
+use Paxton::Util::Errors;
 
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
@@ -27,7 +27,7 @@ our %HAS; BEGIN {
 sub BUILD {
     my ($self) = @_;
     (Scalar::Util::blessed( $self->{handle} ) && $self->{handle}->isa('IO::Handle') )
-        || Paxton::Core::Exception->new( message => 'You must specify a `handle` that is derived from IO::Handle' )->throw;
+        || throw('You must specify a `handle` that is derived from IO::Handle' );
 }
 
 sub current_position {

@@ -8,8 +8,9 @@ use UNIVERSAL::Object;
 
 use Paxton::API::Tokenizer::Consumer;
 
-use Paxton::Core::Exception;
+use Paxton::Util::Errors;
 use Paxton::Util::Tokens;
+
 use Paxton::Core::Context;
 
 our $VERSION   = '0.01';
@@ -64,10 +65,10 @@ sub consume_token {
     my ($self, $token) = @_;
 
     (not $self->is_full)
-        || Paxton::Core::Exception->new( message => 'Decoder is done, cannot `put` any more tokens' )->throw;
+        || throw('Decoder is done, cannot `put` any more tokens' );
 
     (defined $token && is_token($token))
-        || Paxton::Core::Exception->new( message => 'Invalid token: '.$token )->throw;
+        || throw('Invalid token: '.$token );
 
     my $context    = $self->{context};
     my $token_type = $token->type;

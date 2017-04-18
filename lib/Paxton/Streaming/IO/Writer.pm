@@ -13,8 +13,9 @@ use IO::Scalar;
 
 use Paxton::API::Tokenizer::Consumer;
 
-use Paxton::Core::Exception;
+use Paxton::Util::Errors;
 use Paxton::Util::Tokens;
+
 use Paxton::Core::Context;
 
 our $VERSION   = '0.01';
@@ -42,7 +43,7 @@ sub new_to_handle {
     my ($class, $handle) = @_;
 
     (Scalar::Util::blessed( $handle ) && $handle->isa('IO::Handle') )
-        || Paxton::Core::Exception->new( message => 'The stream must be derived from IO::Handle' )->throw;
+        || throw('The stream must be derived from IO::Handle' );
 
     $class->new( sink => $handle );
 }
@@ -51,7 +52,7 @@ sub new_to_string {
     my ($class, $string_ref) = @_;
 
     (defined $string_ref && ref $string_ref eq 'SCALAR')
-        || Paxton::Core::Exception->new( message => 'The string must be a SCALAR reference' )->throw;
+        || throw('The string must be a SCALAR reference' );
 
     return $class->new_to_handle( IO::Scalar->new( $string_ref ) );
 }
@@ -61,7 +62,7 @@ sub new_to_string {
 sub BUILD {
     my ($self) = @_;
     (Scalar::Util::blessed( $self->{sink} ) && $self->{sink}->isa('IO::Handle') )
-        || Paxton::Core::Exception->new( message => 'The `sink` must be an instance of `IO::Handle`' )->throw;
+        || throw('The `sink` must be an instance of `IO::Handle`' );
 
     # TODO:
     # check to make sure the handle
@@ -99,10 +100,10 @@ sub consume_token {
     my ($self, $token) = @_;
 
     (not $self->is_full)
-        || Paxton::Core::Exception->new( message => 'Writer is done, cannot `put` any more tokens' )->throw;
+        || throw('Writer is done, cannot `put` any more tokens' );
 
     (defined $token && is_token($token))
-        || Paxton::Core::Exception->new( message => 'Invalid token: '.$token )->throw;
+        || throw('Invalid token: '.$token );
 
     my $sink       = $self->{sink};
     my $context    = $self->{context};
@@ -168,7 +169,7 @@ sub consume_token {
         $sink->print('null');
     }
     else {
-        Paxton::Core::Exception->new( message => 'Unkown token type: '.$token_type )->throw;
+        throw('Unkown token type: '.$token_type );
     }
 }
 

@@ -7,7 +7,7 @@ use warnings;
 use Scalar::Util ();
 use UNIVERSAL::Object::Immutable;
 
-use Paxton::Core::Exception;
+use Paxton::Util::Errors;
 
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
@@ -69,7 +69,7 @@ sub BUILD {
     my $self = $_[0];
 
     (exists $TOKEN_MAP{ $self->{type} })
-        || Paxton::Core::Exception->new( message => 'Unknown token type (' . $self->{type} . ')' )->throw;
+        || throw('Unknown token type (' . $self->{type} . ')' );
 
     # XXX
     # Might want to check which kinds of

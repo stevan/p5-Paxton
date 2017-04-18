@@ -14,8 +14,9 @@ use IO::Scalar;
 
 use Paxton::API::Tokenizer::Producer;
 
-use Paxton::Core::Exception;
+use Paxton::Util::Errors;
 use Paxton::Util::Tokens;
+
 use Paxton::Core::CharBuffer;
 use Paxton::Core::Context;
 
@@ -38,11 +39,23 @@ our %HAS;  BEGIN {
 
 ## Constructors
 
+sub new_from_path {
+    my ($class, $path) = @_;
+
+    (defined $path && -f $path)
+        || throw('The path must be specified and be valid' );
+
+    my $handle = IO::File->new( $path, 'r' )
+        or throw('Unable to open file('.$path.') for reading because: '.$!);
+
+    $class->new( source => Paxton::Core::CharBuffer->new( handle => $handle ) );
+}
+
 sub new_from_handle {
     my ($class, $handle) = @_;
 
     (Scalar::Util::blessed( $handle ) && $handle->isa('IO::Handle'))
-        || Paxton::Core::Exception->new( message => 'The handle must be derived from IO::Handle' )->throw;
+        || throw('The handle must be derived from IO::Handle' );
 
     $class->new( source => Paxton::Core::CharBuffer->new( handle => $handle ) );
 }
@@ -51,7 +64,7 @@ sub new_from_string {
     my ($class, $string_ref) = @_;
 
     (defined $string_ref && ref $string_ref eq 'SCALAR')
-        || Paxton::Core::Exception->new( message => 'The string must be a SCALAR reference' )->throw;
+        || throw('The string must be a SCALAR reference' );
 
     return $class->new_from_handle( IO::Scalar->new( $string_ref ) );
 }
@@ -61,7 +74,7 @@ sub new_from_string {
 sub BUILD {
     my ($self) = @_;
     (Scalar::Util::blessed( $self->{source} ) && $self->{source}->isa('Paxton::Core::CharBuffer') )
-        || Paxton::Core::Exception->new( message => 'The `source` must be an instance of `Paxton::Core::CharBuffer`' )->throw;
+        || throw('The `source` must be an instance of `Paxton::Core::CharBuffer`' );
 
     # TODO:
     # check to make sure the handle
@@ -101,7 +114,7 @@ sub produce_token {
         my $token = $self->$next();
 
         (defined $token && is_token( $token ))
-            || Paxton::Core::Exception->new( message => 'Invalid token ('.$token.')' )->throw;
+            || throw('Invalid token ('.$token.')' );
 
         return if $token->type == NO_TOKEN;
 

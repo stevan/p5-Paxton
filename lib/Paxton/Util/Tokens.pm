@@ -6,7 +6,6 @@ use warnings;
 
 use Scalar::Util ();
 
-use Paxton::Core::Exception;
 use Paxton::Core::Token;
 
 our $VERSION   = '0.01';

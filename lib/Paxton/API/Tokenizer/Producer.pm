@@ -29,6 +29,8 @@ sub broadcast {
         #warn "got (filtered) consumers : " . join ', ' => @consumers;
         #warn '---------------------------------';
     }
+    # return self for optional chaining
+    return $self;
 }
 
 1;

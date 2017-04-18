@@ -9,8 +9,8 @@ use MOP::Method;
 
 use Paxton::API::Tokenizer::Producer;
 
-use Paxton::Core::Exception;
 use Paxton::Util::Tokens;
+
 use Paxton::Core::Context;
 
 our $VERSION   = '0.01';

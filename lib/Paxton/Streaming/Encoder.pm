@@ -9,8 +9,9 @@ use MOP::Method;
 
 use Paxton::API::Tokenizer::Producer;
 
-use Paxton::Core::Exception;
+use Paxton::Util::Errors;
 use Paxton::Util::Tokens;
+
 use Paxton::Core::Context;
 
 our $VERSION   = '0.01';
@@ -63,7 +64,7 @@ sub produce_token {
         my $token = $self->$next();
 
         (defined $token && is_token( $token ))
-            || Paxton::Core::Exception->new( message => 'Invalid token ('.$token.')' )->throw;
+            || throw('Invalid token ('.$token.')' );
 
         return if $token->type == NO_TOKEN;
 
@@ -77,9 +78,7 @@ sub produce_token {
             $self->{_done} = 1;
         }
         elsif ( not exists $self->{next_state} ) {
-            Paxton::Core::Exception
-                ->new( message => 'Next state is not specified after '.$token->to_string )
-                ->throw;
+            throw('Next state is not specified after '.$token->to_string );
 
         }
         else {

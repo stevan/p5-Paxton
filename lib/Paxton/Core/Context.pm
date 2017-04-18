@@ -6,7 +6,8 @@ use warnings;
 
 use Scalar::Util ();
 
-use Paxton::Core::Exception;
+use Paxton::Util::Errors;
+use Paxton::Util::Tokens;
 
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
@@ -84,7 +85,7 @@ sub enter_root_context {
     my ($self, $value) = @_;
 
     (scalar @$self == 0)
-        || Paxton::Core::Exception->new( message => 'Unable to enter root context: stack not empty' )->throw;
+        || throw('Unable to enter root context: stack not empty');
 
     push @$self => { type => ROOT, value => $value };
     return;
@@ -94,7 +95,7 @@ sub enter_object_context {
     my ($self, $value) = @_;
 
     (scalar @$self)
-        || Paxton::Core::Exception->new( message => 'Unable to enter object context: stack is empty' )->throw;
+        || throw('Unable to enter object context: stack is empty');
 
     push @$self => { type => IN_OBJECT, value => $value, property_count => 0 };
     return;
@@ -104,10 +105,10 @@ sub enter_array_context {
     my ($self, $value) = @_;
 
     (scalar @$self)
-        || Paxton::Core::Exception->new( message => 'Unable to enter array context: stack is empty' )->throw;
+        || throw('Unable to enter array context: stack is empty');
 
     (not $self->in_object_context)
-        || Paxton::Core::Exception->new( message => 'Unable to enter array context from within object context (must be in property context)' )->throw;
+        || throw('Unable to enter array context from within object context (must be in property context)');
 
     push @$self => { type => IN_ARRAY, value => $value, item_count => 0 };
     return;
@@ -117,10 +118,10 @@ sub enter_property_context {
     my ($self, $value) = @_;
 
     (scalar @$self)
-        || Paxton::Core::Exception->new( message => 'Unable to enter property context: stack is empty' )->throw;
+        || throw('Unable to enter property context: stack is empty');
 
     ($self->in_object_context)
-        || Paxton::Core::Exception->new( message => 'Unable to enter property context from within anything but object context' )->throw;
+        || throw('Unable to enter property context from within anything but object context');
 
     # increment the property counter
     $self->[-1]->{property_count}++;
@@ -133,10 +134,10 @@ sub enter_item_context {
     my ($self, $value) = @_;
 
     (scalar @$self)
-        || Paxton::Core::Exception->new( message => 'Unable to enter item context: stack is empty' )->throw;
+        || throw('Unable to enter item context: stack is empty');
 
     ($self->in_array_context)
-        || Paxton::Core::Exception->new( message => 'Unable to enter item context from within anything but array context' )->throw;
+        || throw('Unable to enter item context from within anything but array context');
 
     # increment the property counter
     $self->[-1]->{item_count}++;
@@ -151,10 +152,10 @@ sub leave_object_context {
     my ($self) = @_;
 
     (scalar @$self)
-        || Paxton::Core::Exception->new( message => 'Unable to leave context: stack exhausted' )->throw;
+        || throw('Unable to leave context: stack exhausted');
 
     ($self->[-1]->{type} == IN_OBJECT)
-        || Paxton::Core::Exception->new( message => 'Must be in `object` context, not '.$self->[-1]->{type} )->throw;
+        || throw('Must be in `object` context, not '.$self->[-1]->{type} );
 
     pop @$self;
 
@@ -168,10 +169,10 @@ sub leave_array_context {
     my ($self) = @_;
 
     (scalar @$self)
-        || Paxton::Core::Exception->new( message => 'Unable to leave context: stack exhausted' )->throw;
+        || throw('Unable to leave context: stack exhausted');
 
     ($self->[-1]->{type} == IN_ARRAY)
-        || Paxton::Core::Exception->new( message => 'Must be in `array` context, not '.$self->[-1]->{type} )->throw;
+        || throw('Must be in `array` context, not '.$self->[-1]->{type} );
 
     pop @$self;
 
@@ -185,10 +186,10 @@ sub leave_property_context {
     my ($self) = @_;
 
     (scalar @$self)
-        || Paxton::Core::Exception->new( message => 'Unable to leave context: stack exhausted' )->throw;
+        || throw('Unable to leave context: stack exhausted');
 
     ($self->[-1]->{type} == IN_PROPERTY)
-        || Paxton::Core::Exception->new( message => 'Must be in `property` context, not '.$self->[-1]->{type} )->throw;
+        || throw('Must be in `property` context, not '.$self->[-1]->{type} );
 
     pop @$self;
 
@@ -202,10 +203,10 @@ sub leave_item_context {
     my ($self) = @_;
 
     (scalar @$self)
-        || Paxton::Core::Exception->new( message => 'Unable to leave context: stack exhausted' )->throw;
+        || throw('Unable to leave context: stack exhausted');
 
     ($self->[-1]->{type} == IN_ITEM)
-        || Paxton::Core::Exception->new( message => 'Must be in `item` context, not '.$self->[-1]->{type} )->throw;
+        || throw('Must be in `item` context, not '.$self->[-1]->{type} );
 
     pop @$self;
 
@@ -219,7 +220,7 @@ sub leave_current_context {
     my ($self) = @_;
 
     (scalar @$self)
-        || Paxton::Core::Exception->new( message => 'Unable to leave context: stack exhausted' )->throw;
+        || throw('Unable to leave context: stack exhausted');
 
     pop @$self;
 

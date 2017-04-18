@@ -8,8 +8,9 @@ use UNIVERSAL::Object;
 
 use Paxton::API::Tokenizer::Consumer;
 
-use Paxton::Core::Exception;
+use Paxton::Util::Errors;
 use Paxton::Util::Tokens;
+
 use Paxton::Core::Context;
 use Paxton::Core::Pointer;
 
@@ -57,7 +58,7 @@ sub context { $_[0]->{context} }
 sub get_matched_tokens {
     my ($self) = @_;
     ($self->is_full)
-        || Paxton::Core::Exception->new( message => 'Cannot get matched tokens until matcher is full' )->throw;
+        || throw('Cannot get matched tokens until matcher is full' );
     @{ $self->{_buffer} };
 }
 
@@ -72,10 +73,10 @@ sub consume_token {
     my ($self, $token) = @_;
 
     (not $self->is_full)
-        || Paxton::Core::Exception->new( message => 'Matcher is done, cannot `put` any more tokens' )->throw;
+        || throw('Matcher is done, cannot `put` any more tokens' );
 
     (defined $token && is_token($token))
-        || Paxton::Core::Exception->new( message => 'Invalid token: '.($token//'undef') )->throw;
+        || throw('Invalid token: '.($token//'undef') );
 
     my $context    = $self->{context};
     my $token_type = $token->type;

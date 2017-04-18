@@ -6,7 +6,7 @@ use warnings;
 
 use UNIVERSAL::Object::Immutable;
 
-use Paxton::Core::Exception;
+use Paxton::Util::Errors;
 
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
@@ -55,7 +55,7 @@ sub BUILDARGS {
     my $args = $class->SUPER::BUILDARGS( @args );
 
     ($args->{path} =~ /^\//)
-        || Paxton::Core::Exception->new( message => 'Pointer path must start with a `/`' )->throw;
+        || throw('Pointer path must start with a `/`' );
 
     return $args;
 }

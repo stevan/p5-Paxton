@@ -28,6 +28,8 @@ sub consume {
     until ( $producer->is_exhausted || $self->is_full ) {
         last unless $self->consume_one( $producer );
     }
+    # return self for optional chaining
+    return $self;
 }
 
 1;
