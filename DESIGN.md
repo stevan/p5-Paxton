@@ -26,6 +26,8 @@ Model for representing JSON schemas.
 
 http://json-schema.org/latest/json-schema-core.html
 
+use this to test -> Test::JSON::Schema::Acceptance
+
 #### JSON Patch
 
 Model for JSON patches.
