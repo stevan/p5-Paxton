@@ -33,26 +33,40 @@ my $json_schema_v4 = schema(
     id          => 'http://json-schema.org/draft-04/schema#',
     '$schema'   => 'http://json-schema.org/draft-04/schema#',
     description => 'Core schema meta-schema',
-    default     => {},
     definitions => definitions(
         schemaArray => array(
             minItems => 1,
-            items    => { '$ref' => '#' }
+            items    => reference('#')
         ),
         positiveInteger => number( minimum => 0 ),
         positiveIntegerDefault0 => allOf(
-            { '$ref' => '#/definitions/positiveInteger' },
-            { default => 0 }
+            reference( '#/definitions/positiveInteger' ),
+            schema( default => 0 )
         ),
-        simpleTypes => enum(qw[
-            array boolean integer null number object string
-        ]),
+        simpleTypes => enum(qw[ array boolean integer null number object string ]),
         stringArray => array(
           items       => string(),
           minItems    => 1,
           uniqueItems => \1,
         ),
     ),
+    properties => properties(
+        id          => string( format => 'uri' ),
+        '$schema'   => string( format => 'uri' ),
+        title       => string(),
+        description => string(),
+        default     => schema(),
+
+        multipleOf       => number( minimum => 0, exclusiveMinimum => \1 ),
+        maximum          => number(),
+        exclusiveMaximum => boolean( default => \0 ),
+        minimum          => number(),
+        exclusiveMinimum => boolean( default => \0 ),
+
+        maxLength => reference('#/definitions/positiveInteger'),
+        minLength => reference('#/definitions/positiveIntegerDefault0'),
+    ),
+    default => {},
 );
 
 use Data::Dumper;

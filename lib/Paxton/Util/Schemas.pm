@@ -20,6 +20,7 @@ use Paxton::Schema::Structure::Dependencies;
 use Paxton::Schema::Structure::Enum;
 use Paxton::Schema::Structure::Items;
 use Paxton::Schema::Structure::Properties;
+use Paxton::Schema::Structure::Reference;
 
 use Paxton::Schema::Operator::AllOf;
 use Paxton::Schema::Operator::AnyOf;
@@ -48,6 +49,7 @@ BEGIN {
         enum
         items
         properties
+        reference
 
         allOf
         anyOf
@@ -79,6 +81,7 @@ sub dependencies { Paxton::Schema::Structure::Dependencies ->new( @_ ) }
 sub enum         { Paxton::Schema::Structure::Enum         ->new( @_ ) }
 sub items        { Paxton::Schema::Structure::Items        ->new( @_ ) }
 sub properties   { Paxton::Schema::Structure::Properties   ->new( @_ ) }
+sub reference    { Paxton::Schema::Structure::Reference    ->new( @_ ) }
 
 sub allOf        { Paxton::Schema::Operator::AllOf   ->new( @_ ) }
 sub anyOf        { Paxton::Schema::Operator::AnyOf   ->new( @_ ) }
