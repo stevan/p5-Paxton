@@ -7,7 +7,7 @@ use Test::More;
 use Test::Fatal;
 
 BEGIN {
-    use_ok('Paxton::Util::TokenIterator');
+    use_ok('Paxton::Streaming::TokenIterator');
     use_ok('Paxton::Util::Tokens');
 
     use_ok('Paxton::Core::Pointer');
@@ -18,7 +18,7 @@ BEGIN {
 
 subtest '... basic matcher' => sub {
 
-    my $in = Paxton::Util::TokenIterator->new(
+    my $in = Paxton::Streaming::TokenIterator->new(
         tokens => [
             token(START_OBJECT),
                 token(START_PROPERTY, "foo"),
@@ -35,7 +35,7 @@ subtest '... basic matcher' => sub {
             token(END_OBJECT),
         ]
     );
-    isa_ok($in, 'Paxton::Util::TokenIterator');
+    isa_ok($in, 'Paxton::Streaming::TokenIterator');
 
     my $matcher = Paxton::Streaming::Matcher->new(
         pointer => Paxton::Core::Pointer->new( '/foo' )
@@ -44,8 +44,8 @@ subtest '... basic matcher' => sub {
 
     is(exception { $matcher->consume( $in ) }, undef, '... ran the consumer successfully');
 
-    my $matched = Paxton::Util::TokenIterator->new( tokens => [ $matcher->get_matched_tokens ] );
-    isa_ok($matched, 'Paxton::Util::TokenIterator');
+    my $matched = Paxton::Streaming::TokenIterator->new( tokens => [ $matcher->get_matched_tokens ] );
+    isa_ok($matched, 'Paxton::Streaming::TokenIterator');
 
     my $decoder = Paxton::Streaming::Decoder->new;
     isa_ok($decoder, 'Paxton::Streaming::Decoder');

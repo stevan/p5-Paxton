@@ -6,7 +6,7 @@ use warnings;
 use Test::More;
 
 BEGIN {
-    use_ok('Paxton::Util::TokenIterator');
+    use_ok('Paxton::Streaming::TokenIterator');
     use_ok('Paxton::Util::Tokens');
 }
 
@@ -23,8 +23,8 @@ subtest '... object iterator' => sub {
         token(END_OBJECT),
     );
 
-    my $ti = Paxton::Util::TokenIterator->new( tokens => \@tokens );
-    isa_ok($ti, 'Paxton::Util::TokenIterator');
+    my $ti = Paxton::Streaming::TokenIterator->new( tokens => \@tokens );
+    isa_ok($ti, 'Paxton::Streaming::TokenIterator');
 
     my $ctx = $ti->context;
     isa_ok($ctx, 'Paxton::Core::Context');
@@ -88,8 +88,8 @@ subtest '... array iterator' => sub {
         token(END_ARRAY)
     );
 
-    my $ti = Paxton::Util::TokenIterator->new( tokens => \@tokens );
-    isa_ok($ti, 'Paxton::Util::TokenIterator');
+    my $ti = Paxton::Streaming::TokenIterator->new( tokens => \@tokens );
+    isa_ok($ti, 'Paxton::Streaming::TokenIterator');
 
     my $ctx = $ti->context;
     isa_ok($ctx, 'Paxton::Core::Context');

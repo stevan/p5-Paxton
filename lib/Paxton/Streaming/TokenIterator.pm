@@ -1,4 +1,4 @@
-package Paxton::Util::TokenIterator;
+package Paxton::Streaming::TokenIterator;
 # ABSTRACT: Stream an array of tokens, maintining context
 
 use strict;
