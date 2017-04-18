@@ -22,9 +22,9 @@ BEGIN {
     use_ok('Paxton::Schema::Structure::Dependencies');
     use_ok('Paxton::Schema::Structure::Definitions');
 
-    use_ok('Paxton::Schema::Operator::AllOf');
-    use_ok('Paxton::Schema::Operator::AnyOf');
-    use_ok('Paxton::Schema::Operator::OneOf');
+    use_ok('Paxton::Schema::Combinator::AllOf');
+    use_ok('Paxton::Schema::Combinator::AnyOf');
+    use_ok('Paxton::Schema::Combinator::OneOf');
 
     use_ok('Paxton::Util::Schemas');
 }
@@ -55,7 +55,7 @@ my $json_schema_v4 = schema(
         '$schema'   => string( format => 'uri' ),
         title       => string(),
         description => string(),
-        default     => schema(),
+        default     => {},
 
         multipleOf       => number( minimum => 0, exclusiveMinimum => \1 ),
         maximum          => number(),
@@ -65,6 +65,24 @@ my $json_schema_v4 = schema(
 
         maxLength => reference('#/definitions/positiveInteger'),
         minLength => reference('#/definitions/positiveIntegerDefault0'),
+        pattern   => string( format => 'regex' ),
+
+        additionalItems => anyOf(
+            anyOf => [
+                boolean(),
+                reference('#')
+            ],
+            default => {},
+        ),
+        items => anyOf(
+            anyOf => [
+                reference('#'),
+                reference('#/definitions/schemaArray')
+            ],
+            default => {},
+        ),
+        maxItems => reference('#/definitions/positiveInteger'),
+        minItems => reference('#/definitions/positiveIntegerDefault0')
     ),
     default => {},
 );

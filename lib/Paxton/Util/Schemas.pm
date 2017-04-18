@@ -22,9 +22,9 @@ use Paxton::Schema::Structure::Items;
 use Paxton::Schema::Structure::Properties;
 use Paxton::Schema::Structure::Reference;
 
-use Paxton::Schema::Operator::AllOf;
-use Paxton::Schema::Operator::AnyOf;
-use Paxton::Schema::Operator::OneOf;
+use Paxton::Schema::Combinator::AllOf;
+use Paxton::Schema::Combinator::AnyOf;
+use Paxton::Schema::Combinator::OneOf;
 
 ## TODO:
 # Put all these exports into properly
@@ -83,9 +83,9 @@ sub items        { Paxton::Schema::Structure::Items        ->new( @_ ) }
 sub properties   { Paxton::Schema::Structure::Properties   ->new( @_ ) }
 sub reference    { Paxton::Schema::Structure::Reference    ->new( @_ ) }
 
-sub allOf        { Paxton::Schema::Operator::AllOf   ->new( @_ ) }
-sub anyOf        { Paxton::Schema::Operator::AnyOf   ->new( @_ ) }
-sub oneOf        { Paxton::Schema::Operator::OneOf   ->new( @_ ) }
+sub allOf        { Paxton::Schema::Combinator::AllOf   ->new( @_ ) }
+sub anyOf        { Paxton::Schema::Combinator::AnyOf   ->new( @_ ) }
+sub oneOf        { Paxton::Schema::Combinator::OneOf   ->new( @_ ) }
 
 1;
 

@@ -30,7 +30,12 @@ sub to_json_schema {
     my %properties;
 
     foreach my $key ( keys %{ $self->{_props} } ) {
-        $properties{ $key } = $self->{_props}->{ $key }->to_json_schema;
+        if ( $key eq 'default' ) {
+            $properties{ $key } = $self->{_props}->{ $key };
+        }
+        else {
+            $properties{ $key } = $self->{_props}->{ $key }->to_json_schema;
+        }
     }
 
     return \%properties;

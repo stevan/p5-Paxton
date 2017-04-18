@@ -31,7 +31,7 @@ sub to_json_schema {
 
     foreach my $key ( keys %{ $self->{_deps} } ) {
         my $value = $self->{_deps}->{ $key };
-        if (Scalar::Util::blessed( $value ) && $value->isa('Paxton::Schema::Type::Schema')) {
+        if (Scalar::Util::blessed( $value ) && $value->can('to_json_schema')) {
             $dependencies{ $key } = $value->to_json_schema;
         }
         elsif ( ref $value eq 'ARRAY' ) {

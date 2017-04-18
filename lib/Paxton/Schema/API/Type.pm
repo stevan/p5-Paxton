@@ -17,12 +17,16 @@ our %HAS; BEGIN {
 }
 
 sub to_json_schema {
-    my $self   = $_[0];
-    my $class  = ref $self;
-    my $type   = lc((split /\:\:/ => $class)[-1]);
-    my $schema = {};
+    my $self      = $_[0];
+    my $class     = ref $self;
+    my @namespace = split /\:\:/ => $class;
+    my $category  = lc $namespace[-2];
+    my $type      = lc $namespace[-1];
+    my $schema    = {};
 
-    $schema->{type} = $type unless $type eq 'schema';
+    $schema->{type} = $type
+        if $category eq 'type'
+        && $type     ne 'schema';
 
     foreach my $slot ( MOP::Role->new( $class )->all_slots ) {
 
@@ -40,10 +44,22 @@ sub to_json_schema {
         # ..and then copy the things
         # that can't copy themselves
         elsif ( ref $value eq 'HASH' ) {
-            $value = { %$value };
+            $value = {
+                map {
+                    Scalar::Util::blessed( $value->{ $_ } ) && $value->{ $_ }->can('to_json_schema')
+                        ? ($_ => $value->{ $_ }->to_json_schema)
+                        : ($_ => $value->{ $_ })
+                } keys %$value
+            };
         }
         elsif ( ref $value eq 'ARRAY' ) {
-            $value = [ @$value ];
+            $value = [
+                map {
+                    Scalar::Util::blessed( $_ ) && $_->can('to_json_schema')
+                        ? $_->to_json_schema
+                        : $_
+                } @$value
+            ];
         }
 
         $schema->{ $name } = $value;
