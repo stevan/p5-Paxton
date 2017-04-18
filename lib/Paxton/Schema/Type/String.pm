@@ -22,8 +22,6 @@ our %HAS;  BEGIN {
     );
 }
 
-sub type { 'string' }
-
 # ROLE COMPOSITON
 
 BEGIN {

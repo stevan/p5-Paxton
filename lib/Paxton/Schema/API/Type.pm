@@ -17,11 +17,14 @@ our %HAS; BEGIN {
 }
 
 sub to_json_schema {
-    my ($self) = @_;
+    my $self   = $_[0];
+    my $class  = ref $self;
+    my $type   = lc((split /\:\:/ => $class)[-1]);
+    my $schema = {};
 
-    my $schema = $self->can('type') ? { type => $self->type } : {};
+    $schema->{type} = $type unless $type eq 'schema';
 
-    foreach my $slot ( MOP::Role->new( ref $self )->all_slots ) {
+    foreach my $slot ( MOP::Role->new( $class )->all_slots ) {
 
         my $name  = $slot->name;
         my $value = $self->{ $name };

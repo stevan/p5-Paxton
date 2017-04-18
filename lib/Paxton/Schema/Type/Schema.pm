@@ -21,8 +21,6 @@ our %HAS;  BEGIN {
     );
 }
 
-sub type { 'object' }
-
 1;
 
 __END__

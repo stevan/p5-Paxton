@@ -23,8 +23,6 @@ our %HAS;  BEGIN {
     );
 }
 
-sub type { 'array' }
-
 # ROLE COMPOSITON
 
 BEGIN {

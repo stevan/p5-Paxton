@@ -19,8 +19,6 @@ our %HAS;  BEGIN {
     );
 }
 
-sub type { 'null' }
-
 # ROLE COMPOSITON
 
 BEGIN {

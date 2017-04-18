@@ -24,8 +24,6 @@ our %HAS;  BEGIN {
     );
 }
 
-sub type { 'object' }
-
 # ROLE COMPOSITON
 
 BEGIN {

@@ -19,8 +19,6 @@ our %HAS;  BEGIN {
     );
 }
 
-sub type { 'boolean' }
-
 # ROLE COMPOSITON
 
 BEGIN {
