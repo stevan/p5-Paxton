@@ -51,7 +51,7 @@ sub validate {
                 push @errors => Paxton::Schema::Error::BadLength->new(
                     got      => length($value),
                     expected => sprintf 'max: %d' => $self->{'maxLength'},
-                ) if length($value) < $self->{maxLength};
+                ) if length($value) > $self->{maxLength};
             }
             else {
                 push @errors => Paxton::Schema::Error::BadLength->new(
