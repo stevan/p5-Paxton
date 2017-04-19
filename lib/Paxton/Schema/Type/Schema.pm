@@ -16,6 +16,7 @@ our %HAS;  BEGIN {
         id           => sub {},
         '$schema'    => sub {},
         title        => sub {},
+        type         => sub {},
         dependencies => sub {},
         definitions  => sub {},
     );

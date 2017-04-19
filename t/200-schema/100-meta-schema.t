@@ -4,27 +4,11 @@ use strict;
 use warnings;
 
 use Test::More;
-use IO::File;
-use Data::Dumper;
+use Test::Differences;
 
 BEGIN {
-    use_ok('Paxton::Schema::Type::String');
-    use_ok('Paxton::Schema::Type::Schema');
-    use_ok('Paxton::Schema::Type::Object');
-    use_ok('Paxton::Schema::Type::Number');
-    use_ok('Paxton::Schema::Type::Null');
-    use_ok('Paxton::Schema::Type::Boolean');
-    use_ok('Paxton::Schema::Type::Array');
-
-    use_ok('Paxton::Schema::Structure::Properties');
-    use_ok('Paxton::Schema::Structure::Items');
-    use_ok('Paxton::Schema::Structure::Enum');
-    use_ok('Paxton::Schema::Structure::Dependencies');
-    use_ok('Paxton::Schema::Structure::Definitions');
-
-    use_ok('Paxton::Schema::Combinator::AllOf');
-    use_ok('Paxton::Schema::Combinator::AnyOf');
-    use_ok('Paxton::Schema::Combinator::OneOf');
+    use_ok('Paxton::Streaming::Decoder');
+    use_ok('Paxton::Streaming::IO::Reader');
 
     use_ok('Paxton::Util::Schemas');
 }
@@ -33,15 +17,18 @@ my $json_schema_v4 = schema(
     id          => 'http://json-schema.org/draft-04/schema#',
     '$schema'   => 'http://json-schema.org/draft-04/schema#',
     description => 'Core schema meta-schema',
+    type        => 'object',
     definitions => definitions(
         schemaArray => array(
             minItems => 1,
             items    => reference('#')
         ),
-        positiveInteger => number( minimum => 0 ),
+        positiveInteger => integer( minimum => 0 ),
         positiveIntegerDefault0 => allOf(
-            reference( '#/definitions/positiveInteger' ),
-            schema( default => 0 )
+            allOf => [
+                reference( '#/definitions/positiveInteger' ),
+                schema( default => 0 )
+            ]
         ),
         simpleTypes => enum(qw[ array boolean integer null number object string ]),
         stringArray => array(
@@ -81,13 +68,61 @@ my $json_schema_v4 = schema(
             ],
             default => {},
         ),
-        maxItems => reference('#/definitions/positiveInteger'),
-        minItems => reference('#/definitions/positiveIntegerDefault0')
+        maxItems             => reference('#/definitions/positiveInteger'),
+        minItems             => reference('#/definitions/positiveIntegerDefault0'),
+        uniqueItems          => boolean( default => \0 ),
+        maxProperties        => reference('#/definitions/positiveInteger'),
+        minProperties        => reference('#/definitions/positiveIntegerDefault0'),
+        required             => reference('#/definitions/stringArray'),
+        additionalProperties => anyOf(
+            anyOf => [
+                boolean(),
+                reference('#'),
+            ],
+            default => {}
+        ),
+        definitions       => object( additionalProperties => reference('#'), default => {} ),
+        properties        => object( additionalProperties => reference('#'), default => {} ),
+        patternProperties => object( additionalProperties => reference('#'), default => {} ),
+        dependencies      => object(
+            additionalProperties => anyOf(
+                anyOf => [
+                    reference('#'),
+                    reference('#/definitions/stringArray')
+                ]
+            )
+        ),
+        enum => array(
+          minItems    => 1,
+          uniqueItems => \1
+        ),
+        type => anyOf(
+            anyOf => [
+                reference('#/definitions/simpleTypes'),
+                array(
+                    items       => reference('#/definitions/simpleTypes'),
+                    minItems    =>  1,
+                    uniqueItems => \1,
+                )
+            ]
+        ),
+        allOf => reference('#/definitions/schemaArray'),
+        anyOf => reference('#/definitions/schemaArray'),
+        oneOf => reference('#/definitions/schemaArray'),
+        not   => reference('#'),
+    ),
+    dependencies => dependencies(
+        exclusiveMaximum => ['maximum'],
+        exclusiveMinimum => ['minimum'],
     ),
     default => {},
 );
 
-use Data::Dumper;
-warn Dumper $json_schema_v4->to_json_schema;
+my $got      = $json_schema_v4->to_json_schema;
+my $expected = Paxton::Streaming::Decoder->new->consume(
+    Paxton::Streaming::IO::Reader->new_from_path('share/schemas/json-schema-v4.json')
+)->get_value;
+
+eq_or_diff($got, $expected, '... we generated the same structure as we had');
 
 done_testing;

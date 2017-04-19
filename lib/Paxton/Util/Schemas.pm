@@ -9,6 +9,7 @@ our $AUTHORITY = 'cpan:STEVAN';
 
 use Paxton::Schema::Type::Array;
 use Paxton::Schema::Type::Boolean;
+use Paxton::Schema::Type::Integer;
 use Paxton::Schema::Type::Null;
 use Paxton::Schema::Type::Number;
 use Paxton::Schema::Type::Object;
@@ -38,6 +39,7 @@ BEGIN {
     @EXPORT = qw[
         array
         boolean
+        integer
         null
         number
         object
@@ -70,6 +72,7 @@ sub import_into {
 
 sub array        { Paxton::Schema::Type::Array   ->new( @_ ) }
 sub boolean      { Paxton::Schema::Type::Boolean ->new( @_ ) }
+sub integer      { Paxton::Schema::Type::Integer ->new( @_ ) }
 sub null         { Paxton::Schema::Type::Null    ->new( @_ ) }
 sub number       { Paxton::Schema::Type::Number  ->new( @_ ) }
 sub object       { Paxton::Schema::Type::Object  ->new( @_ ) }
