@@ -43,7 +43,7 @@ sub validate {
         if ( ref $value ) {
             push @errors => Paxton::Schema::Error::BadType->new( got => ref($value), expected => $self );
         }
-        elsif ( not Scalar::Util::looks_like_number($value) ) {
+        elsif ( not Scalar::Util::looks_like_number($value) && int( $value ) == $value ) {
             push @errors => Paxton::Schema::Error::BadType->new( got => $value, expected => $self );
         }
         else {
