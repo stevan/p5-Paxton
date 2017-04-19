@@ -23,6 +23,20 @@ our %HAS;  BEGIN {
     );
 }
 
+sub name { 'integer' }
+
+sub validate {
+    my ($self, $value) = @_;
+
+    my @errors;
+
+    push @errors => Paxton::Schema::Error::BadInput->new( expected => $self )
+        if not defined $value;
+
+    return @errors if @errors;
+    return;
+}
+
 # ROLE COMPOSITON
 
 BEGIN {

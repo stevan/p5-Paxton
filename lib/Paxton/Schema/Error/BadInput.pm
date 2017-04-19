@@ -1,4 +1,4 @@
-package Paxton::Schema::Type::Null;
+package Paxton::Schema::Error::BadInput;
 # ABSTRACT: One stop for all your JSON needs
 
 use strict;
@@ -9,29 +9,10 @@ our $AUTHORITY = 'cpan:STEVAN';
 
 use UNIVERSAL::Object::Immutable;
 
-use Paxton::Schema::API::Type;
+use Paxton::Schema::API::Error;
 
 our @ISA;  BEGIN { @ISA  = ('UNIVERSAL::Object::Immutable') }
-our @DOES; BEGIN { @DOES = ('Paxton::Schema::API::Type') }
-our %HAS;  BEGIN {
-    %HAS = (
-
-    );
-}
-
-sub name { 'null' }
-
-sub validate {
-    my ($self, $value) = @_;
-
-    my @errors;
-
-    push @errors => Paxton::Schema::Error::BadInput->new( expected => $self )
-        if not defined $value;
-
-    return @errors if @errors;
-    return;
-}
+our @DOES; BEGIN { @DOES = ('Paxton::Schema::API::Error')   }
 
 # ROLE COMPOSITON
 

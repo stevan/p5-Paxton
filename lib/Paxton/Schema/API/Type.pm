@@ -16,14 +16,47 @@ our %HAS; BEGIN {
     );
 }
 
+sub name;
+
+# XXX:
+# This is a minimal API for Moose
+# compat I think, will have to test
+# this though.
+# - SL
+sub check {
+    my ($self, $value) = @_;
+    # if &validate returns undef then
+    # we passed successfully, so convert
+    # this into a boolean
+    return not defined $self->validate( $value );
+}
+
+sub validate;
+
+# NOTE:
+# Yes, I am fully aware that this
+# kind of violates the encapsulation
+# principal in that it will access
+# fields not defined here but defined
+# in the consumers of this role. But
+# I think that is okay because I am
+# still (mostly) staying generic via
+# my use of the MOP. The one place
+# where I am not (the handling of
+# the `type` field) is (IMO) forgivable.
+# - SL
 sub to_json_schema {
     my $self      = $_[0];
     my $class     = ref $self;
     my @namespace = split /\:\:/ => $class;
     my $category  = lc $namespace[-2];
-    my $type      = lc $namespace[-1];
+    my $type      = $class->can('name') ? $class->name : lc $namespace[-1];
     my $schema    = {};
 
+    # only ::Type:: members need
+    # this, except ::Schema, for
+    # whom it is optional (so is
+    # considered a `slot` instead)
     $schema->{type} = $type
         if $category eq 'type'
         && $type     ne 'schema';

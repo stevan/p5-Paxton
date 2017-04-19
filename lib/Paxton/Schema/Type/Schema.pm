@@ -22,6 +22,19 @@ our %HAS;  BEGIN {
     );
 }
 
+sub name { 'schema' }
+
+sub validate {
+    my ($self, $value) = @_;
+
+    my @errors = $self->SUPER::validate( $value );
+
+    # ...
+
+    return @errors if @errors;
+    return;
+}
+
 1;
 
 __END__
