@@ -7,6 +7,8 @@ use warnings;
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
 
+use Paxton::Schema::Error::BadValue;
+
 use UNIVERSAL::Object::Immutable;
 
 use Paxton::Schema::API::Type;
@@ -26,8 +28,9 @@ sub validate {
 
     my @errors;
 
-    push @errors => Paxton::Schema::Error::BadInput->new( expected => $self )
-        if not defined $value;
+    if ( defined $value ) {
+        push @errors => Paxton::Schema::Error::BadValue->new( got => $value, expected => $self );
+    }
 
     return @errors if @errors;
     return;
