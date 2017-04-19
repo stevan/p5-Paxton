@@ -7,6 +7,8 @@ use warnings;
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
 
+use Paxton::Schema::Error::BadInput;
+
 use Paxton::Schema::Type::Object;
 
 our @ISA;  BEGIN { @ISA  = ('Paxton::Schema::Type::Object') }

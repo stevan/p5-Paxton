@@ -1,3 +1,7 @@
+# NOTES:
+
+- https://github.com/golang/go/issues/6050#issuecomment-69850788
+
 # Paxton
 
 A JSON Framework for Perl
