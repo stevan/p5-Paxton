@@ -18,22 +18,16 @@ TODO:
 =cut
 
 subtest '... test simple object' => sub {
-    my $bool = Paxton::Schema::Type::Object->new;
-    isa_ok($bool, 'Paxton::Schema::Type::Object');
+    my $schema = Paxton::Schema::Type::Object->new;
+    isa_ok($schema, 'Paxton::Schema::Type::Object');
 
     eq_or_diff(
-        [ map $_->message, $bool->validate( undef ) ],
-        [
-            'Error(BadInput) - got: (undef) expected: (object)'
-        ],
+        [ map $_->message, $schema->validate( undef ) ],
+        [ 'Error(BadInput) - got: (undef) expected: (object)' ],
         '... got the expected error messages'
     );
 
-    is(
-        $bool->validate( {} ),
-        undef,
-        '... validated successfully!'
-    );
+    is($schema->validate( {} ), undef, '... validated successfully!');
 
 };
 

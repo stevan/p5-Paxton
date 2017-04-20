@@ -53,7 +53,7 @@ sub validate {
                     expected => sprintf 'max: %d' => $self->{'maxLength'},
                 ) if length($value) > $self->{maxLength};
             }
-            else {
+            elsif ( defined $self->{maxLength} && defined $self->{minLength} ) {
                 push @errors => Paxton::Schema::Error::BadLength->new(
                     got      => length($value),
                     expected => sprintf 'min: %d, max: %d' => @{$self}{qw[ minLength maxLength ]},

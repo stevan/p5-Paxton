@@ -23,26 +23,17 @@ subtest '... test simple null' => sub {
 
     eq_or_diff(
         [ map $_->message, $bool->validate( 1 ) ],
-        [
-            'Error(BadValue) - got: (1) expected: (null)'
-        ],
+        [ 'Error(BadValue) - got: (1) expected: (null)' ],
         '... got the expected error messages'
     );
 
     eq_or_diff(
         [ map $_->message, $bool->validate( 'foo' ) ],
-        [
-            'Error(BadValue) - got: (foo) expected: (null)'
-        ],
+        [ 'Error(BadValue) - got: (foo) expected: (null)' ],
         '... got the expected error messages'
     );
 
-    is(
-        $bool->validate( undef ),
-        undef,
-        '... validated successfully!'
-    );
-
+    is($bool->validate( undef ), undef, '... validated successfully!');
 };
 
 

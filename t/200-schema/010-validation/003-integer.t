@@ -20,6 +20,61 @@ TODO:
 =cut
 
 subtest '... test simple integer' => sub {
+    my $int = Paxton::Schema::Type::Integer->new;
+    isa_ok($int, 'Paxton::Schema::Type::Integer');
+
+    eq_or_diff(
+        [ map $_->message, $int->validate( undef ) ],
+        [ 'Error(BadInput) - got: (undef) expected: (integer)' ],
+        '... got the expected error messages'
+    );
+
+    eq_or_diff(
+        [ map $_->message, $int->validate( \1 ) ],
+        [ 'Error(BadType) - got: (SCALAR) expected: (integer)' ],
+        '... got the expected error messages'
+    );
+
+    eq_or_diff(
+        [ map $_->message, $int->validate( 'foo' ) ],
+        [ 'Error(BadType) - got: (foo) expected: (integer)' ],
+        '... got the expected error messages'
+    );
+
+    is($int->validate( 10 ), undef, '... validated successfully!');
+};
+
+subtest '... test simple integer w/ minimum' => sub {
+    my $int = Paxton::Schema::Type::Integer->new(
+        minimum => 8
+    );
+    isa_ok($int, 'Paxton::Schema::Type::Integer');
+
+    eq_or_diff(
+        [ map $_->message, $int->validate( 5 ) ],
+        [ 'Error(ExceedsRange) - got: (5) expected: (min: 8)' ],
+        '... got the expected error messages'
+    );
+
+    is($int->validate( 100 ), undef, '... validated successfully!');
+};
+
+subtest '... test simple integer w/ maximum' => sub {
+    my $int = Paxton::Schema::Type::Integer->new(
+        maximum => 12,
+    );
+    isa_ok($int, 'Paxton::Schema::Type::Integer');
+
+    eq_or_diff(
+        [ map $_->message, $int->validate( 100 ) ],
+        [ 'Error(ExceedsRange) - got: (100) expected: (max: 12)' ],
+        '... got the expected error messages'
+    );
+
+    is($int->validate( 10 ), undef, '... validated successfully!');
+};
+
+subtest '... test simple integer w/ minimum and maximum' => sub {
     my $int = Paxton::Schema::Type::Integer->new(
         minimum => 8,
         maximum => 12,
@@ -27,50 +82,18 @@ subtest '... test simple integer' => sub {
     isa_ok($int, 'Paxton::Schema::Type::Integer');
 
     eq_or_diff(
-        [ map $_->message, $int->validate( undef ) ],
-        [
-            'Error(BadInput) - got: (undef) expected: (integer)'
-        ],
-        '... got the expected error messages'
-    );
-
-    eq_or_diff(
-        [ map $_->message, $int->validate( \1 ) ],
-        [
-            'Error(BadType) - got: (SCALAR) expected: (integer)'
-        ],
-        '... got the expected error messages'
-    );
-
-    eq_or_diff(
-        [ map $_->message, $int->validate( 'foo' ) ],
-        [
-            'Error(BadType) - got: (foo) expected: (integer)'
-        ],
-        '... got the expected error messages'
-    );
-
-    eq_or_diff(
         [ map $_->message, $int->validate( 100 ) ],
-        [
-            'Error(ExceedsRange) - got: (100) expected: (min: 8, max: 12)'
-        ],
+        [ 'Error(ExceedsRange) - got: (100) expected: (min: 8, max: 12)' ],
         '... got the expected error messages'
     );
 
     eq_or_diff(
         [ map $_->message, $int->validate( 5 ) ],
-        [
-            'Error(ExceedsRange) - got: (5) expected: (min: 8, max: 12)'
-        ],
+        [ 'Error(ExceedsRange) - got: (5) expected: (min: 8, max: 12)' ],
         '... got the expected error messages'
     );
 
-    is(
-        $int->validate( 10 ),
-        undef,
-        '... validated successfully!'
-    );
+    is($int->validate( 10 ), undef, '... validated successfully!');
 };
 
 

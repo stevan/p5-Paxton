@@ -20,6 +20,55 @@ TODO:
 =cut
 
 subtest '... test simple string' => sub {
+    my $str = Paxton::Schema::Type::String->new;
+    isa_ok($str, 'Paxton::Schema::Type::String');
+
+    eq_or_diff(
+        [ map $_->message, $str->validate( undef ) ],
+        [ 'Error(BadInput) - got: (undef) expected: (string)' ],
+        '... got the expected error messages'
+    );
+
+    eq_or_diff(
+        [ map $_->message, $str->validate( \1 ) ],
+        [ 'Error(BadType) - got: (SCALAR) expected: (string)' ],
+        '... got the expected error messages'
+    );
+
+    is($str->validate( 'success!' ), undef, '... validated successfully!');
+};
+
+subtest '... test simple string w/ minLength' => sub {
+    my $str = Paxton::Schema::Type::String->new(
+        minLength => 8,
+    );
+    isa_ok($str, 'Paxton::Schema::Type::String');
+
+    eq_or_diff(
+        [ map $_->message, $str->validate( 'foo' ) ],
+        [ 'Error(BadLength) - got: (3) expected: (min: 8)' ],
+        '... got the expected error messages'
+    );
+
+    is($str->validate( 'success!' ), undef, '... validated successfully!');
+};
+
+subtest '... test simple string w/ maxLength' => sub {
+    my $str = Paxton::Schema::Type::String->new(
+        maxLength => 12,
+    );
+    isa_ok($str, 'Paxton::Schema::Type::String');
+
+    eq_or_diff(
+        [ map $_->message, $str->validate( 'foobarbazgorch' ) ],
+        [ 'Error(BadLength) - got: (14) expected: (max: 12)' ],
+        '... got the expected error messages'
+    );
+
+    is($str->validate( 'success!' ), undef, '... validated successfully!');
+};
+
+subtest '... test simple string w/ minLength & maxLength' => sub {
     my $str = Paxton::Schema::Type::String->new(
         minLength => 8,
         maxLength => 12,
@@ -27,43 +76,20 @@ subtest '... test simple string' => sub {
     isa_ok($str, 'Paxton::Schema::Type::String');
 
     eq_or_diff(
-        [ map $_->message, $str->validate( undef ) ],
-        [
-            'Error(BadInput) - got: (undef) expected: (string)'
-        ],
-        '... got the expected error messages'
-    );
-
-    eq_or_diff(
-        [ map $_->message, $str->validate( \1 ) ],
-        [
-            'Error(BadType) - got: (SCALAR) expected: (string)'
-        ],
-        '... got the expected error messages'
-    );
-
-    eq_or_diff(
         [ map $_->message, $str->validate( 'foo' ) ],
-        [
-            'Error(BadLength) - got: (3) expected: (min: 8, max: 12)'
-        ],
+        [ 'Error(BadLength) - got: (3) expected: (min: 8, max: 12)' ],
         '... got the expected error messages'
     );
 
     eq_or_diff(
         [ map $_->message, $str->validate( 'foobarbazgorch' ) ],
-        [
-            'Error(BadLength) - got: (14) expected: (min: 8, max: 12)'
-        ],
+        [ 'Error(BadLength) - got: (14) expected: (min: 8, max: 12)' ],
         '... got the expected error messages'
     );
 
-    is(
-        $str->validate( 'success!' ),
-        undef,
-        '... validated successfully!'
-    );
+    is($str->validate( 'success!' ), undef, '... validated successfully!');
 };
+
 
 
 done_testing;

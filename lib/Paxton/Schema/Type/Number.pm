@@ -59,7 +59,7 @@ sub validate {
                     expected => sprintf 'max: %d' => $self->{'maximum'},
                 ) if $value > $self->{maximum};
             }
-            else {
+            elsif ( defined $self->{maximum} && defined $self->{minimum} ) {
                 push @errors => Paxton::Schema::Error::ExceedsRange->new(
                     got      => $value,
                     expected => sprintf 'min: %d, max: %d' => @{$self}{qw[ minimum maximum ]},
