@@ -16,13 +16,13 @@ our %HAS; BEGIN {
     );
 }
 
+# ...
+
 sub name;
 
-# XXX:
-# This is a minimal API for Moose
-# compat I think, will have to test
-# this though.
-# - SL
+## validation ...
+
+sub validate;
 sub check {
     my ($self, $value) = @_;
     # if &validate returns undef then
@@ -31,7 +31,30 @@ sub check {
     return not defined $self->validate( $value );
 }
 
-sub validate;
+## ----------------------------------------------
+## BEGIN MOOSE COMPAT STUFF
+
+# XXX:
+# This is a minimal API for Moose
+# compat I think, will have to test
+# this though, not sure it is worth
+# it to have this here and not have
+# an explicit wrapper.
+# - SL
+
+sub has_coercion       { 0 }
+sub can_be_inlined     { 0 }
+sub inline_environment { {} }
+sub has_message      { 0 }
+sub get_message      { ref($_[0]).'( Validation Error )' }
+sub _default_message { ref($_[0]).'( Validation Error )' }
+sub _compiled_type_constraint {
+    my ($self) = @_;
+    return sub { $self->check( $_[0] ) }
+}
+
+## END MOOSE COMPAT STUFF
+## ----------------------------------------------
 
 # NOTE:
 # Yes, I am fully aware that this
