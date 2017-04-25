@@ -32,9 +32,9 @@ my $json_schema_v4 = schema(
         ),
         simpleTypes => enum(qw[ array boolean integer null number object string ]),
         stringArray => array(
-          items       => string(),
-          minItems    => 1,
-          uniqueItems => \1,
+            items       => string(),
+            minItems    => 1,
+            uniqueItems => \1,
         ),
     ),
     properties => properties(
@@ -93,8 +93,8 @@ my $json_schema_v4 = schema(
             )
         ),
         enum => array(
-          minItems    => 1,
-          uniqueItems => \1
+            minItems    => 1,
+            uniqueItems => \1
         ),
         type => anyOf(
             anyOf => [

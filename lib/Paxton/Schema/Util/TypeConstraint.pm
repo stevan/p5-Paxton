@@ -43,7 +43,7 @@ sub check {
 
 sub has_coercion       { 0 }
 sub can_be_inlined     { 0 }
-sub inline_environment { {} }
+sub inline_environment { +{} }
 
 sub has_message      { !! $_[0]->{_message} }
 sub get_message      {    $_[0]->{_message} }

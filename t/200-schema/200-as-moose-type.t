@@ -15,18 +15,17 @@ BEGIN {
         exit;
     }
 
-    use_ok('Paxton::Util::Schemas');
-    use_ok('Paxton::Schema::Util::TypeConstraint');
+    use_ok('Paxton::Util::Schemas::AsTypeConstraint');
 }
 
 package SomeMooseClass {
     use Moose;
 
-    use Paxton::Util::Schemas;
+    use Paxton::Util::Schemas::AsTypeConstraint;
 
     has 'foo' => (
         is  => 'ro',
-        isa => Paxton::Schema::Util::TypeConstraint->new( type => string( maxLength => 25 ) )
+        isa => string( maxLength => 25 )
     );
 }
 
