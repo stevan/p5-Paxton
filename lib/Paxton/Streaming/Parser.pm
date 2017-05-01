@@ -29,6 +29,7 @@ extends 'Moxie::Object';
 
 
 has 'context' => sub { Paxton::Core::Context->new };
+# private ...
 has '_value'  => sub {};
 
 # ...

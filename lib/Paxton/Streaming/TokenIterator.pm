@@ -20,6 +20,7 @@ extends 'Moxie::Object';
 
 has 'tokens'  => sub { die 'You must specify an array of `tokens` to iterate over.'};
 has 'context' => sub { Paxton::Core::Context->new };
+# private ...
 has '_index'  => sub { 0 };
 has '_done'   => sub { 0 };
 

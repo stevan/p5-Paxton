@@ -14,7 +14,7 @@ extends 'Moxie::Object';
 
 has 'handle' => sub { die 'You must specify a `handle`' };
 has 'buffer' => sub { '' };
-has 'size'   => sub { MAX_BUFFER_SIZE };
+has 'size'   => \&MAX_BUFFER_SIZE;
 has 'done'   => sub { 1 };
 
 sub BUILD ($self, $) {

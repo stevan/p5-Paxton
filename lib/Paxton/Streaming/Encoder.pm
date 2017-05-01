@@ -22,6 +22,7 @@ extends 'Moxie::Object';
 has 'source'     => sub { die 'You must specify a `source` to encode.'};
 has 'next_state' => sub { \&root };
 has 'context'    => sub { Paxton::Core::Context->new };
+# private ...
 has '_done'      => sub { 0 };
 
 sub BUILD ($self, $) {

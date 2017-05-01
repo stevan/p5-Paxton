@@ -18,7 +18,7 @@ has 'maxItems';
 has 'minItems';
 has 'uniqueItems';
 
-sub name { 'array' }
+sub name ($) { 'array' }
 
 sub validate ($self, $value) {
     my @errors;

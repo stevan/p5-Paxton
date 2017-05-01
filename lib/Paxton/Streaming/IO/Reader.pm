@@ -133,12 +133,10 @@ sub log ($self, @msg) {
 
 # delegated charbuffer methods
 
-sub get_next_char   ($self) { $self->{source}->get  }
-sub peek_next_char  ($self) { $self->{source}->peek }
-sub skip_next_char  ($self) { $self->{source}->skip }
-sub discard_whitespace_and_peek ($self) {
-    $self->{source}->discard_whitespace_and_peek
-}
+sub get_next_char               : handles('source->get');
+sub peek_next_char              : handles('source->peek');
+sub skip_next_char              : handles('source->skip');
+sub discard_whitespace_and_peek : handles('source->discard_whitespace_and_peek');
 
 # parse methods
 

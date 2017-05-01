@@ -20,6 +20,7 @@ extends 'Moxie::Object';
 
 has 'pointer'         => sub { die 'You must specify a `pointer` to match with' };
 has 'context'         => sub { Paxton::Core::Context->new };
+# private ...
 has '_done'           => sub { 0 };
 has '_buffer'         => sub { +[] };
 has '_match_context'  => sub { undef };

@@ -16,7 +16,7 @@ has 'type';
 has 'dependencies';
 has 'definitions';
 
-sub name { 'schema' }
+sub name ($) { 'schema' }
 
 sub validate ($self, $value) {
     my @errors = $self->next::method( $value );

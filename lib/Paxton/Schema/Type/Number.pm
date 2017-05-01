@@ -20,7 +20,7 @@ has 'exclusiveMaximum';
 has 'minimum';
 has 'exclusiveMinimum';
 
-sub name { 'number' }
+sub name ($) { 'number' }
 
 sub validate ($self, $value) {
     my @errors;

@@ -12,12 +12,7 @@ our $AUTHORITY = 'cpan:STEVAN';
 extends 'Moxie::Object';
 
 has 'message';
-has '_stack_trace' => sub {
-    Devel::StackTrace->new(
-        skip_frames  => 4,
-        #frame_filter => sub {}
-    )
-};
+has '_stack_trace' => sub { Devel::StackTrace->new( skip_frames => 4 ) };
 
 sub throw ($self) { die $self }
 

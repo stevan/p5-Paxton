@@ -10,7 +10,7 @@ use Paxton::Schema::Error::BadValue;
 extends 'Moxie::Object::Immutable';
    with 'Paxton::Schema::API::Type';
 
-sub name { 'null' }
+sub name ($) { 'null' }
 
 sub validate ($self, $value) {
     my @errors;

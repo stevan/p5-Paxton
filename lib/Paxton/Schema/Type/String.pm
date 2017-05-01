@@ -17,7 +17,7 @@ has 'minLength';
 has 'pattern';
 has 'format';
 
-sub name { 'string' }
+sub name ($) { 'string' }
 
 sub validate ($self, $value) {
     my @errors;

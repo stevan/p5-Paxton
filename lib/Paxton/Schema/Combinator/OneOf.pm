@@ -10,7 +10,7 @@ extends 'Moxie::Object::Immutable';
 
 has 'oneOf' => sub { +[] };
 
-sub name { 'oneOf' }
+sub name ($) { 'oneOf' }
 
 sub validate ($self, $value) {
     my @errors;

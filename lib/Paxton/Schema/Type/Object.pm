@@ -17,7 +17,7 @@ has 'properties';
 has 'patternProperties';
 has 'additionalProperties';
 
-sub name { 'object' }
+sub name ($) { 'object' }
 
 sub validate ($self, $value) {
     my @errors;

@@ -13,7 +13,7 @@ has 'type' => sub { die 'You must specify a `type` to wrap.' },
 has '_message';
 has '_compiled';
 
-sub name { $_[0]->{type}->name }
+sub name : handles('type->name');
 
 sub validate ($self, $value) {
     # ask the type ...
@@ -37,9 +37,9 @@ sub has_coercion       { 0 }
 sub can_be_inlined     { 0 }
 sub inline_environment { +{} }
 
-sub has_message       ($self, @) { !! $self->{_message} }
-sub get_message       ($self, @) {    $self->{_message} }
-sub _default_message  ($self, @) {    $self->{_message} //= ($self->{type}->name . ' - Validation Error') }
+sub has_message       : predicate('_message');
+sub get_message       ($self, @) { $self->{_message} }
+sub _default_message  ($self, @) { $self->{_message} //= ($self->{type}->name . ' - Validation Error') }
 
 sub _compiled_type_constraint ($self, @) {
     return $self->{_compiled} ||= sub { return $self->check( $_[0] ) };
