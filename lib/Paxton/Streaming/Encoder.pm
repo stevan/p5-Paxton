@@ -1,13 +1,8 @@
 package Paxton::Streaming::Encoder;
 # ABSTRACT: Convert an in-memory data structure into a stream of tokens
+use Moxie;
 
-use strict;
-use warnings;
-
-use UNIVERSAL::Object;
 use MOP::Method;
-
-use Paxton::Streaming::API::Producer;
 
 use Paxton::Util::Errors;
 use Paxton::Util::Tokens;
@@ -21,34 +16,24 @@ use constant DEBUG => $ENV{PAXTON_ENCODER_DEBUG} // 0;
 
 # ...
 
-our @ISA;  BEGIN { @ISA  = ('UNIVERSAL::Object') }
-our @DOES; BEGIN { @DOES = ('Paxton::Streaming::API::Producer') }
-our %HAS;  BEGIN {
-    %HAS = (
-        source     => sub { die 'You must specify a `source` to encode.'},
-        next_state => sub { \&root },
-        context    => sub { Paxton::Core::Context->new },
-        # private ...
-        _done   => sub { 0 },
-    )
-}
+extends 'Moxie::Object';
+   with 'Paxton::Streaming::API::Producer';
 
-sub BUILD {
-    my ($self) = @_;
+has 'source'     => sub { die 'You must specify a `source` to encode.'};
+has 'next_state' => sub { \&root };
+has 'context'    => sub { Paxton::Core::Context->new };
+has '_done'      => sub { 0 };
+
+sub BUILD ($self, $) {
     # initialize the state ...
     $self->{context}->enter_root_context( [ undef, $self->{source}, [] ] );
 }
 
 # ...
 
-sub is_exhausted {
-    my ($self) = @_;
-    return $self->{_done};
-}
+sub is_exhausted : ro('_done');
 
-sub produce_token {
-    my ($self) = @_;
-
+sub produce_token ($self) {
     return if $self->{_done};
 
     if ( my $next = delete $self->{next_state} ) {
@@ -93,9 +78,7 @@ sub produce_token {
 
 # ...
 
-sub root {
-    my ($self) = @_;
-
+sub root ($self) {
     $self->log( 'Entering `root`' ) if DEBUG;
 
     my $context = $self->{context};
@@ -109,9 +92,7 @@ sub root {
     }
 }
 
-sub start {
-    my ($self) = @_;
-
+sub start ($self) {
     $self->log( 'Entering `start`' ) if DEBUG;
 
     my $context = $self->{context};
@@ -120,9 +101,7 @@ sub start {
     return $self->_dispatch_on_type( $data );
 }
 
-sub end {
-    my ($self) = @_;
-
+sub end ($self) {
     $self->log( 'Entering `end`' ) if DEBUG;
 
     # NOTE:
@@ -133,9 +112,7 @@ sub end {
     return token( NO_TOKEN );
 }
 
-sub object {
-    my ($self) = @_;
-
+sub object ($self) {
     $self->log( 'Entering `object`' ) if DEBUG;
 
     my $context = $self->{context};
@@ -153,9 +130,7 @@ sub object {
     }
 }
 
-sub property {
-    my ($self) = @_;
-
+sub property ($self) {
     $self->log( 'Entering `property`' ) if DEBUG;
 
     my $context = $self->{context};
@@ -183,9 +158,7 @@ sub property {
     }
 }
 
-sub end_property {
-    my ($self) = @_;
-
+sub end_property ($self) {
     $self->log( 'Entering `end_property`' ) if DEBUG;
 
     $self->{context}->leave_property_context;
@@ -193,9 +166,7 @@ sub end_property {
     return token( END_PROPERTY );
 }
 
-sub array {
-    my ($self) = @_;
-
+sub array ($self) {
     $self->log( 'Entering `array`' ) if DEBUG;
 
     my $context = $self->{context};
@@ -213,9 +184,7 @@ sub array {
     }
 }
 
-sub item {
-    my ($self) = @_;
-
+sub item ($self) {
     $self->log( 'Entering `item`' ) if DEBUG;
 
     my $context = $self->{context};
@@ -243,9 +212,7 @@ sub item {
     }
 }
 
-sub end_item {
-    my ($self) = @_;
-
+sub end_item ($self) {
     $self->log( 'Entering `end_item`' ) if DEBUG;
 
     $self->{context}->leave_item_context;
@@ -253,9 +220,7 @@ sub end_item {
     return token( END_ITEM );
 }
 
-sub _dispatch_on_type {
-    my ($self, $data) = @_;
-
+sub _dispatch_on_type ($self, $data) {
     $self->log( 'Entering `_dispatch_on_type`' ) if DEBUG;
 
     if ( ref $data eq 'HASH' ) {
@@ -299,22 +264,9 @@ sub _dispatch_on_type {
 
 # logging
 
-sub log {
-    my ($self, @msg) = @_;
+sub log ($self, @msg) {
     (DEBUG > 1) ? Carp::cluck( @msg ) : warn( @msg, "\n" );
     return;
-}
-
-# ROLE COMPOSITON
-
-BEGIN {
-    use MOP::Role;
-    use MOP::Internal::Util;
-    MOP::Internal::Util::APPLY_ROLES(
-        MOP::Role->new(name => __PACKAGE__),
-        \@DOES,
-        to => 'class'
-    );
 }
 
 1;

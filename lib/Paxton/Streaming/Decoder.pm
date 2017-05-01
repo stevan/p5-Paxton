@@ -1,12 +1,6 @@
 package Paxton::Streaming::Decoder;
 # ABSTRACT: Convert a stream of tokens into an in-memory data structure
-
-use strict;
-use warnings;
-
-use UNIVERSAL::Object;
-
-use Paxton::Streaming::API::Consumer;
+use Moxie;
 
 use Paxton::Util::Errors;
 use Paxton::Util::Tokens;
@@ -28,42 +22,37 @@ use constant NO_VALUE => \undef;
 
 # ...
 
-our @ISA;  BEGIN { @ISA  = ('UNIVERSAL::Object') }
-our @DOES; BEGIN { @DOES = ('Paxton::Streaming::API::Consumer') }
-our %HAS;  BEGIN {
-    %HAS = (
-        context => sub { Paxton::Core::Context->new },
-        # private
-        _partial => sub {},
-        _value   => sub { NO_VALUE },
-    )
-}
+extends 'Moxie::Object';
+   with 'Paxton::Streaming::API::Consumer';
+
+has 'context'  => sub { Paxton::Core::Context->new };
+# private
+has '_partial' => sub {};
+has '_value'   => sub { NO_VALUE };
 
 # ...
 
-sub BUILD {
-    $_[0]->{context}->enter_root_context;
+sub BUILD ($self, $) {
+    $self->{context}->enter_root_context;
 }
 
 # accessors
 
-sub context { $_[0]->{context} }
-
-sub has_value { not( ref $_[0]->{_value} && $_[0]->{_value} == NO_VALUE ) }
-sub get_value { $_[0]->{_value} }
+sub context   : ro;
+sub get_value : ro('_value');
+sub has_value ($self) {
+    not( ref $self->{_value} &&  $self->{_value} == NO_VALUE )
+}
 
 # ...
 
-sub is_full {
-    my ($self) = @_;
+sub is_full ($self) {
     $self->has_value
         &&
     $self->{context}->in_root_context;
 }
 
-sub consume_token {
-    my ($self, $token) = @_;
-
+sub consume_token ($self, $token) {
     (not $self->is_full)
         || throw('Decoder is done, cannot `put` any more tokens' );
 
@@ -128,32 +117,19 @@ sub consume_token {
 
 # logging
 
-sub log {
-    my ($self, @msg) = @_;
+sub log ($self, @msg) {
     (DEBUG > 1) ? Carp::cluck( @msg ) : warn( @msg, "\n" );
     return;
 }
 
 # ...
 
-sub _stash_value_correctly {
-    $_[0]->{context}->in_array_context
-        ? (push @{ $_[0]->{context}->current_context_value } => $_[1])
-        : $_[0]->{context}->in_root_context
-            ? ($_[0]->{_value}   = $_[1])
-            : ($_[0]->{_partial} = $_[1])
-}
-
-# ROLE COMPOSITON
-
-BEGIN {
-    use MOP::Role;
-    use MOP::Internal::Util;
-    MOP::Internal::Util::APPLY_ROLES(
-        MOP::Role->new(name => __PACKAGE__),
-        \@DOES,
-        to => 'class'
-    );
+sub _stash_value_correctly ($self, $value) {
+    $self->{context}->in_array_context
+        ? (push @{ $self->{context}->current_context_value } => $value)
+        : $self->{context}->in_root_context
+            ? ($self->{_value}   = $value)
+            : ($self->{_partial} = $value)
 }
 
 1;

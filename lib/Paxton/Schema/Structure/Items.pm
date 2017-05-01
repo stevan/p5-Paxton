@@ -1,29 +1,20 @@
 package Paxton::Schema::Structure::Items;
 # ABSTRACT: One stop for all your JSON needs
-
-use strict;
-use warnings;
+use Moxie;
 
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
 
-use UNIVERSAL::Object::Immutable;
+extends 'Moxie::Object::Immutable';
 
-our @ISA; BEGIN { @ISA = ('UNIVERSAL::Object::Immutable') }
-our %HAS; BEGIN {
-    %HAS = (
-        _items => sub { +[] },
-    );
-}
+has '_items' => sub { +[] };
 
-sub BUILDARGS {
-    my ($class, @args) = @_;
+sub BUILDARGS ($class, @args) {
     return { _items => \@args }
 }
 
-sub to_json_schema {
-    my ($self) = @_;
-    return [ map $_->to_json_schema, @{ $self->{_items} } ];
+sub to_json_schema ($self) {
+    return [ map $_->to_json_schema, $self->{_items}->@* ];
 }
 
 1;

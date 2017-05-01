@@ -1,13 +1,8 @@
 package Paxton::Streaming::TokenIterator;
 # ABSTRACT: Stream an array of tokens, maintining context
+use Moxie;
 
-use strict;
-use warnings;
-
-use UNIVERSAL::Object;
 use MOP::Method;
-
-use Paxton::Streaming::API::Producer;
 
 use Paxton::Util::Tokens;
 
@@ -20,38 +15,28 @@ use constant DEBUG => $ENV{PAXTON_TOKEN_ITERATOR_DEBUG} // 0;
 
 # ...
 
-our @ISA;  BEGIN { @ISA  = ('UNIVERSAL::Object') }
-our @DOES; BEGIN { @DOES = ('Paxton::Streaming::API::Producer') }
-our %HAS;  BEGIN {
-    %HAS = (
-        tokens     => sub { die 'You must specify an array of `tokens` to iterate over.'},
-        context    => sub { Paxton::Core::Context->new },
-        # private ...
-        _index => sub { 0 },
-        _done  => sub { 0 },
-    )
-}
+extends 'Moxie::Object';
+   with 'Paxton::Streaming::API::Producer';
 
-sub BUILD {
-    my ($self) = @_;
+has 'tokens'  => sub { die 'You must specify an array of `tokens` to iterate over.'};
+has 'context' => sub { Paxton::Core::Context->new };
+has '_index'  => sub { 0 };
+has '_done'   => sub { 0 };
+
+sub BUILD ($self, $) {
     # initialize the state ...
     $self->{context}->enter_root_context;
 }
 
 # accessor
 
-sub context { $_[0]->{context} }
+sub context : ro;
 
 # ...
 
-sub is_exhausted {
-    my ($self) = @_;
-    return $self->{_done};
-}
+sub is_exhausted : ro('_done');
 
-sub produce_token {
-    my ($self) = @_;
-
+sub produce_token ($self) {
     return if $self->{_done};
 
     my $idx = $self->{_index};
@@ -95,22 +80,9 @@ sub produce_token {
 
 # logging
 
-sub log {
-    my ($self, @msg) = @_;
+sub log ($self, @msg) {
     (DEBUG > 1) ? Carp::cluck( @msg ) : warn( @msg, "\n" );
     return;
-}
-
-# ROLE COMPOSITON
-
-BEGIN {
-    use MOP::Role;
-    use MOP::Internal::Util;
-    MOP::Internal::Util::APPLY_ROLES(
-        MOP::Role->new(name => __PACKAGE__),
-        \@DOES,
-        to => 'class'
-    );
 }
 
 1;

@@ -1,35 +1,25 @@
 package Paxton::Schema::Structure::Definitions;
 # ABSTRACT: One stop for all your JSON needs
-
-use strict;
-use warnings;
+use Moxie;
 
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
 
 use Scalar::Util ();
 
-use UNIVERSAL::Object::Immutable;
+extends 'Moxie::Object::Immutable';
 
-our @ISA; BEGIN { @ISA = ('UNIVERSAL::Object::Immutable') }
-our %HAS; BEGIN {
-    %HAS = (
-        _defs => sub { +{} },
-    );
-}
+has '_defs' => sub { +{} };
 
-sub BUILDARGS {
-    my $class = shift;
-    my $deps  = $class->SUPER::BUILDARGS( @_ );
+sub BUILDARGS ($class, @args) {
+    my $deps = $class->next::method( @args );
     return { _defs => $deps }
 }
 
-sub to_json_schema {
-    my ($self) = @_;
-
+sub to_json_schema ($self) {
     my %definitions;
 
-    foreach my $key ( keys %{ $self->{_defs} } ) {
+    foreach my $key ( keys $self->{_defs}->%* ) {
         $definitions{ $key } = $self->{_defs}->{ $key }->to_json_schema;
     }
 

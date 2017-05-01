@@ -1,28 +1,21 @@
 package Paxton::Schema::Util::TypeConstraint;
 # ABSTRACT: One stop for all your JSON needs
-
-use strict;
-use warnings;
+use Moxie;
 
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
 
-use UNIVERSAL::Object;
+extends 'Moxie::Object';
 
-our @ISA; BEGIN { @ISA = ('UNIVERSAL::Object') }
-our %HAS; BEGIN {
-    %HAS = (
-        type    => sub { die 'You must specify a `type` to wrap.' },
-        # private ...
-        _message  => sub {},
-        _compiled => sub {},
-    );
-}
+has 'type' => sub { die 'You must specify a `type` to wrap.' },
+
+# private ...
+has '_message';
+has '_compiled';
 
 sub name { $_[0]->{type}->name }
 
-sub validate {
-    my ($self, $value) = @_;
+sub validate ($self, $value) {
     # ask the type ...
     my @errors = $self->{type}->validate( $value );
     # horray, it worked!
@@ -33,8 +26,7 @@ sub validate {
     return $self->{_message};
 }
 
-sub check {
-    my ($self, $value) = @_;
+sub check ($self, $value) {
     # if &validate returns undef then
     # we passed successfully, so convert
     # this into a boolean
@@ -45,12 +37,11 @@ sub has_coercion       { 0 }
 sub can_be_inlined     { 0 }
 sub inline_environment { +{} }
 
-sub has_message      { !! $_[0]->{_message} }
-sub get_message      {    $_[0]->{_message} }
-sub _default_message {    $_[0]->{_message} //= ($_[0]->{type}->name . ' - Validation Error') }
+sub has_message       ($self, @) { !! $self->{_message} }
+sub get_message       ($self, @) {    $self->{_message} }
+sub _default_message  ($self, @) {    $self->{_message} //= ($self->{type}->name . ' - Validation Error') }
 
-sub _compiled_type_constraint {
-    my ($self) = @_;
+sub _compiled_type_constraint ($self, @) {
     return $self->{_compiled} ||= sub { return $self->check( $_[0] ) };
 }
 

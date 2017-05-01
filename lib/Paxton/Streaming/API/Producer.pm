@@ -1,8 +1,6 @@
 package Paxton::Streaming::API::Producer;
 # ABSTRACT: One stop for all your JSON needs
-
-use strict;
-use warnings;
+use Moxie;
 
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
@@ -10,16 +8,14 @@ our $AUTHORITY = 'cpan:STEVAN';
 sub produce_token;
 sub is_exhausted;
 
-sub broadcast_one {
-    my ($self, @consumers) = @_;
+sub broadcast_one ($self, @consumers) {
     my $token = $self->produce_token;
     return unless defined $token;
     $_->consume_token( $token ) foreach @consumers;
     return $token;
 }
 
-sub broadcast {
-    my ($self, @consumers) = @_;
+sub broadcast ($self, @consumers) {
     #warn "Running...";
     until ( $self->is_exhausted || (scalar @consumers == 0) ) {
         #warn "broadcasting ...";

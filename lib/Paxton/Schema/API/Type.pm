@@ -1,20 +1,14 @@
 package Paxton::Schema::API::Type;
 # ABSTRACT: One stop for all your JSON needs
-
-use strict;
-use warnings;
+use Moxie;
 
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
 
 use MOP::Role;
 
-our %HAS; BEGIN {
-    %HAS = (
-        description => sub {},
-        default     => sub {},
-    );
-}
+has 'description';
+has 'default';
 
 # ...
 
@@ -35,8 +29,7 @@ sub validate;
 # where I am not (the handling of
 # the `type` field) is (IMO) forgivable.
 # - SL
-sub to_json_schema {
-    my $self      = $_[0];
+sub to_json_schema ($self) {
     my $class     = ref $self;
     my @namespace = split /\:\:/ => $class;
     my $category  = lc $namespace[-2];

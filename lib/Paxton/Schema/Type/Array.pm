@@ -1,8 +1,6 @@
 package Paxton::Schema::Type::Array;
 # ABSTRACT: One stop for all your JSON needs
-
-use strict;
-use warnings;
+use Moxie;
 
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
@@ -11,27 +9,18 @@ use Paxton::Schema::Error::BadInput;
 use Paxton::Schema::Error::BadType;
 use Paxton::Schema::Error::BadSize;
 
-use UNIVERSAL::Object::Immutable;
+extends 'Moxie::Object::Immutable';
+   with 'Paxton::Schema::API::Type';
 
-use Paxton::Schema::API::Type;
-
-our @ISA;  BEGIN { @ISA  = ('UNIVERSAL::Object::Immutable') }
-our @DOES; BEGIN { @DOES = ('Paxton::Schema::API::Type') }
-our %HAS;  BEGIN {
-    %HAS = (
-        items           => sub {},
-        additionalItems => sub {},
-        maxItems        => sub {},
-        minItems        => sub {},
-        uniqueItems     => sub {},
-    );
-}
+has 'items';
+has 'additionalItems';
+has 'maxItems';
+has 'minItems';
+has 'uniqueItems';
 
 sub name { 'array' }
 
-sub validate {
-    my ($self, $value) = @_;
-
+sub validate ($self, $value) {
     my @errors;
 
     if ( not defined $value ) {
@@ -46,7 +35,7 @@ sub validate {
                 push @errors => Paxton::Schema::Error::BadType->new( got => ref($value), expected => $self );
             }
             else {
-                my $num_items = scalar @$value;
+                my $num_items = scalar $value->@*;
 
                 if ( defined $self->{minItems} && not defined $self->{maxItems} ) {
                     push @errors => Paxton::Schema::Error::BadSize->new(
@@ -76,19 +65,6 @@ sub validate {
 
     return @errors if @errors;
     return;
-}
-
-# ROLE COMPOSITON
-
-BEGIN {
-    use MOP::Role;
-    use MOP::Internal::Util;
-
-    MOP::Internal::Util::APPLY_ROLES(
-        MOP::Role->new(name => __PACKAGE__),
-        \@DOES,
-        to => 'class'
-    );
 }
 
 1;

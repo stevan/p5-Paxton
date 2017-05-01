@@ -1,10 +1,6 @@
 package Paxton::Core::Pointer;
 # ABSTRACT: A representation of a JSON Pointer path
-
-use strict;
-use warnings;
-
-use UNIVERSAL::Object::Immutable;
+use Moxie;
 
 use Paxton::Util::Errors;
 
@@ -30,30 +26,25 @@ BEGIN {
 
     foreach my $name ( keys %PATH_SEGMENT_TOKEN_MAP ) {
         no strict 'refs';
-        *{$name} = sub () { $PATH_SEGMENT_TOKEN_MAP{ $name } };
+        *{$name} = sub (@) { $PATH_SEGMENT_TOKEN_MAP{ $name } };
     }
 }
 
 # ...
 
-our @ISA; BEGIN { @ISA = ('UNIVERSAL::Object::Immutable') }
-our %HAS; BEGIN {
-    %HAS = (
-        path => sub { die 'You must specify the `path` you want to point to.' },
-    )
-}
+extends 'Moxie::Object::Immutable';
+
+has path => sub { die 'You must specify the `path` you want to point to.' };
 
 # ...
 
-sub BUILDARGS {
-    my ($class, @args) = @_;
-
+sub BUILDARGS ($class, @args) {
     # if we just get a single string,
     # then handle it accordingly
     @args = ( path => $args[0] )
         if scalar @args == 1 && not ref $args[0];
 
-    my $args = $class->SUPER::BUILDARGS( @args );
+    my $args = $class->next::method( @args );
 
     ($args->{path} =~ /^\//)
         || throw('Pointer path must start with a `/`' );
@@ -61,20 +52,18 @@ sub BUILDARGS {
     return $args;
 }
 
-sub path { $_[0]->{path} }
+sub path : ro;
 
-sub path_segments {
-    my ($self) = @_;
+sub path_segments ($self) {
     return map s/~1/\//r, #/
            map s/~0/\~/r, #/
            grep defined $_ && $_ ne '',
-           split /\// => $_[0]->{path};
+           split /\// => $self->{path};
 }
 
-sub length { scalar $_[0]->path_segments }
+sub length ($self) { scalar $self->path_segments }
 
-sub tokenize {
-    my ($self) = @_;
+sub tokenize ($self) {
     return map {
         /^\d$/ ? [ ITEM,     $_ ]
                : [ PROPERTY, $_ ]

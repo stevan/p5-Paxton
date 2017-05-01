@@ -1,26 +1,16 @@
 package Paxton::Schema::API::Error;
 # ABSTRACT: One stop for all your JSON needs
-
-use strict;
-use warnings;
+use Moxie;
 
 use Scalar::Util ();
 
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
 
-our %HAS; BEGIN {
-    %HAS = (
-        got      => sub {},
-        expected => sub {},
-    );
-}
+has 'got';
+has 'expected';
 
-sub message {
-    my ($self, $format) = @_;
-
-    $format //= 'Error(%s) - got: (%s) expected: (%s)';
-
+sub message ($self, $format = 'Error(%s) - got: (%s) expected: (%s)') {
     sprintf $format => (
         (split /\:\:/ => ref $self)[-1],
         map {
@@ -29,7 +19,7 @@ sub message {
                 : defined $_
                     ? "$_"
                     : 'undef'
-        } @{$self}{qw[ got expected ]}
+        } @{ $self }{qw[ got expected ]}
     );
 }
 

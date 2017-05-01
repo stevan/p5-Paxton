@@ -1,12 +1,6 @@
 package Paxton::Streaming::Matcher;
 # ABSTRACT: Convert a stream of tokens into a substream containing only tokens relevant to a match criteria.
-
-use strict;
-use warnings;
-
-use UNIVERSAL::Object;
-
-use Paxton::Streaming::API::Consumer;
+use Moxie;
 
 use Paxton::Util::Errors;
 use Paxton::Util::Tokens;
@@ -21,42 +15,31 @@ use constant DEBUG => $ENV{PAXTON_MATCHER_DEBUG} // 0;
 
 # ...
 
-our @ISA;  BEGIN { @ISA  = ('UNIVERSAL::Object') }
-our @DOES; BEGIN { @DOES = ('Paxton::Streaming::API::Consumer') }
-our %HAS;  BEGIN {
-    %HAS = (
-        pointer => sub { die 'You must specify a `pointer` to match with' },
-        context => sub { Paxton::Core::Context->new },
-        ## private
-        # flags
-        _done           => sub { 0 },
-        # captured ...
-        _buffer         => sub { +[] },
-        # matching ...
-        _match_context  => sub { undef },
-        _pointer_tokens => sub { +[] },
-    )
-}
+extends 'Moxie::Object';
+   with 'Paxton::Streaming::API::Consumer';
+
+has 'pointer'         => sub { die 'You must specify a `pointer` to match with' };
+has 'context'         => sub { Paxton::Core::Context->new };
+has '_done'           => sub { 0 };
+has '_buffer'         => sub { +[] };
+has '_match_context'  => sub { undef };
+has '_pointer_tokens' => sub { +[] };
 
 # ...
 
-sub BUILD {
-    my ($self) = @_;
-
+sub BUILD ($self, $) {
     $self->{_pointer_tokens} = [ $self->{pointer}->tokenize ];
-
     $self->{context}->enter_root_context;
 }
 
 # accessors
 
-sub pointer { $_[0]->{pointer} }
-sub context { $_[0]->{context} }
+sub pointer : ro;
+sub context : ro;
 
 # ...
 
-sub get_matched_tokens {
-    my ($self) = @_;
+sub get_matched_tokens ($self) {
     ($self->is_full)
         || throw('Cannot get matched tokens until matcher is full' );
     @{ $self->{_buffer} };
@@ -64,14 +47,9 @@ sub get_matched_tokens {
 
 ## fullfil the APIs
 
-sub is_full {
-    my ($self) = @_;
-    $self->{_done};
-}
+sub is_full : ro('_done');
 
-sub consume_token {
-    my ($self, $token) = @_;
-
+sub consume_token ($self, $token) {
     (not $self->is_full)
         || throw('Matcher is done, cannot `put` any more tokens' );
 
@@ -198,22 +176,9 @@ sub consume_token {
 
 # logging
 
-sub log {
-    my ($self, @msg) = @_;
+sub log ($self, @msg) {
     (DEBUG > 1) ? Carp::cluck( @msg ) : warn( @msg, "\n" );
     return;
-}
-
-# ROLE COMPOSITON
-
-BEGIN {
-    use MOP::Role;
-    use MOP::Internal::Util;
-    MOP::Internal::Util::APPLY_ROLES(
-        MOP::Role->new(name => __PACKAGE__),
-        \@DOES,
-        to => 'class'
-    );
 }
 
 1;

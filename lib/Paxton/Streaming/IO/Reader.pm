@@ -1,18 +1,13 @@
 package Paxton::Streaming::IO::Reader;
 # ABSTRACT: Convert a JSON string into a stream of tokens
-
-use strict;
-use warnings;
+use Moxie;
 
 use Carp         ();
 use Scalar::Util ();
-use UNIVERSAL::Object;
 use MOP::Method;
 
 use IO::Handle;
 use IO::Scalar;
-
-use Paxton::Streaming::API::Producer;
 
 use Paxton::Util::Errors;
 use Paxton::Util::Tokens;
@@ -27,21 +22,16 @@ use constant DEBUG => $ENV{PAXTON_READER_DEBUG} // 0;
 
 # ...
 
-our @ISA;  BEGIN { @ISA  = ('UNIVERSAL::Object') }
-our @DOES; BEGIN { @DOES = ('Paxton::Streaming::API::Producer') }
-our %HAS;  BEGIN {
-    %HAS = (
-        source     => sub { die 'You must specify a `source` to read from.'},
-        next_state => sub { \&root },
-        context    => sub { Paxton::Core::Context->new },
-    )
-}
+extends 'Moxie::Object';
+   with 'Paxton::Streaming::API::Producer';
+
+has 'source'     => sub { die 'You must specify a `source` to read from.'};
+has 'next_state' => sub { \&root };
+has 'context'    => sub { Paxton::Core::Context->new };
 
 ## Constructors
 
-sub new_from_path {
-    my ($class, $path) = @_;
-
+sub new_from_path ($class, $path) {
     (defined $path && -f $path)
         || throw('The path must be specified and be valid' );
 
@@ -51,18 +41,14 @@ sub new_from_path {
     $class->new( source => Paxton::Core::CharBuffer->new( handle => $handle ) );
 }
 
-sub new_from_handle {
-    my ($class, $handle) = @_;
-
+sub new_from_handle ($class, $handle) {
     (Scalar::Util::blessed( $handle ) && $handle->isa('IO::Handle'))
         || throw('The handle must be derived from IO::Handle' );
 
     $class->new( source => Paxton::Core::CharBuffer->new( handle => $handle ) );
 }
 
-sub new_from_string {
-    my ($class, $string_ref) = @_;
-
+sub new_from_string ($class, $string_ref) {
     (defined $string_ref && ref $string_ref eq 'SCALAR')
         || throw('The string must be a SCALAR reference' );
 
@@ -71,8 +57,7 @@ sub new_from_string {
 
 # ...
 
-sub BUILD {
-    my ($self) = @_;
+sub BUILD ($self, $) {
     (Scalar::Util::blessed( $self->{source} ) && $self->{source}->isa('Paxton::Core::CharBuffer') )
         || throw('The `source` must be an instance of `Paxton::Core::CharBuffer`' );
 
@@ -87,22 +72,19 @@ sub BUILD {
 
 # accessors (nothing really needs to be secret)
 
-sub source     { $_[0]->{source}     }
-sub context    { $_[0]->{context}    }
-sub next_state { $_[0]->{next_state} }
+sub source     : ro;
+sub context    : ro;
+sub next_state : ro;
 
 # iteration API
 
-sub is_exhausted {
-    my ($self) = @_;
+sub is_exhausted ($self) {
     $self->{source}->is_done
         &&
     $self->{context}->in_root_context;
 }
 
-sub produce_token {
-    my ($self) = @_;
-
+sub produce_token ($self) {
     return if $self->is_exhausted;
 
     if ( my $next = delete $self->{next_state} ) {
@@ -144,26 +126,23 @@ sub produce_token {
 
 # logging
 
-sub log {
-    my ($self, @msg) = @_;
+sub log ($self, @msg) {
     (DEBUG > 1) ? Carp::cluck( @msg ) : warn( @msg, "\n" );
     return;
 }
 
 # delegated charbuffer methods
 
-sub get_next_char  { $_[0]->{source}->get  }
-sub peek_next_char { $_[0]->{source}->peek }
-sub skip_next_char { $_[0]->{source}->skip }
-sub discard_whitespace_and_peek {
-    $_[0]->{source}->discard_whitespace_and_peek
+sub get_next_char   ($self) { $self->{source}->get  }
+sub peek_next_char  ($self) { $self->{source}->peek }
+sub skip_next_char  ($self) { $self->{source}->skip }
+sub discard_whitespace_and_peek ($self) {
+    $self->{source}->discard_whitespace_and_peek
 }
 
 # parse methods
 
-sub root {
-    my ($self) = @_;
-
+sub root ($self) {
     $self->log( 'Entering `root`' ) if DEBUG;
 
     my $char = $self->discard_whitespace_and_peek;
@@ -189,9 +168,7 @@ sub root {
     }
 }
 
-sub end {
-    my ($self) = @_;
-
+sub end ($self) {
     $self->log( 'Entering `end`' ) if DEBUG;
     # NOTE:
     # this token type works for
@@ -201,9 +178,7 @@ sub end {
     return token( NO_TOKEN );
 }
 
-sub start {
-    my ($self) = @_;
-
+sub start ($self) {
     $self->log( 'Entering `start`' ) if DEBUG;
 
     my $char = $self->discard_whitespace_and_peek;
@@ -239,9 +214,7 @@ sub start {
     }
 }
 
-sub object {
-    my ($self) = @_;
-
+sub object ($self) {
     $self->log( 'Entering `object`' ) if DEBUG;
 
     my $char = $self->discard_whitespace_and_peek;
@@ -276,9 +249,7 @@ sub object {
     }
 }
 
-sub property {
-    my ($self) = @_;
-
+sub property ($self) {
     $self->log( 'Entering `property`' ) if DEBUG;
 
     my $char = $self->discard_whitespace_and_peek;
@@ -315,9 +286,7 @@ sub property {
     }
 }
 
-sub end_property {
-    my ($self) = @_;
-
+sub end_property ($self) {
     $self->log( 'Entering `end_property`' ) if DEBUG;
 
     $self->{context}->leave_property_context;
@@ -325,9 +294,7 @@ sub end_property {
     return token( END_PROPERTY );
 }
 
-sub array {
-    my ($self) = @_;
-
+sub array ($self) {
     $self->log( 'Entering `array`' ) if DEBUG;
 
     my $char = $self->discard_whitespace_and_peek;
@@ -362,9 +329,7 @@ sub array {
     }
 }
 
-sub item {
-    my ($self) = @_;
-
+sub item ($self) {
     $self->log( 'Entering `item`' ) if DEBUG;
 
     my $char = $self->discard_whitespace_and_peek;
@@ -397,9 +362,7 @@ sub item {
     }
 }
 
-sub end_item {
-    my ($self) = @_;
-
+sub end_item ($self) {
     $self->log( 'Entering `end_item`' ) if DEBUG;
 
     $self->{context}->leave_item_context;
@@ -420,9 +383,7 @@ our %ESCAPE_CHARS = (
     '"' => '"',
 );
 
-sub string_literal {
-    my ($self) = @_;
-
+sub string_literal ($self) {
     $self->log( 'Entering `string_literal`' ) if DEBUG;
 
     my $char = $self->get_next_char;
@@ -461,9 +422,7 @@ sub string_literal {
     }
 }
 
-sub numeric_literal {
-    my ($self) = @_;
-
+sub numeric_literal ($self) {
     $self->log( 'Entering `numeric_literal`' ) if DEBUG;
 
     my $char = $self->peek_next_char;
@@ -531,24 +490,24 @@ sub numeric_literal {
     }
 }
 
-sub true_literal {
-    $_[0]->_match_literal(
+sub true_literal ($self) {
+    $self->_match_literal(
         ['t', 'r', 'u', 'e'],
         ADD_TRUE,
         'Expected end of `true` literal, not(%s)'
     );
 }
 
-sub false_literal {
-    $_[0]->_match_literal(
+sub false_literal ($self) {
+    $self->_match_literal(
         ['f', 'a', 'l', 's', 'e'],
         ADD_FALSE,
         'Expected end of `false` literal, not(%s)'
     );
 }
 
-sub null_literal {
-    $_[0]->_match_literal(
+sub null_literal ($self) {
+    $self->_match_literal(
         ['n', 'u', 'l', 'l'],
         ADD_NULL,
         'Expected end of `null` literal, not(%s)'
@@ -557,9 +516,7 @@ sub null_literal {
 
 ## ....
 
-sub _match_literal {
-    my ($self, $expected, $token_type, $error_message) = @_;
-
+sub _match_literal ($self, $expected, $token_type, $error_message) {
     $self->log( 'Entering `' . (join '' => @$expected) . '`' ) if DEBUG;
 
     my $char = $self->discard_whitespace_and_peek;
@@ -589,18 +546,6 @@ sub _match_literal {
     else {
         return $self->end;
     }
-}
-
-# ROLE COMPOSITON
-
-BEGIN {
-    use MOP::Role;
-    use MOP::Internal::Util;
-    MOP::Internal::Util::APPLY_ROLES(
-        MOP::Role->new(name => __PACKAGE__),
-        \@DOES,
-        to => 'class'
-    );
 }
 
 1;

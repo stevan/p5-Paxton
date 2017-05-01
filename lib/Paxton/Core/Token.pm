@@ -1,12 +1,8 @@
 package Paxton::Core::Token;
 # ABSTRACT: One stop for all your JSON needs
-
-use strict;
-use warnings;
+use Moxie;
 
 use Scalar::Util ();
-use UNIVERSAL::Object::Immutable;
-
 use Paxton::Util::Errors;
 
 our $VERSION   = '0.01';
@@ -49,25 +45,20 @@ BEGIN {
 
     foreach my $name ( keys %TOKEN_MAP ) {
         no strict 'refs';
-        *{$name} = sub () { $TOKEN_MAP{ $name } };
+        *{$name} = sub (@) { $TOKEN_MAP{ $name } };
     }
 }
 
 # ...
 
-our @ISA; BEGIN { @ISA  = ('UNIVERSAL::Object::Immutable') }
-our %HAS; BEGIN {
-    %HAS = (
-        type     => sub { die 'A `type` is required' },
-        value    => sub {},
-    )
-}
+extends 'Moxie::Object::Immutable';
+
+has 'type' => sub { die 'A `type` is required' };
+has 'value';
 
 # ...
 
-sub BUILD {
-    my $self = $_[0];
-
+sub BUILD ($self, $) {
     (exists $TOKEN_MAP{ $self->{type} })
         || throw('Unknown token type (' . $self->{type} . ')' );
 
@@ -80,25 +71,25 @@ sub BUILD {
 
 # ...
 
-sub type  { $_[0]->{type}  }
-sub value { $_[0]->{value} }
+sub type  : ro;
+sub value : ro;
 
-sub has_value { !! $_[0]->{value} }
+sub has_value : predicate;
 
-sub dump {
+sub dump ($self) {
     require Data::Dumper;
-    Data::Dumper::Dumper( $_[0] );
+    Data::Dumper::Dumper( $self );
 }
 
-sub to_string {
-    my $out  = 'token( '.$_[0]->type;
+sub to_string ($self) {
+    my $out  = 'token( '.$self->{type};
 
-    if ( defined $_[0]->value ) {
-        my $needs_quotes = $_[0]->type == ADD_STRING || $_[0]->type == START_PROPERTY;
+    if ( defined $self->{value} ) {
+        my $needs_quotes = $self->{type} == ADD_STRING || $self->{type} == START_PROPERTY;
 
         $out .= ', '
              .($needs_quotes ? '\'' : '')
-             .$_[0]->value
+             .$self->{value}
              .($needs_quotes ? '\'' : '');
     }
     return $out.' )';

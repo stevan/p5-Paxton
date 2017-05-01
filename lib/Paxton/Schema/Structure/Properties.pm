@@ -1,35 +1,25 @@
 package Paxton::Schema::Structure::Properties;
 # ABSTRACT: One stop for all your JSON needs
-
-use strict;
-use warnings;
+use Moxie;
 
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
 
 use Scalar::Util ();
 
-use UNIVERSAL::Object::Immutable;
+extends 'Moxie::Object::Immutable';
 
-our @ISA; BEGIN { @ISA = ('UNIVERSAL::Object::Immutable') }
-our %HAS; BEGIN {
-    %HAS = (
-        _props => sub { +{} },
-    );
-}
+has '_props' => sub { +{} };
 
-sub BUILDARGS {
-    my $class = shift;
-    my $deps  = $class->SUPER::BUILDARGS( @_ );
+sub BUILDARGS ($class, @args) {
+    my $deps = $class->next::method( @args );
     return { _props => $deps }
 }
 
-sub to_json_schema {
-    my ($self) = @_;
-
+sub to_json_schema ($self) {
     my %properties;
 
-    foreach my $key ( keys %{ $self->{_props} } ) {
+    foreach my $key ( keys $self->{_props}->%* ) {
         if ( $key eq 'default' ) {
             $properties{ $key } = $self->{_props}->{ $key };
         }

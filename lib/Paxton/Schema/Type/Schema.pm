@@ -1,35 +1,25 @@
 package Paxton::Schema::Type::Schema;
 # ABSTRACT: One stop for all your JSON needs
-
-use strict;
-use warnings;
+use Moxie;
 
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
 
 use Paxton::Schema::Error::BadInput;
 
-use Paxton::Schema::Type::Object;
+extends 'Paxton::Schema::Type::Object';
 
-our @ISA;  BEGIN { @ISA  = ('Paxton::Schema::Type::Object') }
-our %HAS;  BEGIN {
-    %HAS = (
-        %Paxton::Schema::Type::Object::HAS,
-        id           => sub {},
-        '$schema'    => sub {},
-        title        => sub {},
-        type         => sub {},
-        dependencies => sub {},
-        definitions  => sub {},
-    );
-}
+has 'id';
+has '$schema';
+has 'title';
+has 'type';
+has 'dependencies';
+has 'definitions';
 
 sub name { 'schema' }
 
-sub validate {
-    my ($self, $value) = @_;
-
-    my @errors = $self->SUPER::validate( $value );
+sub validate ($self, $value) {
+    my @errors = $self->next::method( $value );
 
     # ...
 

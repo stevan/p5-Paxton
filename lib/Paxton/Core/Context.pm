@@ -1,8 +1,6 @@
 package Paxton::Core::Context;
 # ABSTRACT: One stop for all your JSON needs
-
-use strict;
-use warnings;
+use Moxie;
 
 use Scalar::Util ();
 
@@ -22,68 +20,58 @@ use constant IN_ITEM     => Scalar::Util::dualvar( 5, 'IN_ITEM'     );
 
 # constructor ...
 
-sub new {
-    my ($class) = @_;
+sub new ($class) {
     return bless [] => $class;
 }
 
 # ...
 
-sub depth { scalar @{ $_[0] } }
+sub depth ($self) { scalar @$self }
 
-sub current_context_value { $_[0]->[-1]->{value} }
+sub current_context_value ($self) { $self->[-1]->{value} }
 
 # predicates
 
-sub in_root_context {
-    my ($self) = @_;
+sub in_root_context ($self) {
     return unless scalar @$self && defined $self->[-1];
     return $self->[-1]->{type} == ROOT;
 }
 
-sub in_object_context {
-    my ($self) = @_;
+sub in_object_context ($self) {
     return unless scalar @$self && defined $self->[-1];
     return $self->[-1]->{type} == IN_OBJECT;
 }
 
-sub in_array_context {
-    my ($self) = @_;
+sub in_array_context ($self) {
     return unless scalar @$self && defined $self->[-1];
     return $self->[-1]->{type} == IN_ARRAY;
 }
 
-sub in_property_context {
-    my ($self) = @_;
+sub in_property_context ($self) {
     return unless scalar @$self && defined $self->[-1];
     return $self->[-1]->{type} == IN_PROPERTY;
 }
 
-sub in_item_context {
-    my ($self) = @_;
+sub in_item_context ($self) {
     return unless scalar @$self && defined $self->[-1];
     return $self->[-1]->{type} == IN_ITEM;
 }
 
 # data ...
 
-sub get_current_item_count {
-    my ($self) = @_;
+sub get_current_item_count ($self) {
     return unless scalar @$self && defined $self->[-1];
     return $self->[-1]->{item_count};
 }
 
-sub get_current_property_count {
-    my ($self) = @_;
+sub get_current_property_count ($self) {
     return unless scalar @$self && defined $self->[-1];
     return $self->[-1]->{property_count};
 }
 
 # enter ...
 
-sub enter_root_context {
-    my ($self, $value) = @_;
-
+sub enter_root_context ($self, $value = undef) {
     (scalar @$self == 0)
         || throw('Unable to enter root context: stack not empty');
 
@@ -91,9 +79,7 @@ sub enter_root_context {
     return;
 }
 
-sub enter_object_context {
-    my ($self, $value) = @_;
-
+sub enter_object_context ($self, $value = undef) {
     (scalar @$self)
         || throw('Unable to enter object context: stack is empty');
 
@@ -101,9 +87,7 @@ sub enter_object_context {
     return;
 }
 
-sub enter_array_context {
-    my ($self, $value) = @_;
-
+sub enter_array_context ($self, $value = undef) {
     (scalar @$self)
         || throw('Unable to enter array context: stack is empty');
 
@@ -114,9 +98,7 @@ sub enter_array_context {
     return;
 }
 
-sub enter_property_context {
-    my ($self, $value) = @_;
-
+sub enter_property_context ($self, $value = undef) {
     (scalar @$self)
         || throw('Unable to enter property context: stack is empty');
 
@@ -130,9 +112,7 @@ sub enter_property_context {
     return;
 }
 
-sub enter_item_context {
-    my ($self, $value) = @_;
-
+sub enter_item_context ($self, $value = undef) {
     (scalar @$self)
         || throw('Unable to enter item context: stack is empty');
 
@@ -148,9 +128,7 @@ sub enter_item_context {
 
 # leave
 
-sub leave_object_context {
-    my ($self) = @_;
-
+sub leave_object_context ($self) {
     (scalar @$self)
         || throw('Unable to leave context: stack exhausted');
 
@@ -165,9 +143,7 @@ sub leave_object_context {
     return $self->[-1]->{value};
 }
 
-sub leave_array_context {
-    my ($self) = @_;
-
+sub leave_array_context ($self) {
     (scalar @$self)
         || throw('Unable to leave context: stack exhausted');
 
@@ -182,9 +158,7 @@ sub leave_array_context {
     return $self->[-1]->{value};
 }
 
-sub leave_property_context {
-    my ($self) = @_;
-
+sub leave_property_context ($self) {
     (scalar @$self)
         || throw('Unable to leave context: stack exhausted');
 
@@ -199,9 +173,7 @@ sub leave_property_context {
     return $self->[-1]->{value};
 }
 
-sub leave_item_context {
-    my ($self) = @_;
-
+sub leave_item_context ($self) {
     (scalar @$self)
         || throw('Unable to leave context: stack exhausted');
 
@@ -216,9 +188,7 @@ sub leave_item_context {
     return $self->[-1]->{value};
 }
 
-sub leave_current_context {
-    my ($self) = @_;
-
+sub leave_current_context ($self) {
     (scalar @$self)
         || throw('Unable to leave context: stack exhausted');
 

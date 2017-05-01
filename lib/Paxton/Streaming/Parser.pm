@@ -1,12 +1,6 @@
 package Paxton::Streaming::Parser;
 # ABSTRACT: Convert a stream of tokens into a Paxton::Core::TreeNode tree
-
-use strict;
-use warnings;
-
-use UNIVERSAL::Object;
-
-use Paxton::Streaming::API::Consumer;
+use Moxie;
 
 use Paxton::Util::Errors;
 use Paxton::Util::Tokens;
@@ -30,41 +24,35 @@ our %TOKEN_TYPE_TO_NODE_TYPE = (
     ADD_NULL   => Paxton::Core::TreeNode->NULL,
 );
 
-our @ISA;  BEGIN { @ISA  = ('UNIVERSAL::Object') }
-our @DOES; BEGIN { @DOES = ('Paxton::Streaming::API::Consumer') }
-our %HAS;  BEGIN {
-    %HAS = (
-        context => sub { Paxton::Core::Context->new },
-        # private
-        _value  => sub {},
-    )
-}
+extends 'Moxie::Object';
+   with 'Paxton::Streaming::API::Consumer';
+
+
+has 'context' => sub { Paxton::Core::Context->new };
+has '_value'  => sub {};
 
 # ...
 
-sub BUILD {
-    $_[0]->{context}->enter_root_context;
+sub BUILD ($self, $) {
+    $self->{context}->enter_root_context;
 }
 
 # accessors
 
-sub context { $_[0]->{context} }
+sub context : ro;
 
-sub has_value { defined $_[0]->{_value} }
-sub get_value {         $_[0]->{_value} }
+sub has_value : predicate('_value');
+sub get_value : ro('_value');
 
 # ...
 
-sub is_full {
-    my ($self) = @_;
+sub is_full ($self) {
     $self->has_value
         &&
     $self->{context}->in_root_context;
 }
 
-sub consume_token {
-    my ($self, $token) = @_;
-
+sub consume_token ($self, $token) {
     (not $self->is_full)
         || throw('Parser is full, cannot `put` any more tokens' );
 
@@ -134,23 +122,9 @@ sub consume_token {
 
 # logging
 
-sub log {
-    my ($self, @msg) = @_;
+sub log ($self, @msg) {
     (DEBUG > 1) ? Carp::cluck( @msg ) : warn( @msg, "\n" );
     return;
-}
-
-# ROLE COMPOSITON
-
-BEGIN {
-    use MOP::Role;
-    use MOP::Internal::Util;
-
-    MOP::Internal::Util::APPLY_ROLES(
-        MOP::Role->new(name => __PACKAGE__),
-        \@DOES,
-        to => 'class'
-    );
 }
 
 1;

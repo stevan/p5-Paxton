@@ -1,26 +1,18 @@
 package Paxton::Schema::Structure::Dependencies;
 # ABSTRACT: One stop for all your JSON needs
-
-use strict;
-use warnings;
+use Moxie;
 
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
 
 use Scalar::Util ();
 
-use UNIVERSAL::Object::Immutable;
+extends 'Moxie::Object::Immutable';
 
-our @ISA; BEGIN { @ISA = ('UNIVERSAL::Object::Immutable') }
-our %HAS; BEGIN {
-    %HAS = (
-        _deps => sub { +{} },
-    );
-}
+has '_deps' => sub { +{} };
 
-sub BUILDARGS {
-    my $class = shift;
-    my $deps  = $class->SUPER::BUILDARGS( @_ );
+sub BUILDARGS ($class, @args) {
+    my $deps = $class->next::method( @args );
     return { _deps => $deps }
 }
 
@@ -29,13 +21,13 @@ sub to_json_schema {
 
     my %dependencies;
 
-    foreach my $key ( keys %{ $self->{_deps} } ) {
+    foreach my $key ( keys $self->{_deps}->%* ) {
         my $value = $self->{_deps}->{ $key };
         if (Scalar::Util::blessed( $value ) && $value->can('to_json_schema')) {
             $dependencies{ $key } = $value->to_json_schema;
         }
         elsif ( ref $value eq 'ARRAY' ) {
-            $dependencies{ $key } = [ @$value ];
+            $dependencies{ $key } = [ $value->@* ];
         }
     }
 

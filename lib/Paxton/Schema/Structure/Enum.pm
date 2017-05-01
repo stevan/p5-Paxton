@@ -1,29 +1,20 @@
 package Paxton::Schema::Structure::Enum;
 # ABSTRACT: One stop for all your JSON needs
-
-use strict;
-use warnings;
+use Moxie;
 
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
 
-use UNIVERSAL::Object::Immutable;
+extends 'Moxie::Object::Immutable';
 
-our @ISA; BEGIN { @ISA = ('UNIVERSAL::Object::Immutable') }
-our %HAS; BEGIN {
-    %HAS = (
-        _members => sub { +[] },
-    );
-}
+has '_members' => sub { +[] };
 
-sub BUILDARGS {
-    my ($class, @args) = @_;
+sub BUILDARGS ($class, @args) {
     return { _members => \@args }
 }
 
-sub to_json_schema {
-    my ($self) = @_;
-    return { enum => [ @{ $self->{_members} } ] };
+sub to_json_schema ($self) {
+    return { enum => [ $self->{_members}->@* ] };
 }
 
 1;

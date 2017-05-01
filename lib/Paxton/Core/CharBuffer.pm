@@ -1,12 +1,8 @@
 package Paxton::Core::CharBuffer;
 # ABSTRACT: One stop for all your JSON needs
-
-use strict;
-use warnings;
+use Moxie;
 
 use Scalar::Util ();
-use UNIVERSAL::Object;
-
 use Paxton::Util::Errors;
 
 our $VERSION   = '0.01';
@@ -14,35 +10,28 @@ our $AUTHORITY = 'cpan:STEVAN';
 
 use constant MAX_BUFFER_SIZE => 512;
 
-our @ISA; BEGIN { @ISA = ('UNIVERSAL::Object') }
-our %HAS; BEGIN {
-    %HAS = (
-        handle => sub { die 'You must specify a `handle`' },
-        buffer => sub { '' },
-        size   => sub { MAX_BUFFER_SIZE },
-        done   => sub { 1 },
-    )
-}
+extends 'Moxie::Object';
 
-sub BUILD {
-    my ($self) = @_;
+has 'handle' => sub { die 'You must specify a `handle`' };
+has 'buffer' => sub { '' };
+has 'size'   => sub { MAX_BUFFER_SIZE };
+has 'done'   => sub { 1 };
+
+sub BUILD ($self, $) {
     (Scalar::Util::blessed( $self->{handle} ) && $self->{handle}->isa('IO::Handle') )
         || throw('You must specify a `handle` that is derived from IO::Handle' );
 }
 
-sub current_position {
-    my ($self) = @_;
+sub current_position ($self) {
     $self->{handle}->tell - length $self->{buffer};
 }
 
-sub is_done {
-    my ($self) = @_;
+sub is_done ($self) {
     # when done is undef, we are done (sorry, odd I know)
     not defined $self->{done}
 }
 
-sub get {
-    my ($self) = @_;
+sub get ($self) {
     $self->{done} // return;
     ($self->{buffer} ne ''
         ? substr( $self->{buffer}, 0, 1, '' )
@@ -51,8 +40,7 @@ sub get {
             : undef $self->{done});
 }
 
-sub peek {
-    my ($self) = @_;
+sub peek ($self) {
     $self->{done} // return;
     $self->{buffer} ne ''
         ? substr( $self->{buffer}, 0, 1 )
@@ -61,12 +49,9 @@ sub peek {
             : undef $self->{done};
 }
 
-sub skip {
-    my ($self, $n) = @_;
+sub skip  ($self, $n = 1) {
 
     $self->{done} // return;
-
-    $n //= 1;
 
     my $len = length $self->{buffer};
     if ( $n == $len ) {
@@ -81,8 +66,7 @@ sub skip {
     }
 }
 
-sub discard_whitespace_and_peek {
-    my ($self) = @_;
+sub discard_whitespace_and_peek ($self) {
 
     $self->{done} // return;
 
