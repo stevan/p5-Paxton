@@ -1,6 +1,7 @@
 package Paxton::Core::Context;
 # ABSTRACT: One stop for all your JSON needs
 use Moxie;
+use Moxie::Enum;
 
 use Scalar::Util ();
 
@@ -12,11 +13,13 @@ our $AUTHORITY = 'cpan:STEVAN';
 
 # contstants ...
 
-use constant ROOT        => Scalar::Util::dualvar( 1, 'ROOT'        );
-use constant IN_OBJECT   => Scalar::Util::dualvar( 2, 'IN_OBJECT'   );
-use constant IN_ARRAY    => Scalar::Util::dualvar( 3, 'IN_ARRAY'    );
-use constant IN_PROPERTY => Scalar::Util::dualvar( 4, 'IN_PROPERTY' );
-use constant IN_ITEM     => Scalar::Util::dualvar( 5, 'IN_ITEM'     );
+enum ContextType => qw[
+    ROOT
+    IN_OBJECT
+    IN_ARRAY
+    IN_PROPERTY
+    IN_ITEM
+];
 
 # constructor ...
 

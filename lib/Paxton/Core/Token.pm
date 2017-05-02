@@ -1,6 +1,7 @@
 package Paxton::Core::Token;
 # ABSTRACT: One stop for all your JSON needs
 use Moxie;
+use Moxie::Enum;
 
 use Scalar::Util ();
 use Paxton::Util::Errors;
@@ -14,40 +15,32 @@ use constant DEBUG => $ENV{PAXTON_TOKEN_DEBUG} // 0;
 
 # constants
 
-our %TOKEN_MAP;
-BEGIN {
-    %TOKEN_MAP = (
-        NOT_AVAILABLE  => Scalar::Util::dualvar( -1, 'NOT_AVAILABLE'  ),
-        NO_TOKEN       => Scalar::Util::dualvar( 0,  'NO_TOKEN'       ),
+enum TokenType => {
+    NOT_AVAILABLE  => -1,
+    NO_TOKEN       => 0,
 
-        START_OBJECT   => Scalar::Util::dualvar( 1,  'START_OBJECT'   ),
-        END_OBJECT     => Scalar::Util::dualvar( 2,  'END_OBJECT'     ),
+    START_OBJECT   => 1,
+    END_OBJECT     => 2,
 
-        START_PROPERTY => Scalar::Util::dualvar( 3,  'START_PROPERTY' ),
-        END_PROPERTY   => Scalar::Util::dualvar( 4,  'END_PROPERTY'   ),
+    START_PROPERTY => 3,
+    END_PROPERTY   => 4,
 
-        START_ARRAY    => Scalar::Util::dualvar( 5,  'START_ARRAY'    ),
-        END_ARRAY      => Scalar::Util::dualvar( 6,  'END_ARRAY'      ),
+    START_ARRAY    => 5,
+    END_ARRAY      => 6,
 
-        START_ITEM     => Scalar::Util::dualvar( 7,  'START_ITEM'     ),
-        END_ITEM       => Scalar::Util::dualvar( 8,  'END_ITEM'       ),
+    START_ITEM     => 7,
+    END_ITEM       => 8,
 
-        ADD_STRING     => Scalar::Util::dualvar( 9,  'ADD_STRING'     ),
-        ADD_INT        => Scalar::Util::dualvar( 10, 'ADD_INT'        ),
-        ADD_FLOAT      => Scalar::Util::dualvar( 11, 'ADD_FLOAT'      ),
+    ADD_STRING     => 9,
+    ADD_INT        => 10,
+    ADD_FLOAT      => 11,
 
-        ADD_TRUE       => Scalar::Util::dualvar( 12, 'ADD_TRUE'       ),
-        ADD_FALSE      => Scalar::Util::dualvar( 13, 'ADD_FALSE'      ),
-        ADD_NULL       => Scalar::Util::dualvar( 14, 'ADD_NULL'       ),
+    ADD_TRUE       => 12,
+    ADD_FALSE      => 13,
+    ADD_NULL       => 14,
 
-        ERROR          => Scalar::Util::dualvar( 15, 'ERROR'          ),
-    );
-
-    foreach my $name ( keys %TOKEN_MAP ) {
-        no strict 'refs';
-        *{$name} = sub (@) { $TOKEN_MAP{ $name } };
-    }
-}
+    ERROR          => 15,
+};
 
 # ...
 
@@ -59,7 +52,7 @@ has 'value';
 # ...
 
 sub BUILD ($self, $) {
-    (exists $TOKEN_MAP{ $self->{type} })
+    (Moxie::Enum::has_value_for( ref $self, 'TokenType', $self->{type} ))
         || throw('Unknown token type (' . $self->{type} . ')' );
 
     # XXX

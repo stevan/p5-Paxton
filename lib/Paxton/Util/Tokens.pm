@@ -4,6 +4,7 @@ package Paxton::Util::Tokens;
 use strict;
 use warnings;
 
+use Moxie::Enum  ();
 use Scalar::Util ();
 
 use Paxton::Core::Token;
@@ -20,9 +21,9 @@ our $AUTHORITY = 'cpan:STEVAN';
 
 our @EXPORT;
 BEGIN {
-    @EXPORT = keys %Paxton::Core::Token::TOKEN_MAP;
+    @EXPORT = Moxie::Enum::get_keys_for( 'Paxton::Core::Token' => 'TokenType' );
 
-    foreach my $name ( keys %Paxton::Core::Token::TOKEN_MAP ) {
+    foreach my $name ( @EXPORT ) {
         no strict 'refs';
         *{$name} = \&{'Paxton::Core::Token::'.$name};
     }

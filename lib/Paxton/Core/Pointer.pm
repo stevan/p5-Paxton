@@ -1,6 +1,7 @@
 package Paxton::Core::Pointer;
 # ABSTRACT: A representation of a JSON Pointer path
 use Moxie;
+use Moxie::Enum;
 
 use Paxton::Util::Errors;
 
@@ -13,22 +14,14 @@ use constant DEBUG => $ENV{PAXTON_POINTER_DEBUG} // 0;
 
 # constants
 
-our %PATH_SEGMENT_TOKEN_MAP;
-BEGIN {
-    %PATH_SEGMENT_TOKEN_MAP = (
-        PROPERTY => Scalar::Util::dualvar( 1,  'PROPERTY' ),
-        ITEM     => Scalar::Util::dualvar( 2,  'ITEM'     ),
-        # leave room for other possibilities here:
-        # REGEX => ... match a regex against keys ...
-        # RANGE => ... match a range of items ...
-        # GLOB  => ... match everything in between ...
-    );
-
-    foreach my $name ( keys %PATH_SEGMENT_TOKEN_MAP ) {
-        no strict 'refs';
-        *{$name} = sub (@) { $PATH_SEGMENT_TOKEN_MAP{ $name } };
-    }
-}
+enum PathSegmentType => qw[
+    PROPERTY
+    ITEM
+];
+# leave room for other possibilities here:
+# REGEX => ... match a regex against keys ...
+# RANGE => ... match a range of items ...
+# GLOB  => ... match everything in between ...
 
 # ...
 

@@ -1,8 +1,7 @@
 package Paxton::Core::TreeNode;
 # ABSTRACT: One stop for all your JSON needs
 use Moxie;
-
-use Scalar::Util ();
+use Moxie::Enum;
 
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
@@ -13,26 +12,18 @@ use constant DEBUG => $ENV{PAXTON_PARSER_DEBUG} // 0;
 
 ## constants
 
-our %TYPE_MAP;
-BEGIN {
-    %TYPE_MAP = (
-        OBJECT   => Scalar::Util::dualvar( 1,  'OBJECT'   ),
-        PROPERTY => Scalar::Util::dualvar( 2,  'PROPERTY' ),
-        ARRAY    => Scalar::Util::dualvar( 3,  'ARRAY'    ),
-        ITEM     => Scalar::Util::dualvar( 4,  'ITEM'     ),
-        STRING   => Scalar::Util::dualvar( 5,  'STRING'   ),
-        INT      => Scalar::Util::dualvar( 6,  'INT'      ),
-        FLOAT    => Scalar::Util::dualvar( 7,  'FLOAT'    ),
-        TRUE     => Scalar::Util::dualvar( 8,  'TRUE'     ),
-        FALSE    => Scalar::Util::dualvar( 9,  'FALSE'    ),
-        NULL     => Scalar::Util::dualvar( 10, 'NULL'     ),
-    );
-
-    foreach my $name ( keys %TYPE_MAP ) {
-        no strict 'refs';
-        *{$name} = sub (@) { $TYPE_MAP{ $name } };
-    }
-}
+enum NodeType => qw[
+    OBJECT
+    PROPERTY
+    ARRAY
+    ITEM
+    STRING
+    INT
+    FLOAT
+    TRUE
+    FALSE
+    NULL
+];
 
 # ...
 
