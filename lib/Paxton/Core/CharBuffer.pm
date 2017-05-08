@@ -24,10 +24,10 @@ sub BUILDARGS : init_args(
     done        => undef,
 );
 
-my sub handle : prototype() private('$!handle');
-my sub buffer : prototype() private('$!buffer');
-my sub size   : prototype() private('$!size');
-my sub done   : prototype() private('$!done');
+my sub handle : private('$!handle');
+my sub buffer : private('$!buffer');
+my sub size   : private('$!size');
+my sub done   : private('$!done');
 
 sub BUILD ($self, $) {
     (Scalar::Util::blessed( handle ) && handle->isa('IO::Handle') )

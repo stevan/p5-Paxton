@@ -19,8 +19,8 @@ sub BUILDARGS : init_args(
     stack_trace => undef,
 );
 
-my sub message     : prototype() private('$!message');
-my sub stack_trace : prototype() private('$!stack_trace');
+my sub message     : private('$!message');
+my sub stack_trace : private('$!stack_trace');
 
 sub throw ($self) { die $self }
 
