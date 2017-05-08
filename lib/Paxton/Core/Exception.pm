@@ -11,16 +11,24 @@ our $AUTHORITY = 'cpan:STEVAN';
 
 extends 'Moxie::Object';
 
-has 'message';
-has '_stack_trace' => sub { Devel::StackTrace->new( skip_frames => 4 ) };
+has '$!message';
+has '$!stack_trace' => sub { Devel::StackTrace->new( skip_frames => 4 ) };
+
+sub BUILDARGS : init_args(
+    message     => '$!message',
+    stack_trace => undef,
+);
+
+my sub message     : prototype() private('$!message');
+my sub stack_trace : prototype() private('$!stack_trace');
 
 sub throw ($self) { die $self }
 
 sub to_string ($self, @) {
     join "\n" => (
         'GAME OVER MAN! GAME OVER!',
-        $self->{message},
-        $self->{_stack_trace}->as_string
+        message,
+        stack_trace->as_string
     );
 }
 
