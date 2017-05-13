@@ -27,7 +27,7 @@ enum PathSegmentType => qw[
 
 extends 'Moxie::Object::Immutable';
 
-has '$!path' => sub { die 'You must specify the `path` you want to point to.' };
+has path => sub { die 'You must specify the `path` you want to point to.' };
 
 # ...
 
@@ -40,14 +40,12 @@ sub BUILDARGS ($class, @args) {
     my $args = $class->next::method( @args );
 
     ($args->{path} =~ /^\//)
-        || throw('Pointer path must start with a `/`' );
-
-    $args->{'$!path'} = delete $args->{path};
+        || throw('Pointer path must start with a `/`');
 
     return $args;
 }
 
-sub path : ro('$!path');
+sub path : ro;
 
 sub path_segments ($self) {
     return map s/~1/\//r, #/

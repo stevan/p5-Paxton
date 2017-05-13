@@ -12,84 +12,90 @@ use constant MAX_BUFFER_SIZE => 512;
 
 extends 'Moxie::Object';
 
-has '$!handle' => sub { die 'You must specify a `handle`' };
-has '$!buffer' => sub { '' };
-has '$!size'   => \&MAX_BUFFER_SIZE;
-has '$!done'   => sub { 1 };
+## slots
+
+has _handle => sub { die 'You must specify a `handle`' };
+has _size   => \&MAX_BUFFER_SIZE;
+has _buffer => sub { '' };
+has _done   => sub { 1 };
+
+my sub _handle : private;
+my sub _size   : private;
+my sub _buffer : private;
+my sub _done   : private;
+
+## constructor
 
 sub BUILDARGS : init_args(
-    handle      => '$!handle',
-    buffer_size => '$!size',
-    buffer      => undef,
-    done        => undef,
+    handle => '_handle',
+    size   => '_size',
 );
 
-my sub handle : private('$!handle');
-my sub buffer : private('$!buffer');
-my sub size   : private('$!size');
-my sub done   : private('$!done');
+## ...
 
 sub BUILD ($self, $) {
-    (Scalar::Util::blessed( handle ) && handle->isa('IO::Handle') )
+    (Scalar::Util::blessed( _handle ) && _handle->isa('IO::Handle') )
         || throw('You must specify a `handle` that is derived from IO::Handle' );
 }
 
+## methods
+
 sub current_position ($self) {
-    handle->tell - length buffer;
+    _handle->tell - length _buffer;
 }
 
 sub is_done ($self) {
     # when done is undef, we are done (sorry, odd I know)
-    not defined done
+    not defined _done
 }
 
 sub get ($self) {
-    done // return;
-    (buffer ne ''
-        ? substr( buffer, 0, 1, '' )
-        : handle->read( buffer, size )
-            ? substr( buffer, 0, 1, '' )
-            : undef done);
+    _done // return;
+    (_buffer ne ''
+        ? substr( _buffer, 0, 1, '' )
+        : _handle->read( _buffer, _size )
+            ? substr( _buffer, 0, 1, '' )
+            : undef _done);
 }
 
 sub peek ($self) {
-    done // return;
-    buffer ne ''
-        ? substr( buffer, 0, 1 )
-        : handle->read( buffer, size )
-            ? substr( buffer, 0, 1 )
-            : undef done;
+    _done // return;
+    _buffer ne ''
+        ? substr( _buffer, 0, 1 )
+        : _handle->read( _buffer, _size )
+            ? substr( _buffer, 0, 1 )
+            : undef _done;
 }
 
 sub skip  ($self, $n = 1) {
 
-    done // return;
+    _done // return;
 
-    my $len = length buffer;
+    my $len = length _buffer;
     if ( $n == $len ) {
-        buffer = '';
+        _buffer = '';
     }
     elsif ( $n < $len ) {
-        substr( buffer, 0, $n, '' )
+        substr( _buffer, 0, $n, '' )
     }
     elsif ( $n > $len ) {
-        buffer = '';
-        handle->read( my $x, ($n - $len) );
+        _buffer = '';
+        _handle->read( my $x, ($n - $len) );
     }
 }
 
 sub discard_whitespace_and_peek ($self) {
 
-    done // return;
+    _done // return;
 
     do {
-        if ( length buffer == 0 ) {
-            handle->read( buffer, size )
-                or undef done;
+        if ( length _buffer == 0 ) {
+            _handle->read( _buffer, _size )
+                or undef _done;
         }
-    } while ( buffer =~ s/^\s+// );
+    } while ( _buffer =~ s/^\s+// );
 
-    return defined done ? substr( buffer, 0, 1 ) : undef;
+    return defined _done ? substr( _buffer, 0, 1 ) : undef;
 }
 
 1;
