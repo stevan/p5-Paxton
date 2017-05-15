@@ -25,9 +25,21 @@ use constant DEBUG => $ENV{PAXTON_READER_DEBUG} // 0;
 extends 'Moxie::Object';
    with 'Paxton::Streaming::API::Producer';
 
-has 'source'     => sub { die 'You must specify a `source` to read from.'};
-has 'next_state' => sub { \&root };
-has 'context'    => sub { Paxton::Core::Context->new };
+## slots
+
+has _source     => sub { die 'You must specify a `source` to read from.'};
+has _next_state => sub { \&root };
+has _context    => sub { Paxton::Core::Context->new };
+
+my sub _source     : private;
+my sub _next_state : private;
+my sub _context    : private;
+
+sub BUILDARGS : init_args(
+    source     => '_source',
+    next_state => '_next_state',
+    context    => '_context',
+);
 
 ## Constructors
 
@@ -58,7 +70,7 @@ sub new_from_string ($class, $string_ref) {
 # ...
 
 sub BUILD ($self, $) {
-    (Scalar::Util::blessed( $self->{source} ) && $self->{source}->isa('Paxton::Core::CharBuffer') )
+    (Scalar::Util::blessed( _source ) && _source->isa('Paxton::Core::CharBuffer') )
         || throw('The `source` must be an instance of `Paxton::Core::CharBuffer`' );
 
     # TODO:
@@ -67,31 +79,38 @@ sub BUILD ($self, $) {
     # - SL
 
     # enter the root context now ...
-    $self->{context}->enter_root_context( \&start );
+    _context->enter_root_context( \&start );
 }
 
 # accessors (nothing really needs to be secret)
 
-sub source     : ro;
-sub context    : ro;
-sub next_state : ro;
+sub source     : ro('_source');
+sub next_state : ro('_next_state');
+sub context    : ro('_context');
 
 # iteration API
 
 sub is_exhausted ($self) {
-    $self->{source}->is_done
+    _source->is_done
         &&
-    $self->{context}->in_root_context;
+    _context->in_root_context;
 }
+
+# NOTE:
+# these won't work with the lvalues
+# because they need to act on the
+# hash key, not a lvalue
+sub _has_no_available_next_state { ! exists $_[0]->{_next_state} }
+sub _advance_to_next_state       {   delete $_[0]->{_next_state} }
 
 sub produce_token ($self) {
     return if $self->is_exhausted;
 
-    if ( my $next = delete $self->{next_state} ) {
+    if ( my $next = $self->_advance_to_next_state ) {
 
         $self->log( '>> CURRENT => ', MOP::Method->new( $next )->name ) if DEBUG;
-        $self->log( '   CONTEXT => ', join ', ' => map $_->{type}, @{ $self->{context} } ) if DEBUG;
-        $self->log( '   BUFFER  => \'', $self->{source}->{buffer}, '\'' ) if DEBUG;
+        $self->log( '   CONTEXT => ', join ', ' => map $_->{type}, @{ +_context } ) if DEBUG;
+        $self->log( '   BUFFER  => \'', _source->{buffer}, '\'' ) if DEBUG;
 
         my $token = $self->$next();
 
@@ -103,13 +122,13 @@ sub produce_token ($self) {
         if ( is_error( $token ) ) {
             $self->log( 'Encountered error: ', $token->value ) if DEBUG;
         }
-        elsif ( not exists $self->{next_state} ) {
+        elsif ( $self->_has_no_available_next_state ) {
             Paxton::Core::Exception
                 ->new( message => 'Next state is not specified after '.$token->to_string )
                 ->throw;
         }
 
-        $self->log( '<< NEXT <= ', $self->{next_state} ? MOP::Method->new( $self->{next_state} )->name : 'NONE' ) if DEBUG;
+        $self->log( '<< NEXT <= ', _next_state ? MOP::Method->new( _next_state )->name : 'NONE' ) if DEBUG;
 
         return $token;
     }
@@ -133,10 +152,10 @@ sub log ($self, @msg) {
 
 # delegated charbuffer methods
 
-sub get_next_char               : handles('source->get');
-sub peek_next_char              : handles('source->peek');
-sub skip_next_char              : handles('source->skip');
-sub discard_whitespace_and_peek : handles('source->discard_whitespace_and_peek');
+sub get_next_char               : handles('_source->get');
+sub peek_next_char              : handles('_source->peek');
+sub skip_next_char              : handles('_source->skip');
+sub discard_whitespace_and_peek : handles('_source->discard_whitespace_and_peek');
 
 # parse methods
 
@@ -220,18 +239,18 @@ sub object ($self) {
     if ( defined $char ) {
         if ( $char eq '{' ) {
             $self->skip_next_char;
-            $self->{context}->enter_object_context( \&object );
-            $self->{next_state} = \&property;
+            _context->enter_object_context( \&object );
+            _next_state = \&property;
             return token( START_OBJECT );
         }
         elsif ( $char eq '}' ) {
             # close any open properties ...
             return $self->end_property
-                if $self->{context}->in_property_context;
+                if _context->in_property_context;
 
             # now close any objects ...
             $self->skip_next_char;
-            $self->{next_state} = $self->{context}->leave_object_context;
+            _next_state = _context->leave_object_context;
             return token( END_OBJECT );
         }
         elsif ( $char eq ',' ) {
@@ -258,8 +277,8 @@ sub property ($self) {
 
             return $key if is_error( $key );
 
-            $self->{context}->enter_property_context( \&end_property );
-            $self->{next_state} = \&property;
+            _context->enter_property_context( \&end_property );
+            _next_state = \&property;
             return token( START_PROPERTY, $key->value );
         }
         elsif ( $char eq ':' ) {
@@ -271,7 +290,7 @@ sub property ($self) {
             # if no next-state has been
             # queued up, we can end the
             # property
-            $self->{next_state} ||= \&end_property;
+            _next_state ||= \&end_property;
 
             return $value;
         }
@@ -287,8 +306,8 @@ sub property ($self) {
 sub end_property ($self) {
     $self->log( 'Entering `end_property`' ) if DEBUG;
 
-    $self->{context}->leave_property_context;
-    $self->{next_state} = \&object;
+    _context->leave_property_context;
+    _next_state = \&object;
     return token( END_PROPERTY );
 }
 
@@ -300,18 +319,18 @@ sub array ($self) {
     if ( defined $char ) {
         if ( $char eq '[' ) {
             $self->skip_next_char;
-            $self->{context}->enter_array_context( \&array );
-            $self->{next_state} = \&item;
+            _context->enter_array_context( \&array );
+            _next_state = \&item;
             return token( START_ARRAY );
         }
         elsif ( $char eq ']' ) {
             # close any open properties ...
             return $self->end_item
-                if $self->{context}->in_item_context;
+                if _context->in_item_context;
 
             # now close any objects ...
             $self->skip_next_char;
-            $self->{next_state} = $self->{context}->leave_array_context;
+            _next_state = _context->leave_array_context;
             return token( END_ARRAY );
         }
         elsif ( $char eq ',' ) {
@@ -336,10 +355,10 @@ sub item ($self) {
         if ( $char eq ']' ) {
             return $self->array;
         }
-        elsif ( not $self->{context}->in_item_context ) {
-            my $idx = $self->{context}->get_current_item_count;
-            $self->{context}->enter_item_context( \&end_item );
-            $self->{next_state} = \&item;
+        elsif ( not _context->in_item_context ) {
+            my $idx = _context->get_current_item_count;
+            _context->enter_item_context( \&end_item );
+            _next_state = \&item;
             return token( START_ITEM, $idx );
         }
         else {
@@ -350,7 +369,7 @@ sub item ($self) {
             # if no next-state has been
             # queued up, we can end the
             # item
-            $self->{next_state} ||= \&end_item;
+            _next_state ||= \&end_item;
 
             return $value;
         }
@@ -363,8 +382,8 @@ sub item ($self) {
 sub end_item ($self) {
     $self->log( 'Entering `end_item`' ) if DEBUG;
 
-    $self->{context}->leave_item_context;
-    $self->{next_state} = \&array;
+    _context->leave_item_context;
+    _next_state = \&array;
     return token( END_ITEM );
 }
 

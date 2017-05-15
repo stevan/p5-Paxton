@@ -18,37 +18,50 @@ use constant DEBUG => $ENV{PAXTON_TOKEN_ITERATOR_DEBUG} // 0;
 extends 'Moxie::Object';
    with 'Paxton::Streaming::API::Producer';
 
-has 'tokens'  => sub { die 'You must specify an array of `tokens` to iterate over.'};
-has 'context' => sub { Paxton::Core::Context->new };
-# private ...
-has '_index'  => sub { 0 };
-has '_done'   => sub { 0 };
+## slots
+
+has _tokens  => sub { die 'You must specify an array of `tokens` to iterate over.'};
+has _context => sub { Paxton::Core::Context->new };
+has _index   => sub { 0 };
+has _done    => sub { 0 };
+
+my sub _tokens  : private;
+my sub _context : private;
+my sub _index   : private;
+my sub _done    : private;
+
+## constructor
+
+sub BUILDARGS : init_args(
+    tokens  => '_tokens',
+    context => '_context',
+);
 
 sub BUILD ($self, $) {
     # initialize the state ...
-    $self->{context}->enter_root_context;
+    _context->enter_root_context;
 }
 
 # accessor
 
-sub context : ro;
+sub context : ro('_context');
 
 # ...
 
 sub is_exhausted : ro('_done');
 
 sub produce_token ($self) {
-    return if $self->{_done};
+    return if _done;
 
-    my $idx = $self->{_index};
-    $self->{_index}++;
+    my $idx = _index;
+    _index++;
 
-    if ( $self->{_index} >= scalar @{ $self->{tokens} } ) {
-        $self->{_done} = 1;
+    if ( _index >= scalar @{ +_tokens } ) {
+        _done = 1;
     }
 
-    my $token      = $self->{tokens}->[ $idx ];
-    my $context    = $self->{context};
+    my $token      = _tokens->[ $idx ];
+    my $context    = _context;
     my $token_type = $token->type;
 
     if ( $token_type == START_OBJECT ) {

@@ -27,20 +27,25 @@ our %TOKEN_TYPE_TO_NODE_TYPE = (
 extends 'Moxie::Object';
    with 'Paxton::Streaming::API::Consumer';
 
+## slots
 
-has 'context' => sub { Paxton::Core::Context->new };
-# private ...
-has '_value'  => sub {};
+has _context => sub { Paxton::Core::Context->new };
+has _value   => sub {};
 
-# ...
+my sub _context : private;
+my sub _value   : private;
+
+# constructor
+
+sub BUILDARGS : init_args( context => '_context' );
 
 sub BUILD ($self, $) {
-    $self->{context}->enter_root_context;
+    _context->enter_root_context;
 }
 
 # accessors
 
-sub context : ro;
+sub context : ro('_context');
 
 sub has_value : predicate('_value');
 sub get_value : ro('_value');
@@ -50,7 +55,7 @@ sub get_value : ro('_value');
 sub is_full ($self) {
     $self->has_value
         &&
-    $self->{context}->in_root_context;
+    _context->in_root_context;
 }
 
 sub consume_token ($self, $token) {
@@ -60,13 +65,13 @@ sub consume_token ($self, $token) {
     (defined $token && is_token($token))
         || throw('Invalid token: '.$token );
 
-    my $context    = $self->{context};
+    my $context    = _context;
     my $token_type = $token->type;
 
     require Data::Dumper if DEBUG;
     $self->log('>>> TOKEN:   ', $token->to_string                                  ) if DEBUG;
     $self->log('    CONTEXT: ', join ', ' => map $_->{type}, @$context                ) if DEBUG;
-    $self->log('    VALUE:   ', Data::Dumper::Dumper($self->{_value})   =~ s/\n$//r) if DEBUG; #/
+    $self->log('    VALUE:   ', Data::Dumper::Dumper(_value)   =~ s/\n$//r) if DEBUG; #/
     $self->log('    STATE:   ', join ' | ' => grep defined, map $_->[1], @$context) if DEBUG;
     $self->log('         :   ', join ' | ' => map Data::Dumper::Dumper($_->[1])=~s/\n$//r, @$context) if DEBUG; #/
 
@@ -108,7 +113,7 @@ sub consume_token ($self, $token) {
         }
 
         if ( $context->in_root_context ) {
-            $self->{_value} = $child;
+            _value = $child;
         }
     }
     elsif ( is_scalar( $token ) ) {

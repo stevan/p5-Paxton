@@ -11,16 +11,22 @@ our $AUTHORITY = 'cpan:STEVAN';
 
 extends 'Moxie::Object';
 
+## slots
+
 has _message     => sub { '' };
 has _stack_trace => sub { Devel::StackTrace->new( skip_frames => 4 ) };
+
+my sub _message     : private;
+my sub _stack_trace : private;
+
+## constructor
 
 sub BUILDARGS : init_args(
     message => '_message',
     msg     => '_message',
 );
 
-my sub _message     : private;
-my sub _stack_trace : private;
+## methods
 
 sub throw ($self) { die $self }
 

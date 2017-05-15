@@ -23,12 +23,19 @@ use constant DEBUG => $ENV{PAXTON_WRITER_DEBUG} // 0;
 extends 'Moxie::Object';
    with 'Paxton::Streaming::API::Consumer';
 
-has 'sink'    => sub { die 'You must specify a `sink` to write to.'};
-has 'context' => sub { Paxton::Core::Context->new };
+## slots
 
-# private ...
-has '_needs_comma'  => sub { 0 };
-has '_pretty_print' => sub { 0 };
+has _sink         => sub { die 'You must specify a `sink` to write to.'};
+has _context      => sub { Paxton::Core::Context->new };
+has _needs_comma  => sub { 0 };
+has _pretty_print => sub { 0 };
+
+my sub _sink         : private;
+my sub _context      : private;
+my sub _needs_comma  : private;
+my sub _pretty_print : private;
+
+sub BUILDARGS : init_args( sink => '_sink', context => '_context' );
 
 ## Constructors
 
@@ -49,7 +56,7 @@ sub new_to_string ($class, $string_ref) {
 # ...
 
 sub BUILD ($self, $) {
-    (Scalar::Util::blessed( $self->{sink} ) && $self->{sink}->isa('IO::Handle') )
+    (Scalar::Util::blessed( _sink ) && _sink->isa('IO::Handle') )
         || throw('The `sink` must be an instance of `IO::Handle`' );
 
     # TODO:
@@ -57,13 +64,13 @@ sub BUILD ($self, $) {
     # is actually writable.
     # - SL
 
-    $self->{context}->enter_root_context( \&start );
+    _context->enter_root_context( \&start );
 }
 
 # accessors
 
-sub sink    : ro;
-sub context : ro;
+sub sink    : ro('_sink');
+sub context : ro('_context');
 
 # ...
 
@@ -74,13 +81,13 @@ sub close ($self) {
     # - make sure the handle closed okay
     # - make sure we weren't already closed (for whatever reason)
     # - ... maybe more?
-    $self->{sink}->close;
+    _sink->close;
 }
 
 # iteration
 
 sub is_full ($self) {
-    not $self->{sink}->opened;
+    not _sink->opened;
 }
 
 sub consume_token ($self, $token) {
@@ -90,68 +97,66 @@ sub consume_token ($self, $token) {
     (defined $token && is_token($token))
         || throw('Invalid token: '.$token );
 
-    my $sink       = $self->{sink};
-    my $context    = $self->{context};
     my $token_type = $token->type;
 
-    $self->log('>>> TOKEN:   ', $token->to_string                   ) if DEBUG;
-    $self->log('    CONTEXT: ', join ', ' => map $_->{type}, @$context ) if DEBUG;
-    $self->log('    COMMA:   ', $self->{_needs_comma}               ) if DEBUG;
+    $self->log('>>> TOKEN:   ', $token->to_string                      ) if DEBUG;
+    $self->log('    CONTEXT: ', join ', ' => map $_->{type}, @{ +_context } ) if DEBUG;
+    $self->log('    COMMA:   ', _needs_comma                           ) if DEBUG;
 
-    if ( $self->{_needs_comma} && not(is_struct_end( $token ) || is_element_end( $token )) ) {
-        $sink->print(',');
-        $self->{_needs_comma} = 0;
+    if ( _needs_comma && not(is_struct_end( $token ) || is_element_end( $token )) ) {
+        _sink->print(',');
+        _needs_comma = 0;
     }
 
     if ( $token_type == START_OBJECT ) {
-        $sink->print('{');
-        $context->enter_object_context;
+        _sink->print('{');
+        _context->enter_object_context;
     }
     elsif ( $token_type == END_OBJECT ) {
-        $context->leave_object_context;
-        $sink->print('}');
+        _context->leave_object_context;
+        _sink->print('}');
     }
 
     elsif ( $token_type == START_PROPERTY ) {
-        $sink->print($self->make_json_string( $token->value ), ":");
-        $context->enter_property_context;
+        _sink->print($self->make_json_string( $token->value ), ":");
+        _context->enter_property_context;
     }
     elsif ( $token_type == END_PROPERTY ) {
-        $context->leave_property_context;
-        $self->{_needs_comma} = 1;
+        _context->leave_property_context;
+        _needs_comma = 1;
     }
 
     elsif ( $token_type == START_ARRAY ) {
-        $sink->print('[');
-        $context->enter_array_context;
+        _sink->print('[');
+        _context->enter_array_context;
     }
     elsif ( $token_type == END_ARRAY ) {
-        $context->leave_array_context;
-        $sink->print(']');
+        _context->leave_array_context;
+        _sink->print(']');
     }
 
     elsif ( $token_type == START_ITEM ) {
-        $context->enter_item_context;
+        _context->enter_item_context;
     }
     elsif ( $token_type == END_ITEM ) {
-        $context->leave_item_context;
-        $self->{_needs_comma} = 1;
+        _context->leave_item_context;
+        _needs_comma = 1;
     }
 
     elsif ( is_numeric( $token ) ) {
-        $sink->print($token->value);
+        _sink->print($token->value);
     }
     elsif ( $token_type == ADD_STRING ) {
-        $sink->print( $self->make_json_string( $token->value ) );
+        _sink->print( $self->make_json_string( $token->value ) );
     }
     elsif ( $token_type == ADD_TRUE ) {
-        $sink->print('true');
+        _sink->print('true');
     }
     elsif ( $token_type == ADD_FALSE ) {
-        $sink->print('false');
+        _sink->print('false');
     }
     elsif ( $token_type == ADD_NULL ) {
-        $sink->print('null');
+        _sink->print('null');
     }
     else {
         throw('Unkown token type: '.$token_type );

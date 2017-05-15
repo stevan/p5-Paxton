@@ -27,9 +27,11 @@ enum PathSegmentType => qw[
 
 extends 'Moxie::Object::Immutable';
 
+## slots
+
 has path => sub { die 'You must specify the `path` you want to point to.' };
 
-# ...
+## constructor
 
 sub BUILDARGS ($class, @args) {
     # if we just get a single string,
@@ -44,6 +46,8 @@ sub BUILDARGS ($class, @args) {
 
     return $args;
 }
+
+## methods
 
 sub path : ro;
 

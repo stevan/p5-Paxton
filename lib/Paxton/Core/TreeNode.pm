@@ -29,6 +29,8 @@ enum NodeType => qw[
 
 extends 'Moxie::Object::Immutable';
 
+## slots
+
 has '_type'     => sub { die 'A `type` is required' };
 has '_children' => sub { +[] };
 has '_value';
@@ -36,6 +38,8 @@ has '_value';
 my sub _type     : private;
 my sub _children : private;
 my sub _value    : private;
+
+## constructor
 
 sub BUILDARGS : init_args(
     type     => '_type',

@@ -46,6 +46,8 @@ enum TokenType => {
 
 extends 'Moxie::Object::Immutable';
 
+# slots
+
 has 'type' => sub { die 'A `type` is required' };
 has 'value';
 

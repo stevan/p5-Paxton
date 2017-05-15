@@ -25,23 +25,30 @@ use constant NO_VALUE => \undef;
 extends 'Moxie::Object';
    with 'Paxton::Streaming::API::Consumer';
 
-has 'context'  => sub { Paxton::Core::Context->new };
-# private
-has '_partial' => sub {};
-has '_value'   => sub { NO_VALUE };
+## slots
 
-# ...
+has _context => sub { Paxton::Core::Context->new };
+has _partial => sub {};
+has _value   => sub { NO_VALUE };
+
+my sub _context : private;
+my sub _partial : private;
+my sub _value   : private;
+
+# constructor
+
+sub BUILDARGS : init_args( context => '_context' );
 
 sub BUILD ($self, $) {
-    $self->{context}->enter_root_context;
+    _context->enter_root_context;
 }
 
 # accessors
 
-sub context   : ro;
+sub context   : ro('_context');
 sub get_value : ro('_value');
 sub has_value ($self) {
-    not( ref $self->{_value} &&  $self->{_value} == NO_VALUE )
+    not( ref _value &&  _value == NO_VALUE )
 }
 
 # ...
@@ -49,7 +56,7 @@ sub has_value ($self) {
 sub is_full ($self) {
     $self->has_value
         &&
-    $self->{context}->in_root_context;
+    _context->in_root_context;
 }
 
 sub consume_token ($self, $token) {
@@ -59,14 +66,14 @@ sub consume_token ($self, $token) {
     (defined $token && is_token($token))
         || throw('Invalid token: '.$token );
 
-    my $context    = $self->{context};
+    my $context    = _context;
     my $token_type = $token->type;
 
     require Data::Dumper if DEBUG;
     $self->log('>>> TOKEN:   ', $token->to_string                                  ) if DEBUG;
     $self->log('    CONTEXT: ', join ', ' => map $_->{type}, @$context                ) if DEBUG;
-    $self->log('    PARTIAL: ', Data::Dumper::Dumper($self->{_partial}) =~ s/\n$//r) if DEBUG; #/
-    $self->log('    VALUE:   ', Data::Dumper::Dumper($self->{_value})   =~ s/\n$//r) if DEBUG; #/
+    $self->log('    PARTIAL: ', Data::Dumper::Dumper(_partial) =~ s/\n$//r) if DEBUG; #/
+    $self->log('    VALUE:   ', Data::Dumper::Dumper(_value)   =~ s/\n$//r) if DEBUG; #/
     $self->log('    STATE:   ', join ' | ' => grep defined, map $_->[1], @$context) if DEBUG;
     $self->log('    STATE:   ', join ' | ' => map Data::Dumper::Dumper($_->[1])=~s/\n$//r, @$context) if DEBUG; #/
 
@@ -85,7 +92,7 @@ sub consume_token ($self, $token) {
     elsif ( $token_type == END_PROPERTY ) {
         my $key = $context->current_context_value;
         my $obj = $context->leave_property_context;
-        $obj->{ $key } = $self->{_partial};
+        $obj->{ $key } = _partial;
     }
 
     elsif ( $token_type == START_ARRAY ) {
@@ -103,7 +110,7 @@ sub consume_token ($self, $token) {
     elsif ( $token_type == END_ITEM ) {
         my $idx = $context->current_context_value;
         my $arr = $context->leave_item_context;
-        $arr->[ $idx ] = $self->{_partial};
+        $arr->[ $idx ] = _partial;
     }
 
     elsif ( is_scalar( $token ) ) {
@@ -125,11 +132,11 @@ sub log ($self, @msg) {
 # ...
 
 sub _stash_value_correctly ($self, $value) {
-    $self->{context}->in_array_context
-        ? (push @{ $self->{context}->current_context_value } => $value)
-        : $self->{context}->in_root_context
-            ? ($self->{_value}   = $value)
-            : ($self->{_partial} = $value)
+    _context->in_array_context
+        ? (push @{ _context->current_context_value } => $value)
+        : _context->in_root_context
+            ? (_value   = $value)
+            : (_partial = $value)
 }
 
 1;

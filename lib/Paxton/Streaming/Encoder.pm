@@ -19,31 +19,52 @@ use constant DEBUG => $ENV{PAXTON_ENCODER_DEBUG} // 0;
 extends 'Moxie::Object';
    with 'Paxton::Streaming::API::Producer';
 
-has 'source'     => sub { die 'You must specify a `source` to encode.'};
-has 'next_state' => sub { \&root };
-has 'context'    => sub { Paxton::Core::Context->new };
-# private ...
-has '_done'      => sub { 0 };
+## slots
+
+has _source     => sub { die 'You must specify a `source` to encode.'};
+has _next_state => sub { \&root };
+has _context    => sub { Paxton::Core::Context->new };
+has _done       => sub { 0 };
+
+my sub _source     : private;
+my sub _next_state : private;
+my sub _context    : private;
+my sub _done       : private;
+
+## constructor
+
+sub BUILDARGS : init_args(
+    source     => '_source',
+    next_state => '_next_state',
+    context    => '_context',
+);
 
 sub BUILD ($self, $) {
     # initialize the state ...
-    $self->{context}->enter_root_context( [ undef, $self->{source}, [] ] );
+    _context->enter_root_context( [ undef, _source, [] ] );
 }
 
 # ...
 
 sub is_exhausted : ro('_done');
 
+# NOTE:
+# these won't work with the lvalues
+# because they need to act on the
+# hash key, not a lvalue
+sub _has_no_available_next_state { ! exists $_[0]->{_next_state} }
+sub _advance_to_next_state       {   delete $_[0]->{_next_state} }
+
 sub produce_token ($self) {
-    return if $self->{_done};
+    return if _done;
 
-    if ( my $next = delete $self->{next_state} ) {
+    if ( my $next = $self->_advance_to_next_state ) {
 
-        my (undef, $data, $state) = @{ $self->{context}->current_context_value };
+        my (undef, $data, $state) = @{ _context->current_context_value };
 
         require Data::Dumper if DEBUG;
         $self->log( '>> CURRENT => ', MOP::Method->new( $next )->name                 ) if DEBUG;
-        $self->log( '   CONTEXT => ', join ', ' => map $_->{type}, @{ $self->{context} } ) if DEBUG;
+        $self->log( '   CONTEXT => ', join ', ' => map $_->{type}, @{ +_context } ) if DEBUG;
         $self->log( '   DATA    => ', Data::Dumper::Dumper( $data )  =~ s/\n$//r      ) if DEBUG; #/
         $self->log( '   STATE   => ', Data::Dumper::Dumper( $state ) =~ s/\n$//r      ) if DEBUG; #/
 
@@ -57,18 +78,18 @@ sub produce_token ($self) {
         if ( is_error( $token ) ) {
             $self->log( 'Encountered error: ', $token->value ) if DEBUG;
         }
-        elsif ( $self->{context}->in_root_context ) {
+        elsif ( _context->in_root_context ) {
             # if we are back into root context
             # that pretty much means we are done
             # so we can do this ...
-            $self->{_done} = 1;
+            _done = 1;
         }
-        elsif ( not exists $self->{next_state} ) {
+        elsif ( $self->_has_no_available_next_state ) {
             throw('Next state is not specified after '.$token->to_string );
 
         }
         else {
-            $self->log( '<< NEXT <= ', $self->{next_state} ? MOP::Method->new( $self->{next_state} )->name : 'NONE' ) if DEBUG;
+            $self->log( '<< NEXT <= ', _next_state ? MOP::Method->new( _next_state )->name : 'NONE' ) if DEBUG;
         }
 
         return $token;
@@ -82,7 +103,7 @@ sub produce_token ($self) {
 sub root ($self) {
     $self->log( 'Entering `root`' ) if DEBUG;
 
-    my $context = $self->{context};
+    my $context = _context;
     my (undef, $data, undef) = @{ $context->current_context_value };
 
     if ( my $token = $self->start ) {
@@ -96,7 +117,7 @@ sub root ($self) {
 sub start ($self) {
     $self->log( 'Entering `start`' ) if DEBUG;
 
-    my $context = $self->{context};
+    my $context = _context;
     my (undef, $data, undef) = @{ $context->current_context_value };
 
     return $self->_dispatch_on_type( $data );
@@ -116,7 +137,7 @@ sub end ($self) {
 sub object ($self) {
     $self->log( 'Entering `object`' ) if DEBUG;
 
-    my $context = $self->{context};
+    my $context = _context;
     my (undef, $data, $state) = @{ $context->current_context_value };
 
     if ( scalar @$state ) {
@@ -126,7 +147,7 @@ sub object ($self) {
         return $self->end_property
             if $context->in_property_context;
 
-        $self->{next_state} = $context->leave_object_context->[0];
+        _next_state = $context->leave_object_context->[0];
         return token( END_OBJECT );
     }
 }
@@ -134,7 +155,7 @@ sub object ($self) {
 sub property ($self) {
     $self->log( 'Entering `property`' ) if DEBUG;
 
-    my $context = $self->{context};
+    my $context = _context;
     my (undef, $data, $state) = @{ $context->current_context_value };
 
     if ( not $context->in_property_context ) {
@@ -145,7 +166,7 @@ sub property ($self) {
         return $self->object if not defined $key;
 
         $context->enter_property_context( [ \&end_property, $data->{ $key }, [] ] );
-        $self->{next_state} = \&property;
+        _next_state = \&property;
         return token( START_PROPERTY, $key );
     }
     else {
@@ -153,7 +174,7 @@ sub property ($self) {
 
         return $value if is_error( $value );
 
-        $self->{next_state} ||= \&end_property;
+        _next_state ||= \&end_property;
 
         return $value;
     }
@@ -162,15 +183,15 @@ sub property ($self) {
 sub end_property ($self) {
     $self->log( 'Entering `end_property`' ) if DEBUG;
 
-    $self->{context}->leave_property_context;
-    $self->{next_state} = \&object;
+    _context->leave_property_context;
+    _next_state = \&object;
     return token( END_PROPERTY );
 }
 
 sub array ($self) {
     $self->log( 'Entering `array`' ) if DEBUG;
 
-    my $context = $self->{context};
+    my $context = _context;
     my (undef, $data, $state) = @{ $context->current_context_value };
 
     if ( scalar @$state ) {
@@ -180,7 +201,7 @@ sub array ($self) {
         return $self->end_item
             if $context->in_item_context;
 
-        $self->{next_state} = $context->leave_array_context->[0];
+        _next_state = $context->leave_array_context->[0];
         return token( END_ARRAY );
     }
 }
@@ -188,7 +209,7 @@ sub array ($self) {
 sub item ($self) {
     $self->log( 'Entering `item`' ) if DEBUG;
 
-    my $context = $self->{context};
+    my $context = _context;
     my (undef, $data, $state) = @{ $context->current_context_value };
 
     if ( not $context->in_item_context ) {
@@ -199,7 +220,7 @@ sub item ($self) {
         return $self->array if not defined $idx;
 
         $context->enter_item_context( [ \&end_item, $data->[ $idx ], [] ] );
-        $self->{next_state} = \&item;
+        _next_state = \&item;
         return token( START_ITEM, $idx );
     }
     else {
@@ -207,7 +228,7 @@ sub item ($self) {
 
         return $value if is_error( $value );
 
-        $self->{next_state} ||= \&end_item;
+        _next_state ||= \&end_item;
 
         return $value;
     }
@@ -216,8 +237,8 @@ sub item ($self) {
 sub end_item ($self) {
     $self->log( 'Entering `end_item`' ) if DEBUG;
 
-    $self->{context}->leave_item_context;
-    $self->{next_state} = \&array;
+    _context->leave_item_context;
+    _next_state = \&array;
     return token( END_ITEM );
 }
 
@@ -225,13 +246,13 @@ sub _dispatch_on_type ($self, $data) {
     $self->log( 'Entering `_dispatch_on_type`' ) if DEBUG;
 
     if ( ref $data eq 'HASH' ) {
-        $self->{context}->enter_object_context( [ \&object, $data, [ sort keys %$data ] ] );
-        $self->{next_state} = \&property;
+        _context->enter_object_context( [ \&object, $data, [ sort keys %$data ] ] );
+        _next_state = \&property;
         return token( START_OBJECT );
     }
     elsif ( ref $data eq 'ARRAY' ) {
-        $self->{context}->enter_array_context( [ \&array, $data, [ 0 .. $#{$data} ] ] );
-        $self->{next_state} = \&item;
+        _context->enter_array_context( [ \&array, $data, [ 0 .. $#{$data} ] ] );
+        _next_state = \&item;
         return token( START_ARRAY );
     }
     elsif ( not defined $data ) {
