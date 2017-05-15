@@ -66,50 +66,49 @@ sub consume_token ($self, $token) {
     (defined $token && is_token($token))
         || throw('Invalid token: '.$token );
 
-    my $context    = _context;
     my $token_type = $token->type;
 
     require Data::Dumper if DEBUG;
     $self->log('>>> TOKEN:   ', $token->to_string                                  ) if DEBUG;
-    $self->log('    CONTEXT: ', join ', ' => map $_->{type}, @$context                ) if DEBUG;
+    $self->log('    CONTEXT: ', join ', ' => map $_->{type}, @{ +_context }        ) if DEBUG;
     $self->log('    PARTIAL: ', Data::Dumper::Dumper(_partial) =~ s/\n$//r) if DEBUG; #/
     $self->log('    VALUE:   ', Data::Dumper::Dumper(_value)   =~ s/\n$//r) if DEBUG; #/
-    $self->log('    STATE:   ', join ' | ' => grep defined, map $_->[1], @$context) if DEBUG;
-    $self->log('    STATE:   ', join ' | ' => map Data::Dumper::Dumper($_->[1])=~s/\n$//r, @$context) if DEBUG; #/
+    $self->log('    STATE:   ', join ' | ' => grep defined, map $_->[1], @{ +_context }) if DEBUG;
+    $self->log('    STATE:   ', join ' | ' => map Data::Dumper::Dumper($_->[1])=~s/\n$//r, @{ +_context }) if DEBUG; #/
 
     if ( $token_type == START_OBJECT ) {
-        $context->enter_object_context({});
+        _context->enter_object_context({});
     }
     elsif ( $token_type == END_OBJECT ) {
-        my $obj = $context->current_context_value;
-        $context->leave_object_context;
+        my $obj = _context->current_context_value;
+        _context->leave_object_context;
         $self->_stash_value_correctly($obj);
     }
 
     elsif ( $token_type == START_PROPERTY ) {
-        $context->enter_property_context( $token->value );
+        _context->enter_property_context( $token->value );
     }
     elsif ( $token_type == END_PROPERTY ) {
-        my $key = $context->current_context_value;
-        my $obj = $context->leave_property_context;
+        my $key = _context->current_context_value;
+        my $obj = _context->leave_property_context;
         $obj->{ $key } = _partial;
     }
 
     elsif ( $token_type == START_ARRAY ) {
-        $context->enter_array_context([]);
+        _context->enter_array_context([]);
     }
     elsif ( $token_type == END_ARRAY ) {
-        my $array = $context->current_context_value;
-        $context->leave_array_context;
+        my $array = _context->current_context_value;
+        _context->leave_array_context;
         $self->_stash_value_correctly($array);
     }
 
     elsif ( $token_type == START_ITEM ) {
-        $context->enter_item_context( $token->value );
+        _context->enter_item_context( $token->value );
     }
     elsif ( $token_type == END_ITEM ) {
-        my $idx = $context->current_context_value;
-        my $arr = $context->leave_item_context;
+        my $idx = _context->current_context_value;
+        my $arr = _context->leave_item_context;
         $arr->[ $idx ] = _partial;
     }
 
