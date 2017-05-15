@@ -61,32 +61,31 @@ sub produce_token ($self) {
     }
 
     my $token      = _tokens->[ $idx ];
-    my $context    = _context;
     my $token_type = $token->type;
 
     if ( $token_type == START_OBJECT ) {
-        $context->enter_object_context;
+        _context->enter_object_context;
     }
     elsif ( $token_type == END_OBJECT ) {
-        $context->leave_object_context;
+        _context->leave_object_context;
     }
     elsif ( $token_type == START_PROPERTY ) {
-        $context->enter_property_context;
+        _context->enter_property_context;
     }
     elsif ( $token_type == END_PROPERTY ) {
-        $context->leave_property_context;
+        _context->leave_property_context;
     }
     elsif ( $token_type == START_ARRAY ) {
-        $context->enter_array_context;
+        _context->enter_array_context;
     }
     elsif ( $token_type == END_ARRAY ) {
-        $context->leave_array_context;
+        _context->leave_array_context;
     }
     elsif ( $token_type == START_ITEM ) {
-        $context->enter_item_context;
+        _context->enter_item_context;
     }
     elsif ( $token_type == END_ITEM ) {
-        $context->leave_item_context;
+        _context->leave_item_context;
     }
 
     return $token;
