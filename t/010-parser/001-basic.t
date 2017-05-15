@@ -4,6 +4,7 @@ use strict;
 use warnings;
 
 use Test::More;
+use Test::Differences;
 
 BEGIN {
     use_ok('Paxton::Streaming::Parser');
@@ -64,7 +65,7 @@ subtest '... object node' => sub {
         ]
     );
 
-    is_deeply($p->get_value, $object_node, '... got the structure we expected');
+    eq_or_diff($p->get_value, $object_node, '... got the structure we expected');
     is($object_node->to_string, $expected, '... got the stringification we expected');
 };
 
@@ -148,7 +149,7 @@ subtest '... array node' => sub {
         ]
     );
 
-    is_deeply($p->get_value, $array_node, '... got the structure we expected');
+    eq_or_diff($p->get_value, $array_node, '... got the structure we expected');
     is($array_node->to_string, $expected, '... got the stringification we expected');
 };
 

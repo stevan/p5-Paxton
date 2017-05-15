@@ -29,35 +29,45 @@ enum NodeType => qw[
 
 extends 'Moxie::Object::Immutable';
 
-has 'type'     => sub { die 'A `type` is required' };
-has 'children' => sub { +[] };
-has 'value';
+has '_type'     => sub { die 'A `type` is required' };
+has '_children' => sub { +[] };
+has '_value';
 
-sub type     : ro;
-sub children : ro;
-sub value    : ro;
+my sub _type     : private;
+my sub _children : private;
+my sub _value    : private;
+
+sub BUILDARGS : init_args(
+    type     => '_type',
+    children => '_children',
+    value    => '_value',
+);
+
+sub type     : ro('_type');
+sub children : ro('_children');
+sub value    : ro('_value');
 
 # cheap serializer
 sub to_string ($self) {
     #use Data::Dumper;
     #warn Dumper $self;
 
-    my $type = $self->{type};
+    my $type = _type;
 
     if ( $type == OBJECT ) {
-        return '{' . (join ',' => map $_->to_string, $self->{children}->@*) . '}';
+        return '{' . (join ',' => map $_->to_string, _children->@*) . '}';
     }
     elsif ( $type == PROPERTY ) {
-        return '"' . $self->{value} . '":' . $self->{children}->[0]->to_string;
+        return '"' . _value . '":' . _children->[0]->to_string;
     }
     elsif ( $type == ARRAY ) {
-        return '[' . (join ',' => map $_->to_string, $self->{children}->@*) . ']';
+        return '[' . (join ',' => map $_->to_string, _children->@*) . ']';
     }
     elsif ( $type == ITEM ) {
-        return $self->{children}->[0]->to_string;
+        return _children->[0]->to_string;
     }
     elsif ( $type == STRING ) {
-        return '"' . $self->{value} . '"';
+        return '"' . _value . '"';
     }
     elsif ( $type == TRUE ) {
         return 'true';
@@ -69,8 +79,10 @@ sub to_string ($self) {
         return 'null';
     }
     else {
-        return $self->{value};
+        return _value;
     }
+
+    return;
 }
 
 1;
