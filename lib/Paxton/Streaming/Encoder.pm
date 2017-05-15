@@ -103,8 +103,7 @@ sub produce_token ($self) {
 sub root ($self) {
     $self->log( 'Entering `root`' ) if DEBUG;
 
-    my $context = _context;
-    my (undef, $data, undef) = @{ $context->current_context_value };
+    my (undef, $data, undef) = @{ _context->current_context_value };
 
     if ( my $token = $self->start ) {
         return $token;
@@ -117,8 +116,7 @@ sub root ($self) {
 sub start ($self) {
     $self->log( 'Entering `start`' ) if DEBUG;
 
-    my $context = _context;
-    my (undef, $data, undef) = @{ $context->current_context_value };
+    my (undef, $data, undef) = @{ _context->current_context_value };
 
     return $self->_dispatch_on_type( $data );
 }
@@ -137,17 +135,16 @@ sub end ($self) {
 sub object ($self) {
     $self->log( 'Entering `object`' ) if DEBUG;
 
-    my $context = _context;
-    my (undef, $data, $state) = @{ $context->current_context_value };
+    my (undef, $data, $state) = @{ _context->current_context_value };
 
     if ( scalar @$state ) {
         return $self->property;
     }
     else {
         return $self->end_property
-            if $context->in_property_context;
+            if _context->in_property_context;
 
-        _next_state = $context->leave_object_context->[0];
+        _next_state = _context->leave_object_context->[0];
         return token( END_OBJECT );
     }
 }
@@ -155,17 +152,16 @@ sub object ($self) {
 sub property ($self) {
     $self->log( 'Entering `property`' ) if DEBUG;
 
-    my $context = _context;
-    my (undef, $data, $state) = @{ $context->current_context_value };
+    my (undef, $data, $state) = @{ _context->current_context_value };
 
-    if ( not $context->in_property_context ) {
+    if ( not _context->in_property_context ) {
         my $key = shift @$state;
 
         # if we have no keys, just
         # return back to object ...
         return $self->object if not defined $key;
 
-        $context->enter_property_context( [ \&end_property, $data->{ $key }, [] ] );
+        _context->enter_property_context( [ \&end_property, $data->{ $key }, [] ] );
         _next_state = \&property;
         return token( START_PROPERTY, $key );
     }
@@ -191,17 +187,16 @@ sub end_property ($self) {
 sub array ($self) {
     $self->log( 'Entering `array`' ) if DEBUG;
 
-    my $context = _context;
-    my (undef, $data, $state) = @{ $context->current_context_value };
+    my (undef, $data, $state) = @{ _context->current_context_value };
 
     if ( scalar @$state ) {
         return $self->item;
     }
     else {
         return $self->end_item
-            if $context->in_item_context;
+            if _context->in_item_context;
 
-        _next_state = $context->leave_array_context->[0];
+        _next_state = _context->leave_array_context->[0];
         return token( END_ARRAY );
     }
 }
@@ -209,17 +204,16 @@ sub array ($self) {
 sub item ($self) {
     $self->log( 'Entering `item`' ) if DEBUG;
 
-    my $context = _context;
-    my (undef, $data, $state) = @{ $context->current_context_value };
+    my (undef, $data, $state) = @{ _context->current_context_value };
 
-    if ( not $context->in_item_context ) {
+    if ( not _context->in_item_context ) {
         my $idx = shift @$state;
 
         # if we have no indicies, just
         # return back to array ...
         return $self->array if not defined $idx;
 
-        $context->enter_item_context( [ \&end_item, $data->[ $idx ], [] ] );
+        _context->enter_item_context( [ \&end_item, $data->[ $idx ], [] ] );
         _next_state = \&item;
         return token( START_ITEM, $idx );
     }
