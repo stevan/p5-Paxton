@@ -56,7 +56,7 @@ sub produce_token ($self) {
     my $idx = _index;
     _index++;
 
-    if ( _index >= scalar @{ +_tokens } ) {
+    if ( _index >= scalar _tokens->@* ) {
         _done = 1;
     }
 

@@ -60,13 +60,13 @@ sub produce_token ($self) {
 
     if ( my $next = $self->_advance_to_next_state ) {
 
-        my (undef, $data, $state) = @{ _context->current_context_value };
+        my (undef, $data, $state) = _context->current_context_value->@*;
 
         require Data::Dumper if DEBUG;
-        $self->log( '>> CURRENT => ', MOP::Method->new( $next )->name                 ) if DEBUG;
-        $self->log( '   CONTEXT => ', join ', ' => map $_->{type}, @{ +_context } ) if DEBUG;
-        $self->log( '   DATA    => ', Data::Dumper::Dumper( $data )  =~ s/\n$//r      ) if DEBUG; #/
-        $self->log( '   STATE   => ', Data::Dumper::Dumper( $state ) =~ s/\n$//r      ) if DEBUG; #/
+        $self->log( '>> CURRENT => ', MOP::Method->new( $next )->name            ) if DEBUG;
+        $self->log( '   CONTEXT => ', join ', ' => map $_->{type}, _context->@*  ) if DEBUG;
+        $self->log( '   DATA    => ', Data::Dumper::Dumper( $data )  =~ s/\n$//r ) if DEBUG; #/
+        $self->log( '   STATE   => ', Data::Dumper::Dumper( $state ) =~ s/\n$//r ) if DEBUG; #/
 
         my $token = $self->$next();
 
@@ -103,7 +103,7 @@ sub produce_token ($self) {
 sub root ($self) {
     $self->log( 'Entering `root`' ) if DEBUG;
 
-    my (undef, $data, undef) = @{ _context->current_context_value };
+    my (undef, $data, undef) = _context->current_context_value->@*;
 
     if ( my $token = $self->start ) {
         return $token;
@@ -116,7 +116,7 @@ sub root ($self) {
 sub start ($self) {
     $self->log( 'Entering `start`' ) if DEBUG;
 
-    my (undef, $data, undef) = @{ _context->current_context_value };
+    my (undef, $data, undef) = _context->current_context_value->@*;
 
     return $self->_dispatch_on_type( $data );
 }
@@ -135,7 +135,7 @@ sub end ($self) {
 sub object ($self) {
     $self->log( 'Entering `object`' ) if DEBUG;
 
-    my (undef, $data, $state) = @{ _context->current_context_value };
+    my (undef, $data, $state) = _context->current_context_value->@*;
 
     if ( scalar @$state ) {
         return $self->property;
@@ -152,7 +152,7 @@ sub object ($self) {
 sub property ($self) {
     $self->log( 'Entering `property`' ) if DEBUG;
 
-    my (undef, $data, $state) = @{ _context->current_context_value };
+    my (undef, $data, $state) = _context->current_context_value->@*;
 
     if ( not _context->in_property_context ) {
         my $key = shift @$state;
@@ -187,7 +187,7 @@ sub end_property ($self) {
 sub array ($self) {
     $self->log( 'Entering `array`' ) if DEBUG;
 
-    my (undef, $data, $state) = @{ _context->current_context_value };
+    my (undef, $data, $state) = _context->current_context_value->@*;
 
     if ( scalar @$state ) {
         return $self->item;
@@ -204,7 +204,7 @@ sub array ($self) {
 sub item ($self) {
     $self->log( 'Entering `item`' ) if DEBUG;
 
-    my (undef, $data, $state) = @{ _context->current_context_value };
+    my (undef, $data, $state) = _context->current_context_value->@*;
 
     if ( not _context->in_item_context ) {
         my $idx = shift @$state;
@@ -240,7 +240,7 @@ sub _dispatch_on_type ($self, $data) {
     $self->log( 'Entering `_dispatch_on_type`' ) if DEBUG;
 
     if ( ref $data eq 'HASH' ) {
-        _context->enter_object_context( [ \&object, $data, [ sort keys %$data ] ] );
+        _context->enter_object_context( [ \&object, $data, [ sort keys $data->%* ] ] );
         _next_state = \&property;
         return token( START_OBJECT );
     }

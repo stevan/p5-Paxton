@@ -132,7 +132,7 @@ sub log ($self, @msg) {
 
 sub _stash_value_correctly ($self, $value) {
     _context->in_array_context
-        ? (push @{ _context->current_context_value } => $value)
+        ? (push _context->current_context_value->@* => $value)
         : _context->in_root_context
             ? (_value   = $value)
             : (_partial = $value)

@@ -56,7 +56,7 @@ sub context : ro('_context');
 sub get_matched_tokens ($self) {
     ($self->is_full)
         || throw('Cannot get matched tokens until matcher is full' );
-    @{ +_buffer };
+    _buffer->@*;
 }
 
 ## fullfil the APIs
@@ -78,9 +78,9 @@ sub consume_token ($self, $token) {
     $self->log('>>> TOKEN:     ', $token->to_string                      ) if DEBUG;
     $self->log('    CONTEXT:   ', join ', ' => map $_->{type}, @$context ) if DEBUG;
     $self->log('    CTX-DEPTH: ', $context->depth                        ) if DEBUG;
-    $self->log('    POINTER:   ', join ', ' => map { '[' . (join ', ' => @{$_}) . ']' } @{ +_pointer_tokens } ) if DEBUG;
+    $self->log('    POINTER:   ', join ', ' => map { '[' . (join ', ' => @{$_}) . ']' } _pointer_tokens->@* ) if DEBUG;
     $self->log('    MATCH-CTX: ', (defined _match_context ? _match_context : 'undef')) if DEBUG;
-    $self->log('    BUFFER:    ', join ', ' => map $_->to_string, @{+_buffer}) if DEBUG;
+    $self->log('    BUFFER:    ', join ', ' => map $_->to_string, _buffer->@*) if DEBUG;
     $self->log('--------------------------------------------------------') if DEBUG;
 
     my $current_ptr_token = _pointer_tokens->[0];
@@ -110,7 +110,7 @@ sub consume_token ($self, $token) {
                 $token->value eq $current_ptr_token->[1]
             ) {
                 $self->log('Found match with ['.(join', ',@{$current_ptr_token}).']') if DEBUG;
-                shift @{ +_pointer_tokens };
+                shift _pointer_tokens->@*;
             }
         }
         # now we can enter out next level context ...
@@ -135,7 +135,7 @@ sub consume_token ($self, $token) {
                 $token->value == $current_ptr_token->[1]
             ) {
                 $self->log('Found match with ['.(join', ',@{$current_ptr_token}).']') if DEBUG;
-                shift @{ +_pointer_tokens };
+                shift _pointer_tokens->@*;
             }
         }
         # now we can enter out next level context ...
@@ -159,7 +159,7 @@ sub consume_token ($self, $token) {
             # the match context
             _match_context = undef;
             # but grab the last one ...
-            push @{ +_buffer } => $token;
+            push _buffer->@* => $token;
             # and mark it as done ...
             _done = 1;
         }
@@ -168,14 +168,14 @@ sub consume_token ($self, $token) {
             # because that means that we are
             # still the process of capturing
             # the tokens
-            push @{ +_buffer } => $token;
+            push _buffer->@* => $token;
         }
     }
     else {
         # if not in match context, (_match_context is `undef`)
         # and if the pointer path has been exhausted, then
         # we have succesfully matched
-        if ( scalar @{ +_pointer_tokens } == 0 ) {
+        if ( scalar _pointer_tokens->@* == 0 ) {
             $self->log('--------------------------------------------------------') if DEBUG;
             $self->log('>>> The Pointer has been matched!') if DEBUG;
             # so we enter match context and

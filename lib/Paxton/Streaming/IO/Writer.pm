@@ -99,9 +99,9 @@ sub consume_token ($self, $token) {
 
     my $token_type = $token->type;
 
-    $self->log('>>> TOKEN:   ', $token->to_string                      ) if DEBUG;
-    $self->log('    CONTEXT: ', join ', ' => map $_->{type}, @{ +_context } ) if DEBUG;
-    $self->log('    COMMA:   ', _needs_comma                           ) if DEBUG;
+    $self->log('>>> TOKEN:   ', $token->to_string                         ) if DEBUG;
+    $self->log('    CONTEXT: ', join ', ' => map $_->{type}, _context->@* ) if DEBUG;
+    $self->log('    COMMA:   ', _needs_comma                              ) if DEBUG;
 
     if ( _needs_comma && not(is_struct_end( $token ) || is_element_end( $token )) ) {
         _sink->print(',');

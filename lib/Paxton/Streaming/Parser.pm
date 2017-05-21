@@ -109,7 +109,7 @@ sub consume_token ($self, $token) {
         my $child  = $context->current_context_value;
         my $parent = $context->leave_current_context;
         if ( $parent ) {
-            push @{ $parent->children } => $child;
+            push $parent->children->@* => $child;
         }
 
         if ( $context->in_root_context ) {
@@ -117,7 +117,7 @@ sub consume_token ($self, $token) {
         }
     }
     elsif ( is_scalar( $token ) ) {
-        push @{ $context->current_context_value->children } => (
+        push $context->current_context_value->children->@* => (
             Paxton::Core::TreeNode->new(
                 type  => $TOKEN_TYPE_TO_NODE_TYPE{ $token_type },
                 ($token->value) ? (value => $token->value) : (),
