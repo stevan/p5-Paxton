@@ -6,7 +6,6 @@ use Moxie::Enum;
 use Scalar::Util ();
 
 use Paxton::Util::Errors;
-use Paxton::Util::Tokens;
 
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
@@ -21,186 +20,238 @@ enum ContextType => qw[
     IN_ITEM
 ];
 
-# constructor ...
+## ...
 
-sub new ($class) {
-    return bless [] => $class;
-}
+extends 'Moxie::Object';
+
+## slots
+
+has _stack     => sub { +[] };
+has _callbacks => sub { +{} };
+
+my sub _stack     : private;
+my sub _callbacks : private;
 
 # ...
 
-sub depth ($self) { scalar @$self }
+sub depth ($self) { scalar _stack->@* }
 
-sub current_context_value ($self) { $self->[-1]->{value} }
+sub current_context_value ($self) { _stack->[-1]->{value} }
+
+## observable methods
+
+sub bind_event ($self, $event_name, $callback) {
+    _callbacks->{ $event_name } = []
+        unless exists _callbacks->{ $event_name };
+    push _callbacks->{ $event_name }->@* => $callback;
+    $self;
+}
+
+sub unbind_event ($self, $event_name, $callback) {
+    return $self unless _callbacks->{ $event_name };
+    _callbacks->{ $event_name }->@* = grep {
+        Scalar::Util::refaddr($_) != Scalar::Util::refaddr($callback)
+    } _callbacks->{ $event_name }->@*;
+    $self;
+}
+
+sub fire_event ($self, $event_name, @args) {
+    if ( exists _callbacks->{ $event_name } ) {
+        $self->$_( @args ) foreach _callbacks->{ $event_name }->@*;
+    }
+    if ( exists _callbacks->{'_'} ) {
+        $self->$_( $event_name, @args ) foreach _callbacks->{'_'}->@*;
+    }
+    return;
+}
 
 # predicates
 
 sub in_root_context ($self) {
-    return unless scalar @$self && defined $self->[-1];
-    return $self->[-1]->{type} == ROOT;
+    return unless scalar _stack->@* && defined _stack->[-1];
+    return _stack->[-1]->{type} == ROOT;
 }
 
 sub in_object_context ($self) {
-    return unless scalar @$self && defined $self->[-1];
-    return $self->[-1]->{type} == IN_OBJECT;
+    return unless scalar _stack->@* && defined _stack->[-1];
+    return _stack->[-1]->{type} == IN_OBJECT;
 }
 
 sub in_array_context ($self) {
-    return unless scalar @$self && defined $self->[-1];
-    return $self->[-1]->{type} == IN_ARRAY;
+    return unless scalar _stack->@* && defined _stack->[-1];
+    return _stack->[-1]->{type} == IN_ARRAY;
 }
 
 sub in_property_context ($self) {
-    return unless scalar @$self && defined $self->[-1];
-    return $self->[-1]->{type} == IN_PROPERTY;
+    return unless scalar _stack->@* && defined _stack->[-1];
+    return _stack->[-1]->{type} == IN_PROPERTY;
 }
 
 sub in_item_context ($self) {
-    return unless scalar @$self && defined $self->[-1];
-    return $self->[-1]->{type} == IN_ITEM;
+    return unless scalar _stack->@* && defined _stack->[-1];
+    return _stack->[-1]->{type} == IN_ITEM;
 }
 
 # data ...
 
 sub get_current_item_count ($self) {
-    return unless scalar @$self && defined $self->[-1];
-    return $self->[-1]->{item_count};
+    return unless scalar _stack->@* && defined _stack->[-1];
+    return _stack->[-1]->{item_count};
 }
 
 sub get_current_property_count ($self) {
-    return unless scalar @$self && defined $self->[-1];
-    return $self->[-1]->{property_count};
+    return unless scalar _stack->@* && defined _stack->[-1];
+    return _stack->[-1]->{property_count};
 }
 
 # enter ...
 
 sub enter_root_context ($self, $value = undef) {
-    (scalar @$self == 0)
+    (scalar _stack->@* == 0)
         || throw('Unable to enter root context: stack not empty');
 
-    push @$self => { type => ROOT, value => $value };
+    push _stack->@* => { type => ROOT, value => $value };
     return;
 }
 
 sub enter_object_context ($self, $value = undef) {
-    (scalar @$self)
+    (scalar _stack->@*)
         || throw('Unable to enter object context: stack is empty');
 
-    push @$self => { type => IN_OBJECT, value => $value, property_count => 0 };
+    push _stack->@* => { type => IN_OBJECT, value => $value, property_count => 0 };
+    $self->fire_event( enter_object_context => $value );
     return;
 }
 
 sub enter_array_context ($self, $value = undef) {
-    (scalar @$self)
+    (scalar _stack->@*)
         || throw('Unable to enter array context: stack is empty');
 
     (not $self->in_object_context)
         || throw('Unable to enter array context from within object context (must be in property context)');
 
-    push @$self => { type => IN_ARRAY, value => $value, item_count => 0 };
+    push _stack->@* => { type => IN_ARRAY, value => $value, item_count => 0 };
+    $self->fire_event( enter_array_context => $value );
     return;
 }
 
 sub enter_property_context ($self, $value = undef) {
-    (scalar @$self)
+    (scalar _stack->@*)
         || throw('Unable to enter property context: stack is empty');
 
     ($self->in_object_context)
         || throw('Unable to enter property context from within anything but object context');
 
     # increment the property counter
-    $self->[-1]->{property_count}++;
+    _stack->[-1]->{property_count}++;
 
-    push @$self => { type => IN_PROPERTY, value => $value };
+    push _stack->@* => { type => IN_PROPERTY, value => $value };
+    $self->fire_event( enter_property_context => $value );
     return;
 }
 
 sub enter_item_context ($self, $value = undef) {
-    (scalar @$self)
+    (scalar _stack->@*)
         || throw('Unable to enter item context: stack is empty');
 
     ($self->in_array_context)
         || throw('Unable to enter item context from within anything but array context');
 
     # increment the property counter
-    $self->[-1]->{item_count}++;
+    _stack->[-1]->{item_count}++;
 
-    push @$self => { type => IN_ITEM, value => $value };
+    push _stack->@* => { type => IN_ITEM, value => $value };
+    $self->fire_event( enter_item_context => $value );
     return;
 }
 
 # leave
 
 sub leave_object_context ($self) {
-    (scalar @$self)
+    (scalar _stack->@*)
         || throw('Unable to leave context: stack exhausted');
 
-    ($self->[-1]->{type} == IN_OBJECT)
-        || throw('Must be in `object` context, not '.$self->[-1]->{type} );
+    (_stack->[-1]->{type} == IN_OBJECT)
+        || throw('Must be in `object` context, not '._stack->[-1]->{type} );
 
-    pop @$self;
+    pop _stack->@*;
+    $self->fire_event( 'leave_object_context' );
 
     # return nothing if we got nothing ...
-    return unless scalar @$self;
+    return unless scalar _stack->@*;
     # otherwise restore the previous context ...
-    return $self->[-1]->{value};
+    return _stack->[-1]->{value};
 }
 
 sub leave_array_context ($self) {
-    (scalar @$self)
+    (scalar _stack->@*)
         || throw('Unable to leave context: stack exhausted');
 
-    ($self->[-1]->{type} == IN_ARRAY)
-        || throw('Must be in `array` context, not '.$self->[-1]->{type} );
+    (_stack->[-1]->{type} == IN_ARRAY)
+        || throw('Must be in `array` context, not '._stack->[-1]->{type} );
 
-    pop @$self;
+    pop _stack->@*;
+    $self->fire_event( 'leave_array_context' );
 
     # return nothing if we got nothing ...
-    return unless scalar @$self;
+    return unless scalar _stack->@*;
     # otherwise restore the previous context ...
-    return $self->[-1]->{value};
+    return _stack->[-1]->{value};
 }
 
 sub leave_property_context ($self) {
-    (scalar @$self)
+    (scalar _stack->@*)
         || throw('Unable to leave context: stack exhausted');
 
-    ($self->[-1]->{type} == IN_PROPERTY)
-        || throw('Must be in `property` context, not '.$self->[-1]->{type} );
+    (_stack->[-1]->{type} == IN_PROPERTY)
+        || throw('Must be in `property` context, not '._stack->[-1]->{type} );
 
-    pop @$self;
+    pop _stack->@*;
+    $self->fire_event( 'leave_property_context' );
 
     # return nothing if we got nothing ...
-    return unless scalar @$self;
+    return unless scalar _stack->@*;
     # otherwise restore the previous context ...
-    return $self->[-1]->{value};
+    return _stack->[-1]->{value};
 }
 
 sub leave_item_context ($self) {
-    (scalar @$self)
+    (scalar _stack->@*)
         || throw('Unable to leave context: stack exhausted');
 
-    ($self->[-1]->{type} == IN_ITEM)
-        || throw('Must be in `item` context, not '.$self->[-1]->{type} );
+    (_stack->[-1]->{type} == IN_ITEM)
+        || throw('Must be in `item` context, not '._stack->[-1]->{type} );
 
-    pop @$self;
+    pop _stack->@*;
+    $self->fire_event( 'leave_item_context' );
 
     # return nothing if we got nothing ...
-    return unless scalar @$self;
+    return unless scalar _stack->@*;
     # otherwise restore the previous context ...
-    return $self->[-1]->{value};
+    return _stack->[-1]->{value};
 }
 
 sub leave_current_context ($self) {
-    (scalar @$self)
+    (scalar _stack->@*)
         || throw('Unable to leave context: stack exhausted');
 
-    pop @$self;
+    my $event_name = $self->in_object_context
+        ? 'leave_object_context'
+        : $self->in_array_context
+            ? 'leave_array_context'
+            : $self->in_property_context
+                ? 'leave_property_context'
+                : $self->in_item_context
+                    ? 'leave_item_context'
+                    : undef;
+
+    pop _stack->@*;
+    $self->fire_event( $event_name ) if $event_name;
 
     # return nothing if we got nothing ...
-    return unless scalar @$self;
+    return unless scalar _stack->@*;
     # otherwise restore the previous context ...
-    return $self->[-1]->{value};
+    return _stack->[-1]->{value};
 }
 
 1;

@@ -2,8 +2,6 @@ package Paxton::Streaming::TokenIterator;
 # ABSTRACT: Stream an array of tokens, maintining context
 use Moxie;
 
-use MOP::Method;
-
 use Paxton::Util::Tokens;
 
 use Paxton::Core::Context;
