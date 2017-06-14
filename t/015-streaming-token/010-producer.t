@@ -6,7 +6,7 @@ use warnings;
 use Test::More;
 
 BEGIN {
-    use_ok('Paxton::Streaming::TokenIterator');
+    use_ok('Paxton::Streaming::Token::Producer');
     use_ok('Paxton::Util::Tokens');
 }
 
@@ -23,14 +23,11 @@ subtest '... object iterator' => sub {
         token(END_OBJECT),
     );
 
-    my $ti = Paxton::Streaming::TokenIterator->new( tokens => \@tokens );
-    isa_ok($ti, 'Paxton::Streaming::TokenIterator');
+    my $ti = Paxton::Streaming::Token::Producer->new( tokens => \@tokens );
+    isa_ok($ti, 'Paxton::Streaming::Token::Producer');
 
     my $ctx = $ti->context;
     isa_ok($ctx, 'Paxton::Core::Context');
-
-    my @stack;
-    $ctx->bind_event( '_' => sub { push @stack => $_[1] } );
 
     ok(!$ti->is_exhausted, '... we are not exhausted yet');
     ok($ctx->in_root_context, '... we are in the expected context');
@@ -38,45 +35,39 @@ subtest '... object iterator' => sub {
     # START_OBJECT
     is($ti->produce_token, $tokens[0], '... got the matching token (START_OBJECT)');
     ok($ctx->in_object_context, '... we are in the expected context');
-    is($stack[-1], 'enter_object_context', '... got the expected context event');
 
     # START_PROPERTY
     is($ti->produce_token, $tokens[1], '... got the matching token (START_PROPERTY)');
     ok($ctx->in_property_context, '... we are in the expected context');
-    is($stack[-1], 'enter_property_context', '... got the expected context event');
 
     # ADD_STRING
     is($ti->produce_token, $tokens[2], '... got the matching token (ADD_STRING)');
     ok($ctx->in_property_context, '... we are (still) in the expected context');
-    is($stack[-1], 'enter_property_context', '... got the expected context event');
 
     # END_PROPERTY
     is($ti->produce_token, $tokens[3], '... got the matching token (END_PROPERTY)');
     ok($ctx->in_object_context, '... we are back in the object context');
-    is($stack[-1], 'leave_property_context', '... got the expected context event');
 
     # START_PROPERTY
     is($ti->produce_token, $tokens[4], '... got the matching token (START_PROPERTY)');
     ok($ctx->in_property_context, '... we are in the expected context');
-    is($stack[-1], 'enter_property_context', '... got the expected context event');
 
     # ADD_STRING
     is($ti->produce_token, $tokens[5], '... got the matching token (ADD_STRING)');
     ok($ctx->in_property_context, '... we are (still) in the expected context');
-    is($stack[-1], 'enter_property_context', '... got the expected context event');
 
     # END_PROPERTY
     is($ti->produce_token, $tokens[6], '... got the matching token (END_PROPERTY)');
     ok($ctx->in_object_context, '... we are back in the object context');
-    is($stack[-1], 'leave_property_context', '... got the expected context event');
 
     # END_OBJECT
     is($ti->produce_token, $tokens[7], '... got the matching token (END_OBJECT)');
     ok($ctx->in_root_context, '... we are in the expected context');
-    is($stack[-1], 'leave_object_context', '... got the expected context event');
 
     ok($ti->is_exhausted, '... we are exhausted now');
+
 };
+
 
 subtest '... array iterator' => sub {
 
@@ -97,14 +88,11 @@ subtest '... array iterator' => sub {
         token(END_ARRAY)
     );
 
-    my $ti = Paxton::Streaming::TokenIterator->new( tokens => \@tokens );
-    isa_ok($ti, 'Paxton::Streaming::TokenIterator');
+    my $ti = Paxton::Streaming::Token::Producer->new( tokens => \@tokens );
+    isa_ok($ti, 'Paxton::Streaming::Token::Producer');
 
     my $ctx = $ti->context;
     isa_ok($ctx, 'Paxton::Core::Context');
-
-    my @stack;
-    $ctx->bind_event( '*' => sub { push @stack => $_[1] } );
 
     ok(!$ti->is_exhausted, '... we are not exhausted yet');
     ok($ctx->in_root_context, '... we are in the expected context');
@@ -112,12 +100,10 @@ subtest '... array iterator' => sub {
     # START_ARRAY
     is($ti->produce_token, $tokens[0], '... got the matching token (START_ARRAY)');
     ok($ctx->in_array_context, '... we are in the expected context');
-    is($stack[-1], 'enter_array_context', '... got the expected context event');
 
     # START_ITEM
     is($ti->produce_token, $tokens[1], '... got the matching token (START_ITEM)');
     ok($ctx->in_item_context, '... we are in the expected context');
-    is($stack[-1], 'enter_item_context', '... got the expected context event');
 
     # ADD_STRING
     is($ti->produce_token, $tokens[2], '... got the matching token (ADD_STRING)');
@@ -126,12 +112,10 @@ subtest '... array iterator' => sub {
     # END_ITEM
     is($ti->produce_token, $tokens[3], '... got the matching token (END_ITEM)');
     ok($ctx->in_array_context, '... we are back in the object context');
-    is($stack[-1], 'leave_item_context', '... got the expected context event');
 
     # START_ITEM
     is($ti->produce_token, $tokens[4], '... got the matching token (START_ITEM)');
     ok($ctx->in_item_context, '... we are in the expected context');
-    is($stack[-1], 'enter_item_context', '... got the expected context event');
 
     # ADD_STRING
     is($ti->produce_token, $tokens[5], '... got the matching token (ADD_STRING)');
@@ -140,12 +124,10 @@ subtest '... array iterator' => sub {
     # END_ITEM
     is($ti->produce_token, $tokens[6], '... got the matching token (END_ITEM)');
     ok($ctx->in_array_context, '... we are back in the object context');
-    is($stack[-1], 'leave_item_context', '... got the expected context event');
 
     # START_ITEM
     is($ti->produce_token, $tokens[7], '... got the matching token (START_ITEM)');
     ok($ctx->in_item_context, '... we are in the expected context');
-    is($stack[-1], 'enter_item_context', '... got the expected context event');
 
     # ADD_STRING
     is($ti->produce_token, $tokens[8], '... got the matching token (ADD_INT)');
@@ -154,12 +136,10 @@ subtest '... array iterator' => sub {
     # END_ITEM
     is($ti->produce_token, $tokens[9], '... got the matching token (END_ITEM)');
     ok($ctx->in_array_context, '... we are back in the object context');
-    is($stack[-1], 'leave_item_context', '... got the expected context event');
 
-    # START_ITEM
+        # START_ITEM
     is($ti->produce_token, $tokens[10], '... got the matching token (START_ITEM)');
     ok($ctx->in_item_context, '... we are in the expected context');
-    is($stack[-1], 'enter_item_context', '... got the expected context event');
 
     # ADD_STRING
     is($ti->produce_token, $tokens[11], '... got the matching token (ADD_FLOAT)');
@@ -168,12 +148,10 @@ subtest '... array iterator' => sub {
     # END_ITEM
     is($ti->produce_token, $tokens[12], '... got the matching token (END_ITEM)');
     ok($ctx->in_array_context, '... we are back in the object context');
-    is($stack[-1], 'leave_item_context', '... got the expected context event');
 
     # END_ARRAY
     is($ti->produce_token, $tokens[13], '... got the matching token (END_ARRAY)');
     ok($ctx->in_root_context, '... we are in the expected context');
-    is($stack[-1], 'leave_array_context', '... got the expected context event');
 
     ok($ti->is_exhausted, '... we are exhausted now');
 };

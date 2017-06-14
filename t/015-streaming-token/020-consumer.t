@@ -6,8 +6,8 @@ use warnings;
 use Test::More;
 
 BEGIN {
-    use_ok('Paxton::Streaming::TokenIterator');
-    use_ok('Paxton::Streaming::TokenCollector');
+    use_ok('Paxton::Streaming::Token::Producer');
+    use_ok('Paxton::Streaming::Token::Consumer');
     use_ok('Paxton::Util::Tokens');
 }
 
@@ -24,11 +24,11 @@ subtest '... object iterator' => sub {
         token(END_OBJECT),
     );
 
-    my $ti = Paxton::Streaming::TokenIterator->new( tokens => \@tokens );
-    isa_ok($ti, 'Paxton::Streaming::TokenIterator');
+    my $ti = Paxton::Streaming::Token::Producer->new( tokens => \@tokens );
+    isa_ok($ti, 'Paxton::Streaming::Token::Producer');
 
-    my $tc = Paxton::Streaming::TokenCollector->new;
-    isa_ok($tc, 'Paxton::Streaming::TokenCollector');
+    my $tc = Paxton::Streaming::Token::Consumer->new;
+    isa_ok($tc, 'Paxton::Streaming::Token::Consumer');
 
     $tc->consume( $ti );
 
@@ -59,11 +59,11 @@ subtest '... array iterator' => sub {
         token(END_ARRAY)
     );
 
-    my $ti = Paxton::Streaming::TokenIterator->new( tokens => \@tokens );
-    isa_ok($ti, 'Paxton::Streaming::TokenIterator');
+    my $ti = Paxton::Streaming::Token::Producer->new( tokens => \@tokens );
+    isa_ok($ti, 'Paxton::Streaming::Token::Producer');
 
-    my $tc = Paxton::Streaming::TokenCollector->new;
-    isa_ok($tc, 'Paxton::Streaming::TokenCollector');
+    my $tc = Paxton::Streaming::Token::Consumer->new;
+    isa_ok($tc, 'Paxton::Streaming::Token::Consumer');
 
     $tc->consume( $ti );
 

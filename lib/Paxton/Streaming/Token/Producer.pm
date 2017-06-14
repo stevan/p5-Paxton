@@ -1,5 +1,5 @@
-package Paxton::Streaming::TokenCollector;
-# ABSTRACT: Consume tokens stream
+package Paxton::Streaming::Token::Producer;
+# ABSTRACT: Stream an array of tokens, maintining context
 use Moxie;
 
 use Paxton::Util::Tokens;
@@ -9,25 +9,29 @@ use Paxton::Core::Context;
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
 
-use constant DEBUG => $ENV{PAXTON_TOKEN_COLLECTOR_DEBUG} // 0;
+use constant DEBUG => $ENV{PAXTON_TOKEN_ITERATOR_DEBUG} // 0;
 
 # ...
 
 extends 'Moxie::Object';
-   with 'Paxton::Streaming::API::Consumer';
+   with 'Paxton::Streaming::API::Producer';
 
 ## slots
 
-has _sink    => sub { +[] };
+has _tokens  => sub { die 'You must specify an array of `tokens` to iterate over.'};
 has _context => sub { Paxton::Core::Context->new };
+has _index   => sub { 0 };
+has _done    => sub { 0 };
 
-my sub _sink    : private;
+my sub _tokens  : private;
 my sub _context : private;
+my sub _index   : private;
+my sub _done    : private;
 
 ## constructor
 
 sub BUILDARGS : init_args(
-    sink    => '_sink',
+    tokens  => '_tokens',
     context => '_context',
 );
 
@@ -38,24 +42,24 @@ sub BUILD ($self, $) {
 
 # accessor
 
-sub sink    : ro('_sink');
 sub context : ro('_context');
 
 # ...
 
-sub is_full ($self) { 0 }
+sub is_exhausted : ro('_done');
 
-sub consume_token ($self, $token) {
-    (not $self->is_full)
-        || throw('Writer is done, cannot `put` any more tokens' );
+sub produce_token ($self) {
+    return if _done;
 
-    (defined $token && is_token($token))
-        || throw('Invalid token: '.$token );
+    my $idx = _index;
+    _index++;
 
+    if ( _index >= scalar _tokens->@* ) {
+        _done = 1;
+    }
+
+    my $token      = _tokens->[ $idx ];
     my $token_type = $token->type;
-
-    $self->log('>>> TOKEN:   ', $token->to_string                         ) if DEBUG;
-    $self->log('    CONTEXT: ', join ', ' => map $_->{type}, _context->@* ) if DEBUG;
 
     if ( $token_type == START_OBJECT ) {
         _context->enter_object_context;
@@ -63,35 +67,26 @@ sub consume_token ($self, $token) {
     elsif ( $token_type == END_OBJECT ) {
         _context->leave_object_context;
     }
-
     elsif ( $token_type == START_PROPERTY ) {
         _context->enter_property_context;
     }
     elsif ( $token_type == END_PROPERTY ) {
         _context->leave_property_context;
     }
-
     elsif ( $token_type == START_ARRAY ) {
         _context->enter_array_context;
     }
     elsif ( $token_type == END_ARRAY ) {
         _context->leave_array_context;
     }
-
     elsif ( $token_type == START_ITEM ) {
         _context->enter_item_context;
     }
     elsif ( $token_type == END_ITEM ) {
         _context->leave_item_context;
     }
-    else {
-        throw('Unkown token type: '.$token_type )
-            unless is_scalar( $token );
-    }
 
-    push _sink->@* => $token;
-
-    return;
+    return $token;
 }
 
 # logging

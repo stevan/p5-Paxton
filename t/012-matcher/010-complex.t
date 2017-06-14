@@ -9,7 +9,7 @@ use Test::Fatal;
 use IO::File;
 
 BEGIN {
-    use_ok('Paxton::Streaming::TokenIterator');
+    use_ok('Paxton::Streaming::Token::Producer');
     use_ok('Paxton::Util::Tokens');
 
     use_ok('Paxton::Core::Pointer');
@@ -33,10 +33,10 @@ subtest '... basic matcher' => sub {
 
     is(exception { $matcher->consume( $in ) }, undef, '... ran the consumer successfully');
 
-    my $matched = Paxton::Streaming::TokenIterator->new(
+    my $matched = Paxton::Streaming::Token::Producer->new(
         tokens => [ $matcher->get_matched_tokens ]
     );
-    isa_ok($matched, 'Paxton::Streaming::TokenIterator');
+    isa_ok($matched, 'Paxton::Streaming::Token::Producer');
 
     my $decoder = Paxton::Streaming::Decoder->new;
     isa_ok($decoder, 'Paxton::Streaming::Decoder');
