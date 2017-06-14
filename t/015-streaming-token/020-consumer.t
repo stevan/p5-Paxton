@@ -32,7 +32,7 @@ subtest '... object iterator' => sub {
 
     $tc->consume( $ti );
 
-    my @sink = $tc->sink->@*;
+    my @sink = @{ $tc->sink };
 
     foreach my $i ( 0 .. $#tokens ) {
         is($tokens[ $i ], $sink[ $i ], '... got the matching tokens');
@@ -67,7 +67,7 @@ subtest '... array iterator' => sub {
 
     $tc->consume( $ti );
 
-    my @sink = $tc->sink->@*;
+    my @sink = @{ $tc->sink };
 
     foreach my $i ( 0 .. $#tokens ) {
         is($tokens[ $i ], $sink[ $i ], '... got the matching tokens');
