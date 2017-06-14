@@ -34,7 +34,7 @@ subtest '... basic matcher' => sub {
     is(exception { $matcher->consume( $in ) }, undef, '... ran the consumer successfully');
 
     my $matched = Paxton::Streaming::Token::Producer->new(
-        tokens => [ $matcher->get_matched_tokens ]
+        source => [ $matcher->get_matched_tokens ]
     );
     isa_ok($matched, 'Paxton::Streaming::Token::Producer');
 

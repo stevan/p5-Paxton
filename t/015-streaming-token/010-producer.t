@@ -23,7 +23,7 @@ subtest '... object iterator' => sub {
         token(END_OBJECT),
     );
 
-    my $ti = Paxton::Streaming::Token::Producer->new( tokens => \@tokens );
+    my $ti = Paxton::Streaming::Token::Producer->new( source => \@tokens );
     isa_ok($ti, 'Paxton::Streaming::Token::Producer');
 
     my $ctx = $ti->context;
@@ -88,7 +88,7 @@ subtest '... array iterator' => sub {
         token(END_ARRAY)
     );
 
-    my $ti = Paxton::Streaming::Token::Producer->new( tokens => \@tokens );
+    my $ti = Paxton::Streaming::Token::Producer->new( source => \@tokens );
     isa_ok($ti, 'Paxton::Streaming::Token::Producer');
 
     my $ctx = $ti->context;

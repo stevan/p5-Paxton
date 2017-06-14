@@ -19,7 +19,7 @@ BEGIN {
 subtest '... basic matcher' => sub {
 
     my $in = Paxton::Streaming::Token::Producer->new(
-        tokens => [
+        source => [
             token(START_OBJECT),
                 token(START_PROPERTY, "foo"),
                     token(START_OBJECT),
@@ -44,7 +44,7 @@ subtest '... basic matcher' => sub {
 
     is(exception { $matcher->consume( $in ) }, undef, '... ran the consumer successfully');
 
-    my $matched = Paxton::Streaming::Token::Producer->new( tokens => [ $matcher->get_matched_tokens ] );
+    my $matched = Paxton::Streaming::Token::Producer->new( source => [ $matcher->get_matched_tokens ] );
     isa_ok($matched, 'Paxton::Streaming::Token::Producer');
 
     my $decoder = Paxton::Streaming::Decoder->new;

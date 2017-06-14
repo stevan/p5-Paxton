@@ -18,12 +18,12 @@ extends 'Moxie::Object';
 
 ## slots
 
-has _tokens  => sub { die 'You must specify an array of `tokens` to iterate over.'};
+has _source  => sub { die 'You must specify an array of `source` to iterate over.'};
 has _context => sub { Paxton::Core::Context->new };
 has _index   => sub { 0 };
 has _done    => sub { 0 };
 
-my sub _tokens  : private;
+my sub _source  : private;
 my sub _context : private;
 my sub _index   : private;
 my sub _done    : private;
@@ -31,7 +31,7 @@ my sub _done    : private;
 ## constructor
 
 sub BUILDARGS : init_args(
-    tokens  => '_tokens',
+    source  => '_source',
     context => '_context',
 );
 
@@ -54,11 +54,11 @@ sub produce_token ($self) {
     my $idx = _index;
     _index++;
 
-    if ( _index >= scalar _tokens->@* ) {
+    if ( _index >= scalar _source->@* ) {
         _done = 1;
     }
 
-    my $token      = _tokens->[ $idx ];
+    my $token      = _source->[ $idx ];
     my $token_type = $token->type;
 
     if ( $token_type == START_OBJECT ) {
