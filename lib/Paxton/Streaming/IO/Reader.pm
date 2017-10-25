@@ -36,9 +36,9 @@ my sub _next_state : private;
 my sub _context    : private;
 
 sub BUILDARGS : init_args(
-    source     => '_source',
-    next_state => '_next_state',
-    context    => '_context',
+    source      => '_source',
+    next_state? => '_next_state',
+    context?    => '_context',
 );
 
 ## Constructors

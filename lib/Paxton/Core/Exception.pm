@@ -22,8 +22,8 @@ my sub _stack_trace : private;
 ## constructor
 
 sub BUILDARGS : init_args(
-    message => '_message',
-    msg     => '_message',
+    message? => '_message',
+    msg?     => '_message',
 );
 
 ## methods

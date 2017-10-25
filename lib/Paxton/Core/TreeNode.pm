@@ -42,9 +42,9 @@ my sub _value    : private;
 ## constructor
 
 sub BUILDARGS : init_args(
-    type     => '_type',
-    children => '_children',
-    value    => '_value',
+    type      => _type,
+    value?    => _value,
+    children? => _children,
 );
 
 sub type     : ro('_type');

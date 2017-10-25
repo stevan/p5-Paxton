@@ -15,7 +15,7 @@ extends 'Moxie::Object';
 ## slots
 
 has _handle => sub { die 'You must specify a `handle`' };
-has _size   => \&MAX_BUFFER_SIZE;
+has _size   => sub { MAX_BUFFER_SIZE };
 has _buffer => sub { '' };
 has _done   => sub { 1 };
 
@@ -28,7 +28,7 @@ my sub _done   : private;
 
 sub BUILDARGS : init_args(
     handle => '_handle',
-    size   => '_size',
+    size?  => '_size',
 );
 
 ## ...

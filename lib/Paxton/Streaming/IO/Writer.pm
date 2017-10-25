@@ -35,7 +35,7 @@ my sub _context      : private;
 my sub _needs_comma  : private;
 my sub _pretty_print : private;
 
-sub BUILDARGS : init_args( sink => '_sink', context => '_context' );
+sub BUILDARGS : init_args( sink => '_sink', context? => '_context' );
 
 ## Constructors
 

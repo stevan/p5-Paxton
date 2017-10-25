@@ -37,8 +37,8 @@ my sub _pointer_tokens : private;
 # constructor
 
 sub BUILDARGS : init_args(
-    pointer => '_pointer',
-    context => '_context',
+    pointer  => '_pointer',
+    context? => '_context',
 );
 
 sub BUILD ($self, $) {

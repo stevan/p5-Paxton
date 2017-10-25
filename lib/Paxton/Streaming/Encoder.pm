@@ -34,9 +34,9 @@ my sub _done       : private;
 ## constructor
 
 sub BUILDARGS : init_args(
-    source     => '_source',
-    next_state => '_next_state',
-    context    => '_context',
+    source      => '_source',
+    next_state? => '_next_state',
+    context?    => '_context',
 );
 
 sub BUILD ($self, $) {

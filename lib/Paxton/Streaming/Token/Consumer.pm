@@ -27,8 +27,8 @@ my sub _context : private;
 ## constructor
 
 sub BUILDARGS : init_args(
-    sink    => '_sink',
-    context => '_context',
+    sink?    => '_sink',
+    context? => '_context',
 );
 
 sub BUILD ($self, $) {

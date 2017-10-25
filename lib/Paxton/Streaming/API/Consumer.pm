@@ -1,4 +1,4 @@
-package Paxton::Streaming::API::Consumer;
+gpackage Paxton::Streaming::API::Consumer;
 # ABSTRACT: One stop for all your JSON needs
 use Moxie;
 

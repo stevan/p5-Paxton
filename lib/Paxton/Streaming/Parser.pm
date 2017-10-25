@@ -37,7 +37,7 @@ my sub _value   : private;
 
 # constructor
 
-sub BUILDARGS : init_args( context => '_context' );
+sub BUILDARGS : init_args( context? => '_context' );
 
 sub BUILD ($self, $) {
     _context->enter_root_context;
