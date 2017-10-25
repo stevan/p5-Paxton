@@ -2,6 +2,11 @@
 
 - https://github.com/golang/go/issues/6050#issuecomment-69850788
 
+# Training data ...
+
+- http://jsonstudio.com/resources/
+
+
 # Paxton
 
 A JSON Framework for Perl
