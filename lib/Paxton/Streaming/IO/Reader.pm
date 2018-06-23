@@ -1,6 +1,7 @@
 package Paxton::Streaming::IO::Reader;
 # ABSTRACT: Convert a JSON string into a stream of tokens
-use Moxie;
+use strict;
+use warnings;
 
 use Carp         ();
 use Scalar::Util ();
@@ -18,24 +19,21 @@ use Paxton::Core::Context;
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
 
+use decorators ':constructor', ':accessors';
+
 use constant DEBUG => $ENV{PAXTON_READER_DEBUG} // 0;
 
 # ...
 
-extends 'Moxie::Object';
-   with 'Paxton::Streaming::API::Producer';
+use parent 'UNIVERSAL::Object';
+use roles 'Paxton::Streaming::API::Producer';
+use slots (
+    _source     => sub { die 'You must specify a `source` to read from.'},
+    _next_state => sub { \&root },
+    _context    => sub { Paxton::Core::Context->new },
+);
 
-## slots
-
-has _source     => sub { die 'You must specify a `source` to read from.'};
-has _next_state => sub { \&root };
-has _context    => sub { Paxton::Core::Context->new };
-
-my sub _source     : private;
-my sub _next_state : private;
-my sub _context    : private;
-
-sub BUILDARGS : init_args(
+sub BUILDARGS : strict(
     source      => '_source',
     next_state? => '_next_state',
     context?    => '_context',
@@ -43,7 +41,9 @@ sub BUILDARGS : init_args(
 
 ## Constructors
 
-sub new_from_path ($class, $path) {
+sub new_from_path {
+    my ($class, $path) = @_;
+
     (defined $path && -f $path)
         || throw('The path must be specified and be valid' );
 
@@ -53,14 +53,18 @@ sub new_from_path ($class, $path) {
     $class->new( source => Paxton::Core::CharBuffer->new( handle => $handle ) );
 }
 
-sub new_from_handle ($class, $handle) {
+sub new_from_handle {
+    my ($class, $handle) = @_;
+
     (Scalar::Util::blessed( $handle ) && $handle->isa('IO::Handle'))
         || throw('The handle must be derived from IO::Handle' );
 
     $class->new( source => Paxton::Core::CharBuffer->new( handle => $handle ) );
 }
 
-sub new_from_string ($class, $string_ref) {
+sub new_from_string {
+    my ($class, $string_ref) = @_;
+
     (defined $string_ref && ref $string_ref eq 'SCALAR')
         || throw('The string must be a SCALAR reference' );
 
@@ -69,8 +73,10 @@ sub new_from_string ($class, $string_ref) {
 
 # ...
 
-sub BUILD ($self, $) {
-    (Scalar::Util::blessed( _source ) && _source->isa('Paxton::Core::CharBuffer') )
+sub BUILD {
+    my ($self) = @_;
+
+    (Scalar::Util::blessed( $self->{_source} ) && $self->{_source}->isa('Paxton::Core::CharBuffer') )
         || throw('The `source` must be an instance of `Paxton::Core::CharBuffer`' );
 
     # TODO:
@@ -79,38 +85,38 @@ sub BUILD ($self, $) {
     # - SL
 
     # enter the root context now ...
-    _context->enter_root_context( \&start );
+    $self->{_context}->enter_root_context( \&start );
 }
 
 # accessors (nothing really needs to be secret)
 
-sub source     : ro('_source');
-sub next_state : ro('_next_state');
-sub context    : ro('_context');
+sub source     : ro(_);
+sub next_state : ro(_);
+sub context    : ro(_);
 
 # iteration API
 
-sub is_exhausted ($self) {
-    _source->is_done
+sub is_exhausted {
+    my ($self) = @_;
+
+    $self->{_source}->is_done
         &&
-    _context->in_root_context;
+    $self->{_context}->in_root_context;
 }
 
-# NOTE:
-# these won't work with the lvalues
-# because they need to act on the
-# hash key, not a lvalue
 sub _has_no_available_next_state { ! exists $_[0]->{_next_state} }
 sub _advance_to_next_state       {   delete $_[0]->{_next_state} }
 
-sub produce_token ($self) {
+sub produce_token {
+    my ($self) = @_;
+
     return if $self->is_exhausted;
 
     if ( my $next = $self->_advance_to_next_state ) {
 
         $self->log( '>> CURRENT => ', MOP::Method->new( $next )->name ) if DEBUG;
-        $self->log( '   CONTEXT => ', join ', ' => map $_->{type}, @{ +_context } ) if DEBUG;
-        $self->log( '   BUFFER  => \'', _source->{buffer}, '\'' ) if DEBUG;
+        $self->log( '   CONTEXT => ', join ', ' => map $_->{type}, @{ $self->{_context} } ) if DEBUG;
+        $self->log( '   BUFFER  => \'', $self->{_source}->{buffer}, '\'' ) if DEBUG;
 
         my $token = $self->$next();
 
@@ -128,7 +134,7 @@ sub produce_token ($self) {
                 ->throw;
         }
 
-        $self->log( '<< NEXT <= ', _next_state ? MOP::Method->new( _next_state )->name : 'NONE' ) if DEBUG;
+        $self->log( '<< NEXT <= ', $self->{_next_state} ? MOP::Method->new( $self->{_next_state} )->name : 'NONE' ) if DEBUG;
 
         return $token;
     }
@@ -145,21 +151,25 @@ sub produce_token ($self) {
 
 # logging
 
-sub log ($self, @msg) {
+sub log {
+    my ($self, @msg) = @_;
+
     (DEBUG > 1) ? Carp::cluck( @msg ) : warn( @msg, "\n" );
     return;
 }
 
 # delegated charbuffer methods
 
-sub get_next_char               : handles('_source->get');
-sub peek_next_char              : handles('_source->peek');
-sub skip_next_char              : handles('_source->skip');
-sub discard_whitespace_and_peek : handles('_source->discard_whitespace_and_peek');
+sub get_next_char               { $_[0]->{_source}->get  }
+sub peek_next_char              { $_[0]->{_source}->peek }
+sub skip_next_char              { $_[0]->{_source}->skip }
+sub discard_whitespace_and_peek { $_[0]->{_source}->discard_whitespace_and_peek }
 
 # parse methods
 
-sub root ($self) {
+sub root {
+    my ($self) = @_;
+
     $self->log( 'Entering `root`' ) if DEBUG;
 
     my $char = $self->discard_whitespace_and_peek;
@@ -185,7 +195,9 @@ sub root ($self) {
     }
 }
 
-sub end ($self) {
+sub end {
+    my ($self) = @_;
+
     $self->log( 'Entering `end`' ) if DEBUG;
     # NOTE:
     # this token type works for
@@ -195,7 +207,9 @@ sub end ($self) {
     return token( NO_TOKEN );
 }
 
-sub start ($self) {
+sub start {
+    my ($self) = @_;
+
     $self->log( 'Entering `start`' ) if DEBUG;
 
     my $char = $self->discard_whitespace_and_peek;
@@ -231,7 +245,9 @@ sub start ($self) {
     }
 }
 
-sub object ($self) {
+sub object {
+    my ($self) = @_;
+
     $self->log( 'Entering `object`' ) if DEBUG;
 
     my $char = $self->discard_whitespace_and_peek;
@@ -239,18 +255,18 @@ sub object ($self) {
     if ( defined $char ) {
         if ( $char eq '{' ) {
             $self->skip_next_char;
-            _context->enter_object_context( \&object );
-            _next_state = \&property;
+            $self->{_context}->enter_object_context( \&object );
+            $self->{_next_state} = \&property;
             return token( START_OBJECT );
         }
         elsif ( $char eq '}' ) {
             # close any open properties ...
             return $self->end_property
-                if _context->in_property_context;
+                if $self->{_context}->in_property_context;
 
             # now close any objects ...
             $self->skip_next_char;
-            _next_state = _context->leave_object_context;
+            $self->{_next_state} = $self->{_context}->leave_object_context;
             return token( END_OBJECT );
         }
         elsif ( $char eq ',' ) {
@@ -266,7 +282,9 @@ sub object ($self) {
     }
 }
 
-sub property ($self) {
+sub property {
+    my ($self) = @_;
+
     $self->log( 'Entering `property`' ) if DEBUG;
 
     my $char = $self->discard_whitespace_and_peek;
@@ -277,8 +295,8 @@ sub property ($self) {
 
             return $key if is_error( $key );
 
-            _context->enter_property_context( \&end_property );
-            _next_state = \&property;
+            $self->{_context}->enter_property_context( \&end_property );
+            $self->{_next_state} = \&property;
             return token( START_PROPERTY, $key->value );
         }
         elsif ( $char eq ':' ) {
@@ -290,7 +308,7 @@ sub property ($self) {
             # if no next-state has been
             # queued up, we can end the
             # property
-            _next_state ||= \&end_property;
+            $self->{_next_state} ||= \&end_property;
 
             return $value;
         }
@@ -303,15 +321,19 @@ sub property ($self) {
     }
 }
 
-sub end_property ($self) {
+sub end_property {
+    my ($self) = @_;
+
     $self->log( 'Entering `end_property`' ) if DEBUG;
 
-    _context->leave_property_context;
-    _next_state = \&object;
+    $self->{_context}->leave_property_context;
+    $self->{_next_state} = \&object;
     return token( END_PROPERTY );
 }
 
-sub array ($self) {
+sub array {
+    my ($self) = @_;
+
     $self->log( 'Entering `array`' ) if DEBUG;
 
     my $char = $self->discard_whitespace_and_peek;
@@ -319,18 +341,18 @@ sub array ($self) {
     if ( defined $char ) {
         if ( $char eq '[' ) {
             $self->skip_next_char;
-            _context->enter_array_context( \&array );
-            _next_state = \&item;
+            $self->{_context}->enter_array_context( \&array );
+            $self->{_next_state} = \&item;
             return token( START_ARRAY );
         }
         elsif ( $char eq ']' ) {
             # close any open properties ...
             return $self->end_item
-                if _context->in_item_context;
+                if $self->{_context}->in_item_context;
 
             # now close any objects ...
             $self->skip_next_char;
-            _next_state = _context->leave_array_context;
+            $self->{_next_state} = $self->{_context}->leave_array_context;
             return token( END_ARRAY );
         }
         elsif ( $char eq ',' ) {
@@ -346,7 +368,9 @@ sub array ($self) {
     }
 }
 
-sub item ($self) {
+sub item {
+    my ($self) = @_;
+
     $self->log( 'Entering `item`' ) if DEBUG;
 
     my $char = $self->discard_whitespace_and_peek;
@@ -355,10 +379,10 @@ sub item ($self) {
         if ( $char eq ']' ) {
             return $self->array;
         }
-        elsif ( not _context->in_item_context ) {
-            my $idx = _context->get_current_item_count;
-            _context->enter_item_context( \&end_item );
-            _next_state = \&item;
+        elsif ( not $self->{_context}->in_item_context ) {
+            my $idx = $self->{_context}->get_current_item_count;
+            $self->{_context}->enter_item_context( \&end_item );
+            $self->{_next_state} = \&item;
             return token( START_ITEM, $idx );
         }
         else {
@@ -369,7 +393,7 @@ sub item ($self) {
             # if no next-state has been
             # queued up, we can end the
             # item
-            _next_state ||= \&end_item;
+            $self->{_next_state} ||= \&end_item;
 
             return $value;
         }
@@ -379,11 +403,13 @@ sub item ($self) {
     }
 }
 
-sub end_item ($self) {
+sub end_item {
+    my ($self) = @_;
+
     $self->log( 'Entering `end_item`' ) if DEBUG;
 
-    _context->leave_item_context;
-    _next_state = \&array;
+    $self->{_context}->leave_item_context;
+    $self->{_next_state} = \&array;
     return token( END_ITEM );
 }
 
@@ -400,7 +426,9 @@ our %ESCAPE_CHARS = (
     '"' => '"',
 );
 
-sub string_literal ($self) {
+sub string_literal {
+    my ($self) = @_;
+
     $self->log( 'Entering `string_literal`' ) if DEBUG;
 
     my $char = $self->get_next_char;
@@ -439,7 +467,9 @@ sub string_literal ($self) {
     }
 }
 
-sub numeric_literal ($self) {
+sub numeric_literal {
+    my ($self) = @_;
+
     $self->log( 'Entering `numeric_literal`' ) if DEBUG;
 
     my $char = $self->peek_next_char;
@@ -507,7 +537,9 @@ sub numeric_literal ($self) {
     }
 }
 
-sub true_literal ($self) {
+sub true_literal {
+    my ($self) = @_;
+
     $self->_match_literal(
         ['t', 'r', 'u', 'e'],
         ADD_TRUE,
@@ -515,7 +547,9 @@ sub true_literal ($self) {
     );
 }
 
-sub false_literal ($self) {
+sub false_literal {
+    my ($self) = @_;
+
     $self->_match_literal(
         ['f', 'a', 'l', 's', 'e'],
         ADD_FALSE,
@@ -523,7 +557,9 @@ sub false_literal ($self) {
     );
 }
 
-sub null_literal ($self) {
+sub null_literal {
+    my ($self) = @_;
+
     $self->_match_literal(
         ['n', 'u', 'l', 'l'],
         ADD_NULL,
@@ -533,7 +569,9 @@ sub null_literal ($self) {
 
 ## ....
 
-sub _match_literal ($self, $expected, $token_type, $error_message) {
+sub _match_literal {
+    my ($self, $expected, $token_type, $error_message) = @_;
+
     $self->log( 'Entering `' . (join '' => @$expected) . '`' ) if DEBUG;
 
     my $char = $self->discard_whitespace_and_peek;

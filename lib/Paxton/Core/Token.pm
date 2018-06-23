@@ -1,9 +1,10 @@
 package Paxton::Core::Token;
 # ABSTRACT: One stop for all your JSON needs
-use Moxie;
-use Moxie::Enum;
+use strict;
+use warnings;
 
 use Scalar::Util ();
+
 use Paxton::Util::Errors;
 
 our $VERSION   = '0.01';
@@ -11,11 +12,13 @@ our $AUTHORITY = 'cpan:STEVAN';
 
 # ...
 
+use decorators ':accessors';
+
 use constant DEBUG => $ENV{PAXTON_TOKEN_DEBUG} // 0;
 
 # constants
 
-enum TokenType => {
+use enumeration TokenType => {
     NOT_AVAILABLE  => -1,
     NO_TOKEN       => 0,
 
@@ -44,17 +47,17 @@ enum TokenType => {
 
 # ...
 
-extends 'Moxie::Object::Immutable';
-
-# slots
-
-has 'type' => sub { die 'A `type` is required' };
-has 'value';
+use parent 'UNIVERSAL::Object::Immutable';
+use slots (
+    type  => sub { die 'A `type` is required' },
+    value => sub {},
+);
 
 # ...
 
-sub BUILD ($self, $) {
-    (Moxie::Enum::has_value_for( ref $self, 'TokenType', $self->{type} ))
+sub BUILD {
+    my ($self) = @_;
+    (enumeration::has_value_for( ref $self, 'TokenType', $self->{type} ))
         || throw('Unknown token type (' . $self->{type} . ')' );
 
     # XXX
@@ -71,12 +74,15 @@ sub value : ro;
 
 sub has_value : predicate;
 
-sub dump ($self) {
+sub dump {
+    my ($self) = @_;
     require Data::Dumper;
     Data::Dumper::Dumper( $self );
 }
 
-sub to_string ($self) {
+sub to_string {
+    my ($self) = @_;
+
     my $out  = 'token( '.$self->{type};
 
     if ( defined $self->{value} ) {

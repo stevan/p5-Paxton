@@ -1,6 +1,5 @@
 package Paxton::Util::Errors;
 # ABSTRACT: One stop for all your JSON needs
-
 use strict;
 use warnings;
 

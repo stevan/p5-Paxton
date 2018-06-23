@@ -11,7 +11,7 @@ BEGIN {
 }
 
 subtest '... check the raw tokens' => sub {
-    my @tokens = sort { $a <=> $b } Moxie::Enum::get_values_for( 'Paxton::Core::Token' => 'TokenType' );
+    my @tokens = sort { $a <=> $b } enumeration::get_values_for( 'Paxton::Core::Token' => 'TokenType' );
 
     is( ''.$tokens[0],  'NOT_AVAILABLE',  '... got the string token value');
     is( ''.$tokens[1],  'NO_TOKEN',       '... got the string token value');
@@ -23,8 +23,8 @@ subtest '... check the raw tokens' => sub {
     is( ''.$tokens[7],  'END_ARRAY',      '... got the string token value');
     is( ''.$tokens[8],  'START_ITEM',     '... got the string token value');
     is( ''.$tokens[9],  'END_ITEM',       '... got the string token value');
-    is( ''.$tokens[10],  'ADD_STRING',     '... got the string token value');
-    is( ''.$tokens[11],  'ADD_INT',        '... got the string token value');
+    is( ''.$tokens[10], 'ADD_STRING',     '... got the string token value');
+    is( ''.$tokens[11], 'ADD_INT',        '... got the string token value');
     is( ''.$tokens[12], 'ADD_FLOAT',      '... got the string token value');
     is( ''.$tokens[13], 'ADD_TRUE',       '... got the string token value');
     is( ''.$tokens[14], 'ADD_FALSE',      '... got the string token value');

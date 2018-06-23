@@ -1,6 +1,7 @@
 package Paxton::Streaming::Token::Consumer;
 # ABSTRACT: Consume tokens stream
-use Moxie;
+use strict;
+use warnings;
 
 use Paxton::Util::Tokens;
 
@@ -9,43 +10,44 @@ use Paxton::Core::Context;
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
 
+use decorators ':constructor', ':accessors';
+
 use constant DEBUG => $ENV{PAXTON_TOKEN_COLLECTOR_DEBUG} // 0;
 
 # ...
 
-extends 'Moxie::Object';
-   with 'Paxton::Streaming::API::Consumer';
-
-## slots
-
-has _sink    => sub { +[] };
-has _context => sub { Paxton::Core::Context->new };
-
-my sub _sink    : private;
-my sub _context : private;
+use parent 'UNIVERSAL::Object';
+use roles 'Paxton::Streaming::API::Consumer';
+use slots (
+    _sink    => sub { +[] },
+    _context => sub { Paxton::Core::Context->new },
+);
 
 ## constructor
 
-sub BUILDARGS : init_args(
+sub BUILDARGS : strict(
     sink?    => '_sink',
     context? => '_context',
 );
 
-sub BUILD ($self, $) {
+sub BUILD {
+    my ($self) = @_;
     # initialize the state ...
-    _context->enter_root_context;
+    $self->{_context}->enter_root_context;
 }
 
 # accessor
 
-sub sink    : ro('_sink');
-sub context : ro('_context');
+sub sink    : ro(_);
+sub context : ro(_);
 
 # ...
 
-sub is_full ($self) { 0 }
+sub is_full { 0 }
 
-sub consume_token ($self, $token) {
+sub consume_token {
+    my ($self, $token) = @_;
+
     (not $self->is_full)
         || throw('Writer is done, cannot `put` any more tokens' );
 
@@ -55,48 +57,50 @@ sub consume_token ($self, $token) {
     my $token_type = $token->type;
 
     $self->log('>>> TOKEN:   ', $token->to_string                         ) if DEBUG;
-    $self->log('    CONTEXT: ', join ', ' => map $_->{type}, _context->@* ) if DEBUG;
+    $self->log('    CONTEXT: ', join ', ' => map $_->{type}, @{ $self->{_context} } ) if DEBUG;
 
     if ( $token_type == START_OBJECT ) {
-        _context->enter_object_context;
+        $self->{_context}->enter_object_context;
     }
     elsif ( $token_type == END_OBJECT ) {
-        _context->leave_object_context;
+        $self->{_context}->leave_object_context;
     }
 
     elsif ( $token_type == START_PROPERTY ) {
-        _context->enter_property_context;
+        $self->{_context}->enter_property_context;
     }
     elsif ( $token_type == END_PROPERTY ) {
-        _context->leave_property_context;
+        $self->{_context}->leave_property_context;
     }
 
     elsif ( $token_type == START_ARRAY ) {
-        _context->enter_array_context;
+        $self->{_context}->enter_array_context;
     }
     elsif ( $token_type == END_ARRAY ) {
-        _context->leave_array_context;
+        $self->{_context}->leave_array_context;
     }
 
     elsif ( $token_type == START_ITEM ) {
-        _context->enter_item_context;
+        $self->{_context}->enter_item_context;
     }
     elsif ( $token_type == END_ITEM ) {
-        _context->leave_item_context;
+        $self->{_context}->leave_item_context;
     }
     else {
         throw('Unkown token type: '.$token_type )
             unless is_scalar( $token );
     }
 
-    push _sink->@* => $token;
+    push @{ $self->{_sink} } => $token;
 
     return;
 }
 
 # logging
 
-sub log ($self, @msg) {
+sub log {
+    my ($self, @msg) = @_;
+
     (DEBUG > 1) ? Carp::cluck( @msg ) : warn( @msg, "\n" );
     return;
 }

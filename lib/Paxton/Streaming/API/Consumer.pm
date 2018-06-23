@@ -1,6 +1,7 @@
-gpackage Paxton::Streaming::API::Consumer;
+package Paxton::Streaming::API::Consumer;
 # ABSTRACT: One stop for all your JSON needs
-use Moxie;
+use strict;
+use warnings;
 
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
@@ -8,14 +9,16 @@ our $AUTHORITY = 'cpan:STEVAN';
 sub consume_token;
 sub is_full;
 
-sub consume_one ($self, $producer)  {
+sub consume_one {
+    my ($self, $producer) = @_;
     my $token = $producer->produce_token;
     return unless defined $token;
     $self->consume_token( $token );
     return $token;
 }
 
-sub consume ($self, $producer)  {
+sub consume {
+    my ($self, $producer) = @_;
     # Ideally a producer and consumer will be
     # exhausted and full respectively at the
     # same time. But if that is not the case,

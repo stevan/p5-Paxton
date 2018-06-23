@@ -1,18 +1,16 @@
 package Paxton::Core::TreeNode;
 # ABSTRACT: One stop for all your JSON needs
-use Moxie;
-use Moxie::Enum;
+use strict;
+use warnings;
 
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
 
-# ...
+use decorators ':constructor', ':accessors';
 
 use constant DEBUG => $ENV{PAXTON_PARSER_DEBUG} // 0;
 
-## constants
-
-enum NodeType => qw[
+use enumeration NodeType => qw[
     OBJECT
     PROPERTY
     ARRAY
@@ -27,51 +25,47 @@ enum NodeType => qw[
 
 # ...
 
-extends 'Moxie::Object::Immutable';
-
-## slots
-
-has '_type'     => sub { die 'A `type` is required' };
-has '_children' => sub { +[] };
-has '_value';
-
-my sub _type     : private;
-my sub _children : private;
-my sub _value    : private;
+use parent 'UNIVERSAL::Object::Immutable';
+use slots (
+    _type     => sub { die 'A `type` is required' },
+    _children => sub { +[] },
+    _value    => sub {},
+);
 
 ## constructor
 
-sub BUILDARGS : init_args(
+sub BUILDARGS : strict(
     type      => _type,
     value?    => _value,
     children? => _children,
 );
 
-sub type     : ro('_type');
-sub children : ro('_children');
-sub value    : ro('_value');
+sub type     : ro(_);
+sub children : ro(_);
+sub value    : ro(_);
 
 # cheap serializer
-sub to_string ($self) {
+sub to_string {
+    my ($self) = @_;
     #use Data::Dumper;
     #warn Dumper $self;
 
-    my $type = _type;
+    my $type = $self->{_type};
 
     if ( $type == OBJECT ) {
-        return '{' . (join ',' => map $_->to_string, _children->@*) . '}';
+        return '{' . (join ',' => map $_->to_string, @{ $self->{_children} }) . '}';
     }
     elsif ( $type == PROPERTY ) {
-        return '"' . _value . '":' . _children->[0]->to_string;
+        return '"' . $self->{_value} . '":' . $self->{_children}->[0]->to_string;
     }
     elsif ( $type == ARRAY ) {
-        return '[' . (join ',' => map $_->to_string, _children->@*) . ']';
+        return '[' . (join ',' => map $_->to_string, @{ $self->{_children} }) . ']';
     }
     elsif ( $type == ITEM ) {
-        return _children->[0]->to_string;
+        return $self->{_children}->[0]->to_string;
     }
     elsif ( $type == STRING ) {
-        return '"' . _value . '"';
+        return '"' . $self->{_value} . '"';
     }
     elsif ( $type == TRUE ) {
         return 'true';
@@ -83,7 +77,7 @@ sub to_string ($self) {
         return 'null';
     }
     else {
-        return _value;
+        return $self->{_value};
     }
 
     return;

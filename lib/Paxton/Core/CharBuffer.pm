@@ -1,101 +1,109 @@
 package Paxton::Core::CharBuffer;
 # ABSTRACT: One stop for all your JSON needs
-use Moxie;
+use strict;
+use warnings;
 
 use Scalar::Util ();
+
 use Paxton::Util::Errors;
 
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
 
+use decorators ':constructor';
+
 use constant MAX_BUFFER_SIZE => 512;
 
-extends 'Moxie::Object';
-
-## slots
-
-has _handle => sub { die 'You must specify a `handle`' };
-has _size   => sub { MAX_BUFFER_SIZE };
-has _buffer => sub { '' };
-has _done   => sub { 1 };
-
-my sub _handle : private;
-my sub _size   : private;
-my sub _buffer : private;
-my sub _done   : private;
+use parent 'UNIVERSAL::Object';
+use slots (
+    _handle => sub { die 'You must specify a `handle`' },
+    _size   => sub { MAX_BUFFER_SIZE },
+    _buffer => sub { '' },
+    _done   => sub { 1 },
+);
 
 ## constructor
 
-sub BUILDARGS : init_args(
+sub BUILDARGS : strict(
     handle => '_handle',
     size?  => '_size',
 );
 
 ## ...
 
-sub BUILD ($self, $) {
-    (Scalar::Util::blessed( _handle ) && _handle->isa('IO::Handle') )
+sub BUILD {
+    my ($self) = @_;
+
+    (Scalar::Util::blessed( $self->{_handle} ) && $self->{_handle}->isa('IO::Handle') )
         || throw('You must specify a `handle` that is derived from IO::Handle' );
 }
 
 ## methods
 
-sub current_position ($self) {
-    _handle->tell - length _buffer;
+sub current_position {
+    my ($self) = @_;
+    $self->{_handle}->tell - length $self->{_buffer};
 }
 
-sub is_done ($self) {
+sub is_done {
+    my ($self) = @_;
     # when done is undef, we are done (sorry, odd I know)
-    not defined _done
+    not defined $self->{_done}
 }
 
-sub get ($self) {
-    _done // return;
-    (_buffer ne ''
-        ? substr( _buffer, 0, 1, '' )
-        : _handle->read( _buffer, _size )
-            ? substr( _buffer, 0, 1, '' )
-            : undef _done);
+sub get {
+    my ($self) = @_;
+    $self->{_done} // return;
+    ($self->{_buffer} ne ''
+        ? substr( $self->{_buffer}, 0, 1, '' )
+        : $self->{_handle}->read( $self->{_buffer}, $self->{_size} )
+            ? substr( $self->{_buffer}, 0, 1, '' )
+            : undef $self->{_done});
 }
 
-sub peek ($self) {
-    _done // return;
-    _buffer ne ''
-        ? substr( _buffer, 0, 1 )
-        : _handle->read( _buffer, _size )
-            ? substr( _buffer, 0, 1 )
-            : undef _done;
+sub peek {
+    my ($self) = @_;
+    $self->{_done} // return;
+    $self->{_buffer} ne ''
+        ? substr( $self->{_buffer}, 0, 1 )
+        : $self->{_handle}->read( $self->{_buffer}, $self->{_size} )
+            ? substr( $self->{_buffer}, 0, 1 )
+            : undef $self->{_done};
 }
 
-sub skip  ($self, $n = 1) {
+sub skip {
+    my ($self, $n) = @_;
 
-    _done // return;
+    $n //= 1;
 
-    my $len = length _buffer;
+    $self->{_done} // return;
+
+    my $len = length $self->{_buffer};
     if ( $n == $len ) {
-        _buffer = '';
+        $self->{_buffer} = '';
     }
     elsif ( $n < $len ) {
-        substr( _buffer, 0, $n, '' )
+        substr( $self->{_buffer}, 0, $n, '' )
     }
     elsif ( $n > $len ) {
-        _buffer = '';
-        _handle->read( my $x, ($n - $len) );
+        $self->{_buffer} = '';
+        $self->{_handle}->read( my $x, ($n - $len) );
     }
 }
 
-sub discard_whitespace_and_peek ($self) {
+sub discard_whitespace_and_peek {
+    my ($self) = @_;
 
-    _done // return;
+    $self->{_done} // return;
 
     do {
-        if ( length _buffer == 0 ) {
-            _handle->read( _buffer, _size )
-                or undef _done;
+        if ( length $self->{_buffer} == 0 ) {
+            $self->{_handle}->read( $self->{_buffer}, $self->{_size} )
+                or undef $self->{_done};
         }
-    } while ( _buffer =~ s/^\s+// );
+    } while ( $self->{_buffer} =~ s/^\s+// );
 
-    return defined _done ? substr( _buffer, 0, 1 ) : undef;
+    return defined $self->{_done} ? substr( $self->{_buffer}, 0, 1 ) : undef;
 }
 
 1;

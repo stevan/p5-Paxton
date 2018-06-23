@@ -1,10 +1,9 @@
 package Paxton::Util::Tokens;
 # ABSTRACT: One stop for all your JSON needs
-
 use strict;
 use warnings;
 
-use Moxie::Enum  ();
+use enumeration  ();
 use Scalar::Util ();
 
 use Paxton::Core::Token;
@@ -21,7 +20,7 @@ our $AUTHORITY = 'cpan:STEVAN';
 
 our @EXPORT;
 BEGIN {
-    @EXPORT = Moxie::Enum::get_keys_for( 'Paxton::Core::Token' => 'TokenType' );
+    @EXPORT = enumeration::get_keys_for( 'Paxton::Core::Token' => 'TokenType' );
 
     foreach my $name ( @EXPORT ) {
         no strict 'refs';
