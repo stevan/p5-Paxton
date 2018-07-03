@@ -10,7 +10,7 @@ use decorators ':constructor', ':accessors';
 
 use constant DEBUG => $ENV{PAXTON_PARSER_DEBUG} // 0;
 
-use enumeration NodeType => qw[
+use enumerable NodeType => qw[
     OBJECT
     PROPERTY
     ARRAY

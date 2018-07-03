@@ -11,7 +11,7 @@ BEGIN {
 }
 
 subtest '... check the raw tokens' => sub {
-    my @tokens = sort { $a <=> $b } enumeration::get_values_for( 'Paxton::Core::Token' => 'TokenType' );
+    my @tokens = sort { $a <=> $b } enumerable::get_values_for( 'Paxton::Core::Token' => 'TokenType' );
 
     is( ''.$tokens[0],  'NOT_AVAILABLE',  '... got the string token value');
     is( ''.$tokens[1],  'NO_TOKEN',       '... got the string token value');

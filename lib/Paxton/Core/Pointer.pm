@@ -12,7 +12,7 @@ use decorators ':accessors';
 
 use constant DEBUG => $ENV{PAXTON_POINTER_DEBUG} // 0;
 
-use enumeration PathSegmentType => qw[
+use enumerable PathSegmentType => qw[
     PROPERTY
     ITEM
 ];

@@ -12,7 +12,7 @@ our $AUTHORITY = 'cpan:STEVAN';
 
 # contstants ...
 
-use enumeration ContextType => qw[
+use enumerable ContextType => qw[
     ROOT
     IN_OBJECT
     IN_ARRAY

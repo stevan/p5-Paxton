@@ -18,7 +18,7 @@ use constant DEBUG => $ENV{PAXTON_TOKEN_DEBUG} // 0;
 
 # constants
 
-use enumeration TokenType => {
+use enumerable TokenType => {
     NOT_AVAILABLE  => -1,
     NO_TOKEN       => 0,
 
@@ -57,7 +57,7 @@ use slots (
 
 sub BUILD {
     my ($self) = @_;
-    (enumeration::has_value_for( ref $self, 'TokenType', $self->{type} ))
+    (enumerable::has_value_for( ref $self, 'TokenType', $self->{type} ))
         || throw('Unknown token type (' . $self->{type} . ')' );
 
     # XXX

@@ -3,7 +3,7 @@ package Paxton::Util::Tokens;
 use strict;
 use warnings;
 
-use enumeration  ();
+use enumerable  ();
 use Scalar::Util ();
 
 use Paxton::Core::Token;
@@ -20,7 +20,7 @@ our $AUTHORITY = 'cpan:STEVAN';
 
 our @EXPORT;
 BEGIN {
-    @EXPORT = enumeration::get_keys_for( 'Paxton::Core::Token' => 'TokenType' );
+    @EXPORT = enumerable::get_keys_for( 'Paxton::Core::Token' => 'TokenType' );
 
     foreach my $name ( @EXPORT ) {
         no strict 'refs';
